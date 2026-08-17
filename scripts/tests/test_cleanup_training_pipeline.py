@@ -36,6 +36,7 @@ reviewer = load("apply_cleanup_reviews")
 gate_a = load("gate_a_cleanup")
 trainer = load("train_cleanup_adapter")
 direct_trainer = load("train_direct_source_adapter")
+validation_exporter = load("prepare_direct_source_validation")
 inference = load("infer_cleanup_adapter")
 dev_scorer = load("score_cleanup_training_dev")
 monitor = load("monitor_cleanup_run")
@@ -44,6 +45,16 @@ environment_checker = load("check_training_environment")
 
 
 class CleanupTrainingPipelineTest(unittest.TestCase):
+    def test_cross_dataset_validation_selection_defaults_to_training_experiment(self) -> None:
+        resolved = {"experiment_key": "sotto"}
+        config = {"experiments": {"sotto": {"validation_records": 2}, "nyra": {"validation_records": 1}}}
+        key, experiment = validation_exporter.select_experiment(resolved, config, None)
+        self.assertEqual("sotto", key)
+        self.assertEqual(2, experiment["validation_records"])
+        key, experiment = validation_exporter.select_experiment(resolved, config, "nyra")
+        self.assertEqual("nyra", key)
+        self.assertEqual(1, experiment["validation_records"])
+
     def test_chat_template_accepts_transformers_batch_encoding_shape(self) -> None:
         class MappingTokenizer:
             def apply_chat_template(self, *_args, **_kwargs):

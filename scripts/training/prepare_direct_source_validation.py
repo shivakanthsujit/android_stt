@@ -27,7 +27,21 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--experiment", choices=("sotto", "disfl_qa", "nyra", "combined"),
+        help="publisher validation split to export; defaults to the run's training experiment",
+    )
     return parser.parse_args()
+
+
+def select_experiment(
+    resolved: dict, training_config: dict, requested_experiment: str | None,
+) -> tuple[str, dict]:
+    experiment_key = requested_experiment or resolved["experiment_key"]
+    experiments = training_config.get("experiments", {})
+    if experiment_key not in experiments:
+        raise RuntimeError(f"unknown direct-source experiment: {experiment_key}")
+    return experiment_key, experiments[experiment_key]
 
 
 def main() -> int:
@@ -55,19 +69,24 @@ def main() -> int:
     source_config_path = REPO_ROOT / resolved["source_config_path"]
     if sha256_file(source_config_path) != resolved["input_hashes"]["source_config_sha256"]:
         raise RuntimeError("source config bytes differ from the training run")
+    training_config_path = REPO_ROOT / "training/config/direct-source-training-v1.json"
+    if sha256_file(training_config_path) != resolved["input_hashes"]["training_config_sha256"]:
+        raise RuntimeError("direct-source training config bytes differ from the training run")
     manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
     source_config = json.loads(source_config_path.read_text(encoding="utf-8"))
+    training_config = json.loads(training_config_path.read_text(encoding="utf-8"))
     verify_source_identity(manifest, source_config, source_config_path)
     indexed = manifest_files(manifest)
     forbidden = frozen_surfaces(REPO_ROOT / path for path in resolved["frozen_evaluation_paths"])
+    experiment_key, experiment = select_experiment(resolved, training_config, args.experiment)
 
     validation_rows: list[dict[str, str]] = []
     source_reports = []
-    for spec in resolved["experiment"]["sources"]:
+    for spec in experiment["sources"]:
         rows, report = load_source_split(source_root, spec, "validation", indexed, forbidden)
         validation_rows.extend(rows)
         source_reports.append(report)
-    expected_count = resolved["experiment"]["validation_records"]
+    expected_count = experiment["validation_records"]
     if len(validation_rows) != expected_count:
         raise RuntimeError(f"validation row count {len(validation_rows)} != {expected_count}")
 
@@ -83,10 +102,12 @@ def main() -> int:
                 "must_remove": [],
             }, ensure_ascii=False, separators=(",", ":")) + "\n")
     provenance = {
-        "schema_version": "direct-source-publisher-validation-v1",
+        "schema_version": "direct-source-publisher-validation-v2",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "contains_example_text": False,
         "run_dir": str(args.run_dir.resolve()),
+        "trained_experiment": resolved["experiment_key"],
+        "evaluated_experiment": experiment_key,
         "resolved_config_sha256": sha256_file(resolved_path),
         "source_manifest_sha256": sha256_file(source_manifest_path),
         "records": len(validation_rows),
@@ -94,7 +115,11 @@ def main() -> int:
         "output_sha256": sha256_file(output),
     }
     provenance_path.write_text(json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"records": len(validation_rows), "output": str(output)}, sort_keys=True))
+    print(json.dumps({
+        "evaluated_experiment": experiment_key,
+        "records": len(validation_rows),
+        "output": str(output),
+    }, sort_keys=True))
     return 0
 
 
