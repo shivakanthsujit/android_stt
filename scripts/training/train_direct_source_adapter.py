@@ -234,6 +234,30 @@ def audit_and_encode(
     }
 
 
+def longest_encoded(rows: Sequence[dict[str, list[int]]], limit: int = 32) -> list[dict[str, list[int]]]:
+    """Select the longest encoded rows deterministically, preserving source order for ties."""
+
+    if limit <= 0:
+        raise RuntimeError("longest-row selection limit must be positive")
+    return sorted(rows, key=lambda row: len(row["input_ids"]), reverse=True)[:limit]
+
+
+def encoded_audit(rows: Sequence[dict[str, list[int]]]) -> dict[str, Any]:
+    maximum = max((len(row["input_ids"]) for row in rows), default=0)
+    histogram: Counter[str] = Counter()
+    for row in rows:
+        length = len(row["input_ids"])
+        bucket = "<=128" if length <= 128 else "129-256" if length <= 256 else "257-512" if length <= 512 else "513-1024" if length <= 1024 else "1025-2112"
+        histogram[bucket] += 1
+    return {
+        "records": len(rows),
+        "maximum_formatted_tokens": maximum,
+        "length_histogram": dict(sorted(histogram.items())),
+        "over_limit_records": 0,
+        "silent_truncation": False,
+    }
+
+
 def resolved_config(
     config: dict[str, Any], experiment_key: str, source_manifest_path: Path, config_path: Path,
     source_root: Path, run_purpose: str,
@@ -245,6 +269,7 @@ def resolved_config(
     derived_steps = math.ceil(math.ceil(experiment["train_records"] / common["train_batch_size"]) / common["gradient_accumulation_steps"])
     if derived_steps != experiment["expected_optimizer_steps"]:
         raise RuntimeError("configured optimizer-step count differs from the fixed recipe")
+    smoke = run_purpose in {"smoke", "longest_smoke"}
     return {
         "config_version": config["config_version"],
         "experiment_key": experiment_key,
@@ -258,9 +283,10 @@ def resolved_config(
         "experiment": experiment,
         "run_controls": {
             "purpose": run_purpose,
-            "train_record_limit": 32 if run_purpose == "smoke" else None,
-            "validation_record_limit": 32 if run_purpose == "smoke" else None,
-            "max_steps": 2 if run_purpose == "smoke" else -1,
+            "selection": "longest_formatted" if run_purpose == "longest_smoke" else "publisher_prefix" if smoke else "all",
+            "train_record_limit": 32 if smoke else None,
+            "validation_record_limit": 32 if smoke else None,
+            "max_steps": 2 if smoke else -1,
         },
         "artifact_inputs": {
             "source_root": str(source_root.resolve()),
@@ -297,7 +323,7 @@ def verify_tracked_repository_and_inputs(repository: dict[str, Any], paths: Iter
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experiment", choices=("sotto", "disfl_qa", "nyra", "combined"), required=True)
-    parser.add_argument("--run-purpose", choices=("smoke", "full"), required=True)
+    parser.add_argument("--run-purpose", choices=("smoke", "longest_smoke", "full"), required=True)
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--source-root", type=Path, default=Path("/data/rise/android_stt/raw/sources-v1"))
     parser.add_argument("--source-manifest", type=Path, default=Path("/data/rise/android_stt/manifests/source-manifest-v1.json"))
@@ -376,8 +402,20 @@ def main() -> int:
         encoded_validation, validation_audit = audit_and_encode(
             tokenizer, instruction, validation_rows, max_tokens, model_config["chat_template_kwargs"]
         )
+        full_corpus_audit = None
+        if args.run_purpose == "longest_smoke":
+            full_corpus_audit = {"train": train_audit, "validation": validation_audit}
+            encoded_train = longest_encoded(encoded_train)
+            encoded_validation = longest_encoded(encoded_validation)
+            train_audit = encoded_audit(encoded_train)
+            validation_audit = encoded_audit(encoded_validation)
         (args.run_dir / "tokenization-audit.json").write_text(
-            json.dumps({"train": train_audit, "validation": validation_audit}, indent=2, sort_keys=True) + "\n",
+            json.dumps({
+                "selection": resolved["run_controls"]["selection"],
+                "train": train_audit,
+                "validation": validation_audit,
+                "full_corpus": full_corpus_audit,
+            }, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         model = AutoModelForCausalLM.from_pretrained(
@@ -427,7 +465,7 @@ def main() -> int:
                 self.delegate.on_log(trainer_args, state, control, logs, **kwargs)
 
         experiment = resolved["experiment"]
-        smoke = args.run_purpose == "smoke"
+        smoke = args.run_purpose in {"smoke", "longest_smoke"}
         training_args = TrainingArguments(
             output_dir=str(args.run_dir),
             num_train_epochs=common["epochs"], max_steps=2 if smoke else -1,

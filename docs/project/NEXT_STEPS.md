@@ -98,7 +98,8 @@ to evaluation before completing the stricter balanced/reviewed corpus.
 - [x] Add a separate direct-source loader/config/trainer without weakening or faking the reviewed
   pilot Gate A path.
 - [x] Fix Qwen3-0.6B, one epoch, BF16 LoRA rank 16, effective batch 32, learning rate 2e-4, seed
-  23, assistant-only loss, and a no-thinking 1,024-token format for the four-way comparison.
+  23, assistant-only loss, and a no-thinking format for the four-way comparison. After the complete
+  Sotto audit, revise the no-truncation ceiling to 2,112 tokens with microbatch 4 / accumulation 8.
 - [x] Run one 32-row/two-step mechanical smoke on Sotto and verify checkpoint/final-adapter output.
 - [x] Record the user's explicit waiver of the pre-run push gate for local commit `53a5551` and
   attempt the full managed launch without pushing.

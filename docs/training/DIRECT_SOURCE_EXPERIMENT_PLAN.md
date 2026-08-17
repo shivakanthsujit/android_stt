@@ -77,9 +77,9 @@ Use this recipe unchanged across the four adapters unless a run fails mechanical
 |---|---:|
 | Epochs | 1 |
 | Seed / data seed | 23 / 23 |
-| Maximum formatted sequence | 1,024 tokens, no silent truncation |
-| Microbatch | 8 |
-| Gradient accumulation | 4 |
+| Maximum formatted sequence | 2,112 tokens, no silent truncation |
+| Microbatch | 4 |
+| Gradient accumulation | 8 |
 | Effective batch | 32 |
 | Precision | BF16; TF32 enabled |
 | Optimizer | fused AdamW |
@@ -101,7 +101,8 @@ One epoch is intentional: it gets a complete comparable result quickly. If Sotto
 still improving, extend the recipe in a new, explicitly named 3-epoch experiment rather than
 quietly changing the four-way comparison.
 
-Before Sotto, run only one bounded mechanical smoke: 32 examples and two optimizer steps. Its job
+Before Sotto, run only one bounded mechanical smoke: the 32 longest formatted train/validation
+examples and two optimizer steps. Its job
 is to catch tokenizer/template, CUDA, LoRA-target, or memory failures. Do not run the old long
 overfit/resume-smoke sequence before this exploratory launch. If 1,024 tokens does not cover every
 source pair, report the count and maximum before deciding whether to raise the limit; never
@@ -157,7 +158,8 @@ and terminal status. Keep all datasets, model caches, checkpoints, results conta
 and weights outside Git.
 
 Launch the run in a managed session and monitor every three minutes with
-`monitor_cleanup_run.py`. Track process/session identity, latest step, train/eval loss, learning
+`monitor_cleanup_run.py`. Attach it only after the trainer has written its initial `status.json`,
+so the monitor cannot race the new-run directory audit. Track process/session identity, latest step, train/eval loss, learning
 rate, gradient norm, throughput, newest checkpoint, GPU utilization/memory/temperature/power,
 disk space, and terminal status. Monitoring is read-only. Do not silently restart, change batch
 size, or alter hyperparameters. Stop and diagnose NaNs, repeated OOMs, missing checkpoints, disk

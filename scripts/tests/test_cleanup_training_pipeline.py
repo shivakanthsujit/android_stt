@@ -66,11 +66,30 @@ class CleanupTrainingPipelineTest(unittest.TestCase):
         self.assertEqual(135503, config["experiments"]["sotto"]["train_records"])
         self.assertEqual(7181, config["experiments"]["disfl_qa"]["train_records"])
         self.assertEqual(147142, config["experiments"]["combined"]["train_records"])
+        self.assertEqual(2112, config["dataset"]["max_sequence_tokens"])
+        self.assertEqual(4, config["common"]["train_batch_size"])
+        self.assertEqual(8, config["common"]["gradient_accumulation_steps"])
+        self.assertEqual(32, config["common"]["effective_batch_size"])
         resolved = direct_trainer.resolved_config(
             config, "sotto", Path(__file__), config_path, Path("/tmp/source-root"), "smoke"
         )
         self.assertEqual(4235, resolved["experiment"]["expected_optimizer_steps"])
         self.assertEqual(2, resolved["run_controls"]["max_steps"])
+        longest = direct_trainer.resolved_config(
+            config, "sotto", Path(__file__), config_path, Path("/tmp/source-root"), "longest_smoke"
+        )
+        self.assertEqual("longest_formatted", longest["run_controls"]["selection"])
+
+    def test_direct_source_longest_smoke_selection_is_deterministic(self) -> None:
+        rows = [
+            {"input_ids": [1, 2], "attention_mask": [1, 1], "labels": [1, 2]},
+            {"input_ids": [3, 4, 5], "attention_mask": [1, 1, 1], "labels": [3, 4, 5]},
+            {"input_ids": [6, 7, 8], "attention_mask": [1, 1, 1], "labels": [6, 7, 8]},
+        ]
+        selected = direct_trainer.longest_encoded(rows, limit=2)
+        self.assertIs(rows[1], selected[0])
+        self.assertIs(rows[2], selected[1])
+        self.assertEqual(3, direct_trainer.encoded_audit(selected)["maximum_formatted_tokens"])
 
     def test_direct_source_loader_declares_invalid_rows_and_blocks_frozen_overlap(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

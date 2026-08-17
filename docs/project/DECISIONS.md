@@ -111,6 +111,12 @@ Last updated: 2026-08-17
     stronger base; retain Gemma 3 1B as the measured quality alternative and LFM2.5-350M as the
     deployment-speed wildcard. Gemma 4 E2B is outside this experiment because its total parameter
     footprint is about 5.1B, not sub-1B.
+27. Raise the fixed direct-source maximum formatted sequence from 1,024 to 2,112 tokens after the
+    complete Sotto audit found 775 train and 46 validation rows over the old limit, with a maximum
+    of 2,050. Preserve the full publisher splits and no-truncation policy. Use microbatch 4 plus
+    gradient accumulation 8 across the four-way comparison to retain effective batch 32: the
+    original microbatch 8 OOMed on the 1,838-token longest train row, while the revised recipe
+    passed the exact two-step worst-case A6000 diagnostic without gradient checkpointing.
 
 ## Android/toolchain
 
