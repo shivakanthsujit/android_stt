@@ -1,6 +1,6 @@
 # Direct-source cleanup experiments
 
-Status: implemented; full Sotto run active and monitored
+Status: Sotto complete/no-go; standalone Disfl-QA is next
 
 This is the new-session handoff for the fast experimental track. The purpose is to train real
 models quickly, evaluate their raw behavior, and use evidence to improve the data and recipe. It
@@ -193,20 +193,19 @@ train loss is 0.09389 and final validation loss is 0.07938. Resumable checkpoint
 `checkpoint-1059`, `checkpoint-2118`, `checkpoint-3177`, and `checkpoint-4235`; the terminal
 adapter is `final-adapter/` and matches checkpoint 4,235 exactly.
 
-Retired diagnostics and cross-dataset evaluations are complete. Raw semantic safety failed on
-eight substantive cases, and Sotto-to-Disfl-QA/Nyra transfer was not sufficient to skip either
-standalone training run. Full generation over the 6,921-row Sotto publisher validation split is
-still active under `evaluation/publisher-validation-results.jsonl`. Sanitized interim evidence and
-artifact hashes are in
-`docs/evaluation/results/2026-08-18-direct-sotto-qwen3-interim-evaluation.json`.
+Retired diagnostics, cross-dataset evaluations, and full publisher validation are complete. Raw
+semantic safety failed on eight substantive retired-diagnostic cases. Publisher validation reached
+4,751/6,921 raw exact (68.65%), with zero empty outputs, 48 cap hits, and 3,098 guardrail flags.
+Sotto-to-Disfl-QA/Nyra transfer was not sufficient to skip either standalone training run. Final
+sanitized evidence and artifact hashes are in
+`docs/evaluation/results/2026-08-18-direct-sotto-qwen3-evaluation.json`.
 
 ## What the next session should do
 
 1. Read `AGENTS.md`, `TRAINING_MACHINE_HANDOFF.md`, and this file completely.
-2. Preserve the completed Sotto run and do not disturb its active publisher evaluator.
-3. Monitor publisher generation to 6,921/6,921, verify exit status and hashes, then score it.
-4. Launch the standalone Disfl-QA and Nyra source adapters with the identical recipe; cross-transfer
-   evidence does not justify skipping them.
+2. Preserve the completed Sotto run and its hashed publisher-evaluation artifacts.
+3. Launch and evaluate the standalone Disfl-QA source adapter with the identical recipe.
+4. Launch and evaluate Nyra afterward; cross-transfer evidence does not justify skipping it.
 5. Compare the three source adapters before deciding whether to pay for the combined run or instead
    test three epochs/full fine-tuning on the best source recipe.
 

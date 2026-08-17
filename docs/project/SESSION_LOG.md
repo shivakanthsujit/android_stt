@@ -246,3 +246,20 @@
   `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-interim-evaluation.json`. Full 6,921-row
   Sotto publisher generation remains active under the same run directory and is monitored every
   500 records with immediate failure reporting.
+
+## 2026-08-18 — Final Sotto publisher evaluation and next-run decision
+
+- Full Sotto publisher generation completed all 6,921/6,921 rows and the managed evaluator exited
+  zero. Exact match was 4,751/6,921 (68.65%); there were no empty outputs, 48 output-cap hits, and
+  3,098 guardrail flags. Mixed-concurrency A6000 latency was 91.5 ms median TTFT and 583.4 ms
+  median total, so it is not treated as a standalone latency benchmark.
+- Verified and hashed publisher cases, results, their provenance sidecars, and the aggregate score
+  under the completed Sotto run's `evaluation/` directory. Added the final text-free report at
+  `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-evaluation.json`; raw source text and model
+  artifacts remain outside Git under `/data`.
+- Confirmed the Sotto adapter remains a no-go: publisher exactness is weak and the fully reviewed
+  retired diagnostics already contain eight substantive raw semantic-policy failures. Full manual
+  review of all 2,170 non-exact publisher outputs was not performed because it cannot reverse that
+  deployment decision.
+- Selected the fixed-recipe standalone Disfl-QA adapter as the next controlled run, followed by
+  Nyra. The combined run remains conditional on comparing the three standalone source adapters.

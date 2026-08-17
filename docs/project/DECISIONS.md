@@ -127,8 +127,10 @@ Last updated: 2026-08-17
 29. Reject the one-epoch Sotto-only Qwen3-0.6B adapter as a deployment candidate despite its strong
     51/69 retired-diagnostic exact score. Agent review found eight substantive raw-policy failures,
     including answered content and protected entity, name, identifier, numeric-surface, intent,
-    and deletion errors. Guardrail fallback remains defense in depth and cannot rescue raw semantic
-    safety. Keep the adapter/checkpoints as experimental evidence under the completed run directory.
+    and deletion errors. Full publisher validation reached only 4,751/6,921 raw exact, with 48
+    output-cap hits and 3,098 guardrail flags. Guardrail fallback remains defense in depth and
+    cannot rescue raw semantic safety. Keep the adapter/checkpoints as experimental evidence under
+    the completed run directory.
 30. Do not skip standalone Disfl-QA or Nyra training based on Sotto-adapter transfer. Cross-dataset
     exactness was 472/1,000 for Disfl-QA with 732 guardrail flags and 32/250 for Nyra with 76 flags.
     Run the identical one-epoch source adapters after Sotto publisher scoring; decide on the combined

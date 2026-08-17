@@ -1,0 +1,135 @@
+{
+  "schema_version": "direct-sotto-qwen3-evaluation-v1",
+  "created_at": "2026-08-17T16:14:46Z",
+  "contains_example_text": false,
+  "status": "complete_no_go",
+  "run": {
+    "run_id": "direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z",
+    "run_dir": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z",
+    "training_commit": "c556709058a5b45851bf0a9fd76dd36a2bad0db9",
+    "global_step": 4235,
+    "epochs": 1.0,
+    "train_records": 135503,
+    "validation_records": 6921,
+    "train_loss": 0.0938862940848507,
+    "final_validation_loss": 0.0793779119849205,
+    "train_runtime_seconds": 7662.0994,
+    "train_samples_per_second": 17.685,
+    "train_steps_per_second": 0.553,
+    "terminal_status": "complete"
+  },
+  "artifacts": {
+    "final_adapter": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/final-adapter",
+    "final_adapter_model_bytes": 40422168,
+    "checkpoint_steps": [1059, 2118, 3177, 4235],
+    "trainer_state": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/trainer_state.json",
+    "resolved_config": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/resolved-config.json",
+    "metrics": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/metrics.jsonl",
+    "hashes": {
+      "adapter_config_sha256": "f08b77c9295ebedfee2c0230f7277c7ec5d17f33ea54d040c19440b19d71249d",
+      "adapter_model_sha256": "22736a4d4aff8b5788386a80d643296874c3b54dd980404e7196a5665023fa2b",
+      "resolved_config_sha256": "346c4b710f95c212fdf0a1b2502b3b8e16628d8f41d1a0f0215fda8834f07716",
+      "trainer_state_sha256": "8fe0a72ffd29e52553d0a9e440fd5a58863323f2476c41814f70e6645833f773"
+    },
+    "final_adapter_matches_checkpoint_4235": true
+  },
+  "publisher_validation": {
+    "records": 6921,
+    "raw_exact": {"count": 4751, "total": 6921, "rate": 0.6864614940037567},
+    "empty_outputs": 0,
+    "guardrail_flags": 3098,
+    "output_cap_hits": 48,
+    "latency_ms": {
+      "ttft_median": 91.4523,
+      "ttft_p95": 139.124602,
+      "total_median": 583.388233,
+      "total_p95": 1368.902365,
+      "measurement_note": "Most generation was standalone, but part overlapped other evaluation processes; treat these as mixed-concurrency A6000 measurements."
+    },
+    "paths": {
+      "cases": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/evaluation/publisher-validation-cases.jsonl",
+      "results": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/evaluation/publisher-validation-results.jsonl",
+      "score": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/evaluation/publisher-validation-score.json"
+    },
+    "hashes": {
+      "cases_sha256": "25cbb028524515a40e3f116425b73403045c3c178d23401347287cc6a7117881",
+      "cases_provenance_sha256": "8746687c3bad2b24ca170ed16e5153425a66a6b9aea37a1a25a8094f76b12629",
+      "results_sha256": "e605b327ab8df9dff408e0cbe4f65a3ad86ba9ee7729c3be03a5a2feabd7ac7d",
+      "results_provenance_sha256": "1991c2745776c16b79ed8d80729f53a03a2e656fbd23b25cc8da7c0f02298868",
+      "score_sha256": "679a0e41d19a3ff8c6ea37e1a625cc473578682225761e09561fd4e1d77d621d"
+    },
+    "raw_semantic_safety": {
+      "status": "not_fully_reviewed",
+      "non_exact_outputs": 2170,
+      "note": "Publisher rows lack project safety annotations and every non-exact publisher output was not manually reviewed. The adapter already fails raw semantic safety on the fully reviewed retired diagnostics."
+    }
+  },
+  "retired_diagnostics": {
+    "records": 69,
+    "seed_exact": {"count": 15, "total": 24, "rate": 0.625},
+    "heldout_exact": {"count": 36, "total": 45, "rate": 0.8},
+    "combined_exact": {"count": 51, "total": 69, "rate": 0.7391304347826086},
+    "preservation_anchors": {"preserved": 153, "total": 163, "rate": 0.9386503067484663},
+    "self_correction_exact": {"count": 7, "total": 10, "rate": 0.7},
+    "must_not_answer_exact": {"count": 15, "total": 17, "rate": 0.8823529411764706},
+    "empty_outputs": 0,
+    "guardrail_flags": 11,
+    "output_cap_hits": 1,
+    "raw_semantic_safety": {
+      "status": "fail",
+      "reviewer_kind": "codex_agent_audit_not_human_qualification",
+      "non_exact_cases_reviewed": 18,
+      "substantive_policy_failures": 8,
+      "failure_case_ids": [
+        "cleanup-004",
+        "cleanup-014",
+        "cleanup-018",
+        "cleanup-019",
+        "cleanup-021",
+        "heldout-015",
+        "heldout-029",
+        "heldout-031"
+      ],
+      "guardrail_cannot_rescue_raw_model": true,
+      "deployment_candidate": false
+    },
+    "result_hashes": {
+      "seed_sha256": "12fa994f49c3ce2d51fe8311d444d8c6d7be23c9f453a6879300c864e8cc95d8",
+      "heldout_sha256": "3612b3ec5c4d72e1cf541f00095a2b240a0abd2ede85f2661b32f66c32883994"
+    }
+  },
+  "cross_dataset_validation": {
+    "disfl_qa": {
+      "records": 1000,
+      "exact": 472,
+      "exact_rate": 0.472,
+      "guardrail_flags": 732,
+      "empty_outputs": 0,
+      "output_cap_hits": 0,
+      "results_sha256": "961bf7b6c6b0c6b18b94d2938409dbfd47ba389b4e09fbf4c31cdb85f6e85af8",
+      "standalone_training_can_be_skipped": false
+    },
+    "nyra": {
+      "records": 250,
+      "exact": 32,
+      "exact_rate": 0.128,
+      "no_op_exact": 10,
+      "no_op_total": 16,
+      "guardrail_flags": 76,
+      "empty_outputs": 0,
+      "output_cap_hits": 1,
+      "results_sha256": "f11c44252068a235c28fb1497bc617ba5551a37911818d8857f50eb645953e02",
+      "standalone_training_can_be_skipped": false
+    }
+  },
+  "decision": {
+    "deployment_candidate": false,
+    "reason": "Raw semantic safety failed on the fully reviewed retired diagnostics; publisher exactness is also below the experimental quality target and includes 48 capped outputs.",
+    "next_experiment": "Train the standalone Disfl-QA adapter with the identical one-epoch Qwen3-0.6B LoRA recipe, then train Nyra and compare all source adapters before deciding on a combined run."
+  },
+  "selection_constraints": {
+    "blind_v2_used": false,
+    "retired_diagnostics_used_for_training": false,
+    "raw_model_output_controls_safety_decision": true
+  }
+}

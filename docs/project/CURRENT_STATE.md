@@ -1,6 +1,6 @@
 # Current state
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 ## Repository
 
@@ -164,14 +164,17 @@ Last updated: 2026-08-17
   outputs found eight substantive raw-policy failures, including intent change, answered content,
   protected entity/name/identifier changes, and substantive deletion. Raw semantic safety fails;
   this adapter is not a deployment candidate and guardrails cannot convert it into one.
+- Full Sotto publisher validation is complete: 4,751/6,921 raw exact (68.65%), zero empty outputs,
+  48 output-cap hits, and 3,098 guardrail flags. Generation exited zero with exactly 6,921 result
+  rows. Mixed-concurrency A6000 latency was 91.5 ms median TTFT and 583.4 ms median total; do not
+  treat it as a clean standalone benchmark.
 - Cross-dataset generation is complete. The Sotto adapter reached 472/1,000 exact on Disfl-QA dev
   with 732 guardrail flags and 32/250 exact on Nyra validation with 76 guardrail flags. Neither
-  result justifies skipping standalone source training. Full Sotto publisher generation is still
-  running at
-  `evaluation/publisher-validation-results.jsonl`; its expected final count is 6,921.
-- Sanitized training, artifact, cross-dataset, and retired-diagnostic evidence is in
-  `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-interim-evaluation.json`. Raw publisher
-  pairs/results and model artifacts remain under `/data`, outside Git.
+  result justifies skipping standalone source training.
+- Final sanitized training, artifact, publisher, cross-dataset, and retired-diagnostic evidence is
+  in `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-evaluation.json`; the earlier interim
+  snapshot is retained for provenance. Raw publisher pairs/results and model artifacts remain
+  under `/data`, outside Git.
 - Sotto has no located formal paper; the publisher's evolving Hugging Face model card is its
   stated training research document. The closest detailed reference uses LFM2.5-350M full SFT for
   three epochs at 3e-5, effective batch 8, AdamW beta2 0.95, cosine/50-step warmup, packed 4,096
@@ -202,6 +205,6 @@ Last updated: 2026-08-17
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
 5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve the completed
-   Sotto run, finish/score its active publisher-validation generation, then use the documented
-   failures to select the next separately named source/recipe experiment. Preserve the stricter
+   Sotto run and launch the fixed-recipe standalone Disfl-QA experiment, followed by Nyra. Compare
+   the three source adapters before deciding on combined training. Preserve the stricter
    reviewed-pilot path for later qualification work.
