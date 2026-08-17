@@ -159,6 +159,14 @@ Last updated: 2026-08-18
     LoRA, effective batch 32, seed 23, learning rate 2e-4, and the 2,112-token no-truncation policy
     unchanged so the result remains a dataset comparison. Evaluate all source splits and retired
     diagnostics with the fixed vLLM profile; never use blind-v2 for this exploratory decision.
+34. Supersede the just-started one-epoch combined run with a separately named three-epoch combined
+    learning-curve run at the user's request. Preserve the partial run and its explicit
+    `KeyboardInterrupt` evidence. Hold the data, model, LoRA, optimizer, batch, seed, and sequence
+    policy fixed; change only epochs, total expected steps, checkpoint/evaluation cadence, and
+    retention. Save at the exact end of each epoch (steps 4,599, 9,198, and 13,797), then compare
+    all three checkpoints with the same fixed vLLM profile and raw semantic-safety gate. This
+    intentionally studies epoch sufficiency and must be reported as a recipe follow-up rather than
+    an unchanged one-epoch dataset-comparison row. Never use blind-v2 for epoch selection.
 
 ## Android/toolchain
 

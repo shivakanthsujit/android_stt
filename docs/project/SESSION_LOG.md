@@ -318,3 +318,12 @@
   commit `79d22a2`. It contains 147,142 train and 8,171 validation rows, expects 4,599 optimizer
   steps, passed frozen-surface overlap checks, and has durable 180-second telemetry plus terminal
   and error monitoring. No blind-v2 surface was used.
+- At the user's request, gracefully interrupted that combined run at step 92/4,599 and preserved
+  its run directory, logs, audits, telemetry, and `KeyboardInterrupt` terminal status. It had
+  passed all input/isolation/tokenization gates; the stop was a recipe decision, not an OOM or
+  training defect.
+- Added a dedicated three-epoch combined learning-curve config and generalized the trainer's
+  expected-step validation across integer epoch counts. The follow-up expects 13,797 optimizer
+  steps and saves/evaluates exactly every 4,599 steps, yielding epoch-1, epoch-2, and epoch-3
+  checkpoints. All other model/data/optimizer/batch/seed/sequence settings remain unchanged.
+  The complete 112-script-test and 10-host-test suites pass before launch.

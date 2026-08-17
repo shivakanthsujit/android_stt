@@ -266,7 +266,14 @@ def resolved_config(
     common = config["common"]
     if common["train_batch_size"] * common["gradient_accumulation_steps"] != common["effective_batch_size"]:
         raise RuntimeError("effective batch size does not match microbatch × accumulation")
-    derived_steps = math.ceil(math.ceil(experiment["train_records"] / common["train_batch_size"]) / common["gradient_accumulation_steps"])
+    epochs = common["epochs"]
+    if not isinstance(epochs, int) or epochs < 1:
+        raise RuntimeError("epochs must be a positive integer")
+    optimizer_steps_per_epoch = math.ceil(
+        math.ceil(experiment["train_records"] / common["train_batch_size"])
+        / common["gradient_accumulation_steps"]
+    )
+    derived_steps = optimizer_steps_per_epoch * epochs
     if derived_steps != experiment["expected_optimizer_steps"]:
         raise RuntimeError("configured optimizer-step count differs from the fixed recipe")
     smoke = run_purpose in {"smoke", "longest_smoke"}

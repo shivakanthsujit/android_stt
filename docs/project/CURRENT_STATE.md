@@ -211,11 +211,17 @@ Last updated: 2026-08-18
   rejected; sanitized evidence is
   `docs/evaluation/results/2026-08-18-direct-nyra-qwen3-evaluation.json`.
 - Poor cross-source transfer and raw-safety failure across all three standalone adapters justify
-  the predeclared combined experiment. The unchanged one-epoch combined run is active at
-  `/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z` from pinned
-  training commit `79d22a2`: 147,142 train rows, 8,171 validation rows, expected 4,599 optimizer
-  steps, effective batch 32, and the same 2,112-token no-truncation contract. Durable 180-second
-  telemetry plus terminal/error monitors are attached. Do not use blind-v2 for this decision.
+  the predeclared combined experiment. The initial one-epoch combined run at
+  `/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z` passed the
+  complete no-truncation audit and reached step 92/4,599 before an explicit user-requested stop;
+  its `KeyboardInterrupt` status and logs are preserved, and it is not a training failure.
+- The combined follow-up is deliberately three epochs so checkpoints at steps 4,599, 9,198, and
+  13,797 can be evaluated as an epoch-wise learning curve. The dedicated config changes only
+  epochs, total expected steps, save/eval cadence, and checkpoint retention relative to the
+  combined one-epoch recipe; data, Qwen3-0.6B, BF16 rank-16 LoRA, optimizer settings, effective
+  batch 32, seed 23, and the 2,112-token no-truncation contract remain fixed. This is a recipe
+  follow-up, not a directly identical fourth row in the one-epoch dataset comparison. Never use
+  blind-v2 to choose among its checkpoints.
 
 ## Toolchain
 
@@ -236,8 +242,9 @@ Last updated: 2026-08-18
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
 5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve the completed
-   Sotto, Disfl-QA, and Nyra runs and monitor the active fixed-recipe combined run to terminal
-   status. Then evaluate the combined adapter with the locked vLLM server, 64 sharded publisher
-   clients, four diagnostic clients, raw semantic review, and no blind-v2 use. Preserve the
-   stricter reviewed-pilot path for later qualification work; repeat borderline results and do
-   not compare fixed-profile vLLM scores directly with sequential inference scores.
+   Sotto, Disfl-QA, Nyra, and superseded partial combined runs; monitor the three-epoch combined
+   learning-curve run to terminal status. Then evaluate each epoch checkpoint with the locked
+   vLLM server, 64 sharded publisher clients, four diagnostic clients, raw semantic review, and no
+   blind-v2 use. Preserve the stricter reviewed-pilot path for later qualification work; repeat
+   borderline results and do not compare fixed-profile vLLM scores directly with sequential
+   inference scores.

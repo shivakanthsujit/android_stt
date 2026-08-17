@@ -91,6 +91,19 @@ class CleanupTrainingPipelineTest(unittest.TestCase):
         )
         self.assertEqual("longest_formatted", longest["run_controls"]["selection"])
 
+    def test_direct_source_three_epoch_config_saves_each_combined_epoch(self) -> None:
+        config_path = REPO / "training/config/direct-source-training-combined-3epoch-v1.json"
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        combined = config["experiments"]["combined"]
+        self.assertEqual(3, config["common"]["epochs"])
+        self.assertEqual(13797, combined["expected_optimizer_steps"])
+        self.assertEqual(4599, combined["eval_steps"])
+        self.assertEqual(4599, combined["save_steps"])
+        resolved = direct_trainer.resolved_config(
+            config, "combined", Path(__file__), config_path, Path("/tmp/source-root"), "full"
+        )
+        self.assertEqual(13797, resolved["experiment"]["expected_optimizer_steps"])
+
     def test_direct_source_longest_smoke_selection_is_deterministic(self) -> None:
         rows = [
             {"input_ids": [1, 2], "attention_mask": [1, 1], "labels": [1, 2]},

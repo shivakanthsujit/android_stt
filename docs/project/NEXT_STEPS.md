@@ -134,11 +134,12 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   30/250 Nyra, with 23 substantive retired-diagnostic safety failures. Nyra reached 150/250 on its
   source but only 1,479/6,921 Sotto and 73/1,000 Disfl-QA, with 18 substantive safety failures.
   Both are source-specific no-go results.
-- [ ] Complete and evaluate the justified combined adapter. The active run is
-  `direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z` with 147,142/8,171 rows and 4,599
-  expected optimizer steps. After terminal artifact verification, run the same vLLM profile on
-  the combined publisher validation, each source split, and both retired diagnostics; audit every
-  non-exact retired raw output before deciding the next base/data/recipe experiment.
+- [ ] Complete and evaluate the justified combined learning curve. The initial one-epoch run was
+  explicitly stopped and preserved at step 92 after the user requested a real epoch-sufficiency
+  test. Run three epochs under the dedicated config, saving/evaluating at steps 4,599, 9,198, and
+  13,797. Evaluate every epoch checkpoint with the same vLLM profile on the combined publisher
+  validation, each source split, and both retired diagnostics; audit every non-exact retired raw
+  output before selecting an epoch or deciding the next base/data/recipe experiment.
 - [ ] Use the evidence to choose whether the next base comparison is Qwen3.5-0.8B, Gemma 3 1B, or
   whether data/recipe changes matter more. Do not use blind-v2 during this exploratory iteration.
 
