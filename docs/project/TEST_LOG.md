@@ -3,6 +3,22 @@
 All tests below used a physical Google Pixel 7 unless stated otherwise. Raw transcript contents are
 not persisted here; only representative accuracy observations and timing are recorded.
 
+## 2026-08-17 — Training-machine handoff validation (host only)
+
+- Verified `origin` points to `https://github.com/shivakanthsujit/android_stt.git` and `main`
+  tracks `origin/main`.
+- Resolved immutable source revisions with `git ls-remote`: Sotto
+  `183cc8fd58532f13fa192980185214de1bcd5acc`, Disfl-QA
+  `1f0c16171c77b3d3408be92c485f11b8998a9189`, and Nyra Disfluency Speech
+  `723e9e69bfbdc8214a9b8ce8815985e90afcbaa3`.
+- Host script tests: 51/51 passed.
+- Deterministic baseline tests: 10/10 passed.
+- Both frozen cleanup corpora validated: 24/24 and 45/45 structurally valid.
+- `git diff --check` passed.
+- Confirmed git ignores raw/work/private cleanup data, training runs, checkpoints, and model
+  artifacts while retaining `data/cleanup/README.md`.
+- No dataset payload, model training, checkpoint generation, or Android code change occurred.
+
 ## 2026-08-17 — Milestone 1 Moonshine
 
 ### Build verification

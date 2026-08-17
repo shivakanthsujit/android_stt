@@ -72,3 +72,10 @@
   Rejected it for Android and automatic labeling.
 - Confirmed that model training will happen later on the separate training machine. This Mac will
   only prepare portable data/tooling and run inference/evaluation.
+- Added the GitHub remote and a root agent-routing file plus a self-contained RTX A6000 handoff.
+  The handoff defines environment preflight, immutable source pins, data review/isolation,
+  train/resume/monitor/evaluate phases, artifact policy, and a copyable new-session bootstrap
+  instruction.
+- Selected Sotto transcript cleanup as the primary public-data candidate and Disfl-QA/Nyra
+  Disfluency Speech as supplements. Recorded immutable revisions and conservative rejection/
+  quarantine rules; no dataset was downloaded, converted, approved, or used for training here.

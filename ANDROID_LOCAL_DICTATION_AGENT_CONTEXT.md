@@ -43,6 +43,8 @@ The active bottleneck is **cleanup**, not STT:
   Dataset schema, validation, provenance, and contamination checks are implemented.
 - **Do not train on this Mac.** Prepare portable data/tooling here and run LoRA/QLoRA later on the
   separate training machine.
+- On that machine, start with `AGENTS.md` and `TRAINING_MACHINE_HANDOFF.md`; they contain the
+  current public-data pins, safety boundary, execution order, and resume/monitoring requirements.
 
 The earlier Liquid-first recommendations below are historical starting assumptions. Their measured
 no-go outcomes are preserved in `docs/evaluation/results/` and supersede them.

@@ -67,6 +67,13 @@ Last updated: 2026-08-17
     meaning three times, and followed one dictated instruction. It is not an automatic labeler.
 18. Prepare training data, validators, manifests, and runbooks on this Mac, but run LoRA/QLoRA only
     on the separate training machine. No local training job is authorized or needed now.
+19. Use Sotto transcript cleanup as the primary public-data candidate, with Disfl-QA and Nyra
+    Disfluency Speech as supplements. Pin immutable revisions and treat every row as untrusted;
+    reject or quarantine grammar rewrites, guessed ASR corrections, unsafe deletions, and other
+    policy conflicts before project splitting or training.
+20. A new RTX A6000 session may build and run the documented pilot, but it must pass Gate A first,
+    keep blind-v2 outside the optimization context, monitor/resume long jobs reproducibly, and keep
+    datasets, weights, checkpoints, secrets, and private references out of git.
 
 ## Android/toolchain
 

@@ -102,7 +102,7 @@ no lexical additions at all.
 
 ## Source and generation strategy
 
-Use four data sources, in descending order of control:
+Use five data sources, in descending order of control:
 
 1. **Human-authored semantic scenarios.** Write clean intent-bearing sentences covering personal
    messages, reminders, work notes, questions, commands, technical dictation, names, numbers,
@@ -113,13 +113,20 @@ Use four data sources, in descending order of control:
 3. **LLM-proposed candidates with human approval.** A generator may propose diverse scenarios and
    disfluencies, but it must not receive any frozen evaluation cases. Generated pairs are data only
    after validation and review; never accept the generator's target automatically.
-4. **Consented real STT transcripts.** Later, add opt-in pairs from actual phone dictation. Store no
+4. **Audited public cleanup/disfluency pairs.** Import only immutable, license-recorded revisions.
+   Treat rows as untrusted candidates, rebuild family/template splits, reject policy-conflicting
+   rewrites, and require the same validators and review as generated data. The selected sources and
+   pins are in `CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`.
+5. **Consented real STT transcripts.** Later, add opt-in pairs from actual phone dictation. Store no
    private transcript in logs by default. Redact personal data, group by speaker/session, and keep a
    separate provenance flag. These examples validate synthetic realism rather than changing the
    first training milestone.
 
-Public corpora are optional. Use one only after recording its license and whether derivative model
-training is permitted. Split by original conversation/speaker before generating variants.
+The pilot should begin with filtered Sotto data, supplemented by Disfl-QA and Nyra Disfluency
+Speech. Their permissive labels do not make their targets trusted: record exact revisions and file
+hashes, verify upstream provenance, and split by semantic family/source/speaker before use. If the
+audit finds systematic unsafe rewrites or unresolved licensing, fall back to a smaller
+human-authored/programmatic corpus instead of weakening the target policy.
 
 Generation should vary clause order, sentence length, vocabulary, grammatical person, dialectal
 fillers, entity type, Unicode script, and STT punctuation/casing. It must not train the model to
@@ -318,20 +325,24 @@ The latency target may be revised after measurement, but semantic gates may not.
 
 ## Concrete execution order
 
-1. Freeze and hash the existing 69 cases and mark them `evaluation_only` in the dataset tooling.
-2. Write the annotation policy, schema validator, split/dedup tool, and deterministic corruption
-   generators before generating bulk data.
-3. Author 300 independent semantic families and use them to build the 5,000/500 pilot without
-   touching frozen cases.
-4. Train matching adapters for Qwen3-0.6B and Qwen3.5-0.8B; select a base using Gate B ordering.
-5. Expand template and human-authored family diversity to 25,000/1,500, then train full v1.
-6. Independently author, double-review, hash, and lock blind v2 only after the training templates
-   are stable.
-7. Select exactly one checkpoint/prompt/decoder on dev, run old diagnostics, and execute blind v2.
-8. If Gate C passes, export Q4 and repeat quality checks before starting Pixel integration. If it
+1. Keep the existing 69 cases frozen and evaluation-only; their hashes are part of every data
+   manifest.
+2. Finish the annotation policy, source importer, near-duplicate/family splitter, and deterministic
+   corruption tooling around the committed schema validator.
+3. Fetch the three public sources only at their pinned revisions, audit licenses/targets, and build
+   a reviewed 5,000/500 pilot without touching frozen cases.
+4. Pass Gate A and commit the sanitized manifest/report before training.
+5. Train matching adapters for Qwen3-0.6B and Qwen3.5-0.8B; select a base using Gate B ordering.
+6. Expand source and human-authored family diversity to 25,000/1,500 only if the pilot validates
+   the approach.
+7. After templates stabilize, have an independent context author, double-review, hash, and seal
+   blind v2 outside the training job's readable path.
+8. Train the selected base on full v1, then select exactly one checkpoint/prompt/decoder on dev and
+   the old diagnostics before unsealing blind v2 once.
+9. If Gate C passes, export Q4 and repeat quality checks before starting Pixel integration. If it
    fails, record the failure class, retire v2 to diagnostics, and iterate with a newly authored
    blind v3.
-9. Add a consented real-STT canary set after the synthetic pipeline works. Keep it speaker/session
+10. Add a consented real-STT canary set after the text pipeline works. Keep it speaker/session
    isolated and use it to decide which synthetic corruptions are unrealistic or missing.
 
 This plan keeps STT and cleanup separable: cleanup development can proceed immediately using text,

@@ -7,3 +7,13 @@ captures/
 *.iml
 __pycache__/
 *.py[cod]
+
+# Training-machine data, caches, runs, and model artifacts.
+data/cleanup/raw/
+data/cleanup/work/
+data/cleanup/private/
+training/runs/
+training/checkpoints/
+training/models/
+.cache/huggingface/
+wandb/

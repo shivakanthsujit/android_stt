@@ -42,7 +42,10 @@ See [ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md](ANDROID_LOCAL_DICTATION_AGENT_CON
 product plan and milestone sequence.
 
 For a concise new-session handoff, current progress, decisions, device evidence, and the ordered
-work queue, start at [docs/project/README.md](docs/project/README.md).
+work queue, start at [docs/project/README.md](docs/project/README.md). A session running on the
+separate RTX A6000 training machine must start at
+[TRAINING_MACHINE_HANDOFF.md](TRAINING_MACHINE_HANDOFF.md) after reading the root
+[AGENTS.md](AGENTS.md).
 
 ## Privacy and networking
 

@@ -66,9 +66,11 @@ raw transcripts while cleanup quality is solved. Keep the stages unjoined until 
 
 Working references:
 
+- `TRAINING_MACHINE_HANDOFF.md`
 - `docs/research/VOICEINK_QWEN35_2B_SCREEN_2026-08-17.md`
 - `docs/evaluation/SPECIALIZED_CANDIDATE_SCREENING.md`
 - `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
+- `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
 
 ### Immediate public-model screen
 
@@ -92,11 +94,19 @@ separate training machine when it is available. Do not start training on this Ma
 
 - [x] Freeze a training schema for raw transcript, cleaned target, transformation labels, protected
   spans, and provenance. Never train on either committed evaluation corpus.
+- [x] Select and pin public candidate sources: Sotto transcript cleanup as primary, Disfl-QA for
+  question corrections, and Nyra Disfluency Speech for an audio-backed supplement. Treat every row
+  as untrusted until project validation/review.
+- [x] Add a self-contained RTX A6000 handoff covering environment preflight, source pins, data
+  isolation, training/evaluation deliverables, monitoring, resume, artifacts, and blind-v2 rules.
+- [ ] Build the pinned source fetcher, importer, conservative filter/quarantine rules,
+  near-duplicate family splitter, and deterministic source manifest.
 - [ ] Build a balanced, reviewable training/dev corpus covering fillers, repeats, false starts,
   explicit corrections, punctuation, commands/questions-as-data, adversarial text, names, numbers,
   uncertainty, negation, Unicode, and technical tokens.
-- [ ] Create a new blind v2 evaluation set before training or prompt work; keep its targets and
-  results out of the optimization loop.
+- [ ] Prepare the blind evaluator contract early. After training templates stabilize, have an
+  independent context author/double-review and seal blind v2 outside the training job's readable
+  path; do not use it for checkpoint or prompt selection.
 - [ ] Fine-tune the smallest practical base first (Qwen3 0.6B or Qwen3.5 0.8B), using the stronger
   task-tuned model as a teacher only when outputs pass deterministic preservation checks and human
   review.

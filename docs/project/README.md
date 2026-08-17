@@ -9,6 +9,7 @@ Start here when resuming Local Flow in a new session.
 | [DECISIONS.md](DECISIONS.md) | Durable technical/product decisions and their rationale |
 | [TEST_LOG.md](TEST_LOG.md) | Physical-device and build verification evidence |
 | [SESSION_LOG.md](SESSION_LOG.md) | Append-only summary of completed work by date |
+| [Training-machine handoff](../../TRAINING_MACHINE_HANDOFF.md) | Complete RTX A6000 data/training/evaluation workflow |
 
 Maintenance rule: update `CURRENT_STATE.md`, `NEXT_STEPS.md`, and `SESSION_LOG.md` at the end of
 every meaningful work session. Add stable decisions to `DECISIONS.md` and device evidence to
@@ -16,3 +17,7 @@ every meaningful work session. Add stable decisions to `DECISIONS.md` and device
 
 The full product plan remains in
 [ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md](../../ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md).
+
+Agents automatically receive the repository rules in [AGENTS.md](../../AGENTS.md). On the training
+machine, read the complete training handoff and every document it marks required before fetching
+data or starting a GPU job.

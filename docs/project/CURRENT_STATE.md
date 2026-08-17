@@ -5,6 +5,7 @@ Last updated: 2026-08-17
 ## Repository
 
 - Branch: `main`
+- Remote: `https://github.com/shivakanthsujit/android_stt.git`
 - Last verified milestone: Milestone 3 cross-family cleanup screen (see current `git log`)
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: Phase A ordinary Android benchmark app
@@ -78,8 +79,15 @@ Last updated: 2026-08-17
 - Task-specific data work has a versioned JSONL contract and standard-library validator covering
   provenance/review policy, frozen-corpus overlap, split leakage, anchors, lexical additions, and
   deterministic SHA-256 manifests. No training rows have been generated yet.
-- Training will run later on the separate training machine. Do not start LoRA/QLoRA training on
-  this Mac; use it for authoring/validation, local inference screens, and result analysis only.
+- Public candidate sources are now pinned for audit: Sotto transcript cleanup at
+  `183cc8fd58532f13fa192980185214de1bcd5acc`, Disfl-QA at
+  `1f0c16171c77b3d3408be92c485f11b8998a9189`, and Nyra Disfluency Speech English at
+  `723e9e69bfbdc8214a9b8ce8815985e90afcbaa3`. None has been imported or approved yet.
+- `TRAINING_MACHINE_HANDOFF.md` is the self-contained entry point for the RTX A6000 session. It
+  authorizes building the missing data/training/evaluation pipeline and running the pilot there,
+  subject to Gate A, monitoring, artifact, review, and blind-isolation rules.
+- Do not start LoRA/QLoRA training on this Mac; use it for Android work, authoring/validation, local
+  inference screens, and result analysis only.
 
 ## Toolchain
 
@@ -93,10 +101,11 @@ Last updated: 2026-08-17
 
 ## Resume checklist
 
-1. Read this file and `NEXT_STEPS.md`.
+1. Read root `AGENTS.md`, this file, and `NEXT_STEPS.md`.
 2. Run `git status --short` and preserve any uncommitted work.
-3. Run `./scripts/check-toolchain.sh` with the Pixel attached.
-4. Run `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Continue active Milestone 4 in `NEXT_STEPS.md`: build the reviewed training/dev corpus and freeze
-   blind v2. Keep the portable training recipe ready, but run it only on the separate training
-   machine.
+3. On the RTX A6000 machine, read `TRAINING_MACHINE_HANDOFF.md` completely and follow its Phase 0
+   preflight. Do not run the Mac/Pixel steps below.
+4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
+   `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
+5. Continue active Milestone 4 in `NEXT_STEPS.md`. The training-machine next action is the pinned
+   source fetch/import/audit pipeline—not an immediate unvalidated full training run.
