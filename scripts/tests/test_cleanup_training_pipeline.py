@@ -108,6 +108,16 @@ class CleanupTrainingPipelineTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "revision"):
                 direct_trainer.verify_source_identity(manifest, source_config, config_path)
 
+    def test_direct_source_repository_check_records_untracked_without_using_it(self) -> None:
+        repository = trainer.git_report()
+        direct_trainer.verify_tracked_repository_and_inputs(repository, (
+            REPO / "training/config/direct-source-training-v1.json",
+            REPO / "training/config/sources-v1.json",
+            REPO / "training/config/cleanup-instruction-v2.txt",
+        ))
+        self.assertTrue(repository["tracked_files_match_head"])
+        self.assertTrue(repository["untracked_files_are_not_training_inputs"])
+
     def test_safe_target_rejects_archive_escape(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

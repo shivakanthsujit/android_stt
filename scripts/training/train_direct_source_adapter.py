@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import subprocess
 import sys
 import traceback
 from collections import Counter
@@ -22,10 +23,10 @@ from cleanup_data_common import nfc  # noqa: E402
 from train_cleanup_adapter import (  # noqa: E402
     JsonlMetricsCallback,
     Telemetry,
+    committed_file_sha256,
     encode_record,
     git_report,
     sha256_file,
-    verify_clean_committed_run_inputs,
 )
 
 
@@ -277,6 +278,22 @@ def resolved_config(
     }
 
 
+def verify_tracked_repository_and_inputs(repository: dict[str, Any], paths: Iterable[Path]) -> None:
+    """Permit recorded untracked scratch files, but require tracked bytes to match HEAD."""
+
+    tracked = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+        cwd=REPO_ROOT, text=True, capture_output=True, check=True,
+    ).stdout.splitlines()
+    if tracked:
+        raise RuntimeError(f"training requires all tracked files to match HEAD: {tracked}")
+    for path in paths:
+        if committed_file_sha256(path) != sha256_file(path):
+            raise RuntimeError(f"working bytes differ from HEAD for required input: {path}")
+    repository["tracked_files_match_head"] = True
+    repository["untracked_files_are_not_training_inputs"] = True
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experiment", choices=("sotto", "disfl_qa", "nyra", "combined"), required=True)
@@ -293,8 +310,8 @@ def main() -> int:
     config = json.loads(args.config.read_text(encoding="utf-8"))
     repository = git_report()
     source_config_path = REPO_ROOT / config["source_config_path"]
-    verify_clean_committed_run_inputs(
-        repository, args.config, source_config_path, REPO_ROOT / config["instruction_path"]
+    verify_tracked_repository_and_inputs(
+        repository, (args.config, source_config_path, REPO_ROOT / config["instruction_path"])
     )
     resolved = resolved_config(
         config, args.experiment, args.source_manifest, args.config, args.source_root, args.run_purpose
