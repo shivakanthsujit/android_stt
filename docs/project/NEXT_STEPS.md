@@ -140,6 +140,8 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   13,797. Evaluate every epoch checkpoint with the same vLLM profile on the combined publisher
   validation, each source split, and both retired diagnostics; audit every non-exact retired raw
   output before selecting an epoch or deciding the next base/data/recipe experiment.
+  The active run is `direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z` from commit
+  `00fae17`; preserve its durable telemetry, logs, status, and all three resumable checkpoints.
 - [ ] Use the evidence to choose whether the next base comparison is Qwen3.5-0.8B, Gemma 3 1B, or
   whether data/recipe changes matter more. Do not use blind-v2 during this exploratory iteration.
 

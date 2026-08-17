@@ -327,3 +327,8 @@
   steps and saves/evaluates exactly every 4,599 steps, yielding epoch-1, epoch-2, and epoch-3
   checkpoints. All other model/data/optimizer/batch/seed/sequence settings remain unchanged.
   The complete 112-script-test and 10-host-test suites pass before launch.
+- Committed the learning-curve implementation as `00fae17`, created a clean detached training
+  worktree under `/data`, verified the A6000 was idle, and launched
+  `direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z`. The resolved 13,797-step config and
+  147,142/8,171-row zero-overlap source audit are present; 180-second telemetry and durable
+  terminal/error monitors are attached.

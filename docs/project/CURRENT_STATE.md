@@ -222,6 +222,11 @@ Last updated: 2026-08-18
   batch 32, seed 23, and the 2,112-token no-truncation contract remain fixed. This is a recipe
   follow-up, not a directly identical fourth row in the one-epoch dataset comparison. Never use
   blind-v2 to choose among its checkpoints.
+- The three-epoch run is active at
+  `/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z` from clean
+  training commit `00fae17`. Its resolved configuration records 13,797 expected optimizer steps
+  and the complete source audit again records 147,142/8,171 usable rows with zero frozen-surface
+  overlap. Durable 180-second telemetry plus terminal/error monitors are attached.
 
 ## Toolchain
 
