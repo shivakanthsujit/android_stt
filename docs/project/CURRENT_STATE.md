@@ -10,7 +10,8 @@ Last updated: 2026-08-17
 - Current phase: Phase A ordinary Android benchmark app
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
   no-go evaluation), 3 (cross-family generic-model quality screen)
-- Next milestone: 4 (STT-only evaluation); task-specific cleanup research remains independent
+- Active milestone: 4 (task-specific cleanup model qualification/training)
+- Deferred milestone: 5 (formal STT-only evaluation)
 
 ## Working functionality
 
@@ -35,6 +36,9 @@ Last updated: 2026-08-17
 - The runtime-neutral runner now applies a parity-tested port of the Android lexical/intent
   guardrails and emits scorer-compatible JSONL with raw output, guarded selection, TTFT, and total
   latency.
+- Cleanup is the current product bottleneck. The working offline Moonshine capture/transcription
+  path is the provisional speech input while task-specific cleanup is pursued. This is a priority
+  decision, not a claim that formal STT comparison is complete.
 
 ## Physical device
 
@@ -64,6 +68,18 @@ Last updated: 2026-08-17
   but it retained a superseded command and obeyed two embedded instructions. It is rejected.
 - Current host timings are Apple M2 screening measurements, not Pixel 7 results. Pixel integration
   was intentionally skipped because no candidate passed quality first.
+- The original 24 cases are a development/regression set. The 45-case held-out set has now informed
+  guardrail fixes, so it is also a regression set rather than a future blind test. Training work
+  must create leakage-isolated train/dev data and a new untouched blind v2 evaluation set.
+- The first specialized quality probe, VoiceInk Qwen3.5-2B Q4_K_M, is complete and rejected. It
+  reached 38/69 raw exact but only 2/10 explicit corrections, retained six superseded edits,
+  changed meaning/facts three times, and answered one dictated instruction. Its fine-tune license
+  is also undeclared.
+- Task-specific data work has a versioned JSONL contract and standard-library validator covering
+  provenance/review policy, frozen-corpus overlap, split leakage, anchors, lexical additions, and
+  deterministic SHA-256 manifests. No training rows have been generated yet.
+- Training will run later on the separate training machine. Do not start LoRA/QLoRA training on
+  this Mac; use it for authoring/validation, local inference screens, and result analysis only.
 
 ## Toolchain
 
@@ -81,5 +97,6 @@ Last updated: 2026-08-17
 2. Run `git status --short` and preserve any uncommitted work.
 3. Run `./scripts/check-toolchain.sh` with the Pixel attached.
 4. Run `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Start the STT-only fixed-audio evaluation in `NEXT_STEPS.md`. Keep cleanup independent and
-   unjoined; a task-specific cleanup fine-tune may be screened in parallel later.
+5. Continue active Milestone 4 in `NEXT_STEPS.md`: build the reviewed training/dev corpus and freeze
+   blind v2. Keep the portable training recipe ready, but run it only on the separate training
+   machine.

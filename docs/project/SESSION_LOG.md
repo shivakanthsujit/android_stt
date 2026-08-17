@@ -55,3 +55,20 @@
   guarded result now falls back on all three unsafe Gemma outputs.
 - Stopped before Android runtime integration because no candidate earned Pixel performance work.
   Cleanup remains unjoined; the next active milestone is repeatable STT-only evaluation.
+- Reprioritized after product review: cleanup is the actual blocker, while the current offline STT
+  path is provisionally adequate. Moved formal STT evaluation behind task-specific cleanup.
+- Started Milestone 4 with three parallel tracks: verify and screen the public VoiceInk
+  Qwen3.5-2B fine-tune, define leakage-safe fine-tuning data and blind-v2 evaluation, and prepare a
+  reproducible specialized-model host runbook.
+- Pinned the author's exact VoiceInk training prompt and checksum-addressed 1.19 GiB Q4_K_M
+  artifact, added a two-corpus llama.cpp screening orchestrator with full provenance, and began the
+  internal model download. The fine-tune license remains a distribution blocker.
+- Added the v1 cleanup-training JSONL contract and validator, including frozen-eval contamination,
+  family/template split leakage, review/provenance, lexical-anchor, and manifest hash checks. No
+  evaluation case has been reused as training data.
+- Completed the checksum-verified VoiceInk inference-only screen with its exact author prompt. Raw
+  output reached 12/24 seed exact and 26/45 regression exact, but only 2/10 corrections were exact;
+  audit found six retained superseded edits, three meaning/fact changes, and one answered command.
+  Rejected it for Android and automatic labeling.
+- Confirmed that model training will happen later on the separate training machine. This Mac will
+  only prepare portable data/tooling and run inference/evaluation.

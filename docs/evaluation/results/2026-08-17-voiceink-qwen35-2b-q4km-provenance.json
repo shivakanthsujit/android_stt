@@ -1,0 +1,142 @@
+{
+  "commands": {
+    "run_heldout-v1": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/ssujit/Documents/projects/android_stt/scripts/run-cleanup-openai.py",
+      "--base-url",
+      "http://127.0.0.1:18080/v1",
+      "--model",
+      "voiceink-qwen3.5-2b",
+      "--quantization",
+      "Q4_K_M",
+      "--cases",
+      "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/cleanup_cases_heldout_v1.jsonl",
+      "--output",
+      "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-heldout-v1.jsonl",
+      "--prompt-variant",
+      "voiceink_task_tuned",
+      "--temperature",
+      "0.1",
+      "--request-extra",
+      "docs/evaluation/request_extras/voiceink-qwen35-2b.json"
+    ],
+    "run_seed": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/ssujit/Documents/projects/android_stt/scripts/run-cleanup-openai.py",
+      "--base-url",
+      "http://127.0.0.1:18080/v1",
+      "--model",
+      "voiceink-qwen3.5-2b",
+      "--quantization",
+      "Q4_K_M",
+      "--cases",
+      "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/cleanup_cases.jsonl",
+      "--output",
+      "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-seed.jsonl",
+      "--prompt-variant",
+      "voiceink_task_tuned",
+      "--temperature",
+      "0.1",
+      "--request-extra",
+      "docs/evaluation/request_extras/voiceink-qwen35-2b.json"
+    ],
+    "score_heldout-v1": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/ssujit/Documents/projects/android_stt/scripts/score-cleanup-results.py",
+      "--cases",
+      "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/cleanup_cases_heldout_v1.jsonl",
+      "--format",
+      "json",
+      "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-heldout-v1.jsonl"
+    ],
+    "score_seed": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/ssujit/Documents/projects/android_stt/scripts/score-cleanup-results.py",
+      "--cases",
+      "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/cleanup_cases.jsonl",
+      "--format",
+      "json",
+      "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-seed.jsonl"
+    ]
+  },
+  "completed_at_utc": "2026-08-17T07:25:52Z",
+  "corpora": {
+    "heldout-v1": {
+      "path": "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/cleanup_cases_heldout_v1.jsonl",
+      "sha256": "cc1dfb4033b0336bface23f56e993fef894c5db87c57d137ffee188ce6ea2d71"
+    },
+    "seed": {
+      "path": "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/cleanup_cases.jsonl",
+      "sha256": "1cf4335b7679c81ca55c9d1cd4b9d25ee69a37dcecfff72f3c03740cd53573b9"
+    }
+  },
+  "host": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.0 (main, Oct  7 2025, 09:34:52) [Clang 16.0.0 (clang-1600.0.26.6)]"
+  },
+  "llama_server": {
+    "command": [
+      "/opt/homebrew/Cellar/llama.cpp/10450/bin/llama-server",
+      "--model",
+      "/Users/ssujit/Documents/projects/android_stt/build/models/voiceink-qwen3.5-2b-q4_k_m.gguf",
+      "--alias",
+      "voiceink-qwen3.5-2b",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18080",
+      "--ctx-size",
+      "16384",
+      "--gpu-layers",
+      "all",
+      "--flash-attn",
+      "on",
+      "--jinja",
+      "--reasoning",
+      "off"
+    ],
+    "executable": "/opt/homebrew/Cellar/llama.cpp/10450/bin/llama-server",
+    "version": "version: 0.1.0-dev (build 10450, commit ece963f41)\nbuilt with AppleClang 21.0.0.21000101 for Darwin arm64"
+  },
+  "model": {
+    "name": "voiceink-qwen3.5-2b",
+    "path": "/Users/ssujit/Documents/projects/android_stt/build/models/voiceink-qwen3.5-2b-q4_k_m.gguf",
+    "quantization": "Q4_K_M",
+    "sha256": "343721d889adcec76725373f51be207e6a980eec8411e4e6c553dd6c8329d175",
+    "size_bytes": 1274396352
+  },
+  "outputs": {
+    "provenance": "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-provenance.json",
+    "result_heldout-v1": "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-heldout-v1.jsonl",
+    "result_seed": "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-seed.jsonl",
+    "score_heldout-v1": "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-heldout-v1-score.json",
+    "score_seed": "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-seed-score.json",
+    "server_log": "/Users/ssujit/Documents/projects/android_stt/build/evaluation-results/2026-08-17-voiceink-qwen35-2b-q4km-native-server.log"
+  },
+  "settings": {
+    "output_token_cap": "input-derived 16-96",
+    "prompt": {
+      "path": "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/prompts/voiceink-qwen35-2b-system-v1.txt",
+      "sha256": "71e80330e2d26f30f484bdcbf4b610c1b08635691a18d8ed38eff9e041472077",
+      "variant": "voiceink_task_tuned"
+    },
+    "request_extra": {
+      "path": "/Users/ssujit/Documents/projects/android_stt/docs/evaluation/request_extras/voiceink-qwen35-2b.json",
+      "sha256": "90b6305f2d2a692bb9fbfed352e867248745402d3b87022f7b6055a0e9c4ebe0"
+    },
+    "seed": 23,
+    "temperature": 0.1
+  },
+  "started_at_utc": "2026-08-17T07:25:07Z",
+  "status": "complete",
+  "tools": {
+    "runner": {
+      "path": "/Users/ssujit/Documents/projects/android_stt/scripts/run-cleanup-openai.py",
+      "sha256": "7fcbc02ec2ef9c059fdec13266e1f6db5b37286d9bb4cafecbb9502353c93165"
+    },
+    "scorer": {
+      "path": "/Users/ssujit/Documents/projects/android_stt/scripts/score-cleanup-results.py",
+      "sha256": "e6c5c552fade8d8ed9127d63f78513549570a197de0ff38a3286d372d9cede8d"
+    }
+  }
+}

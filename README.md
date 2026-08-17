@@ -2,8 +2,9 @@
 
 Local Flow is a Pixel-first, fully local dictation project. The ordinary Android benchmark app can
 record microphone speech and transcribe it with **Moonshine Small Streaming English**. The active
-milestone separately benchmarks Liquid LFM2.5 cleanup models against a fixed direct-text corpus
-before joining speech recognition and cleanup.
+milestone qualifies or trains a task-specific cleanup model against fixed direct-text corpora
+before joining speech recognition and cleanup. The working offline STT path is provisionally
+adequate for prototyping; cleanup is the current blocker.
 
 Keeping these stages independently measurable in a normal Activity makes model quality, latency,
 offline behavior, and microphone lifecycle observable before Android keyboard work is introduced.
@@ -25,6 +26,10 @@ Implemented:
 - a 24-case, multi-prompt cleanup batch runner with JSONL export and deterministic host scoring
 - completed Pixel 7 evaluations of LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M`; all are no-go
   results, with 230M retained as the latency baseline and 1.2B as the capability baseline
+- a deterministic baseline, fresh 45-case regression suite, runtime-neutral streaming runner, and
+  completed host screen of Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B, and Gemma 1B; all
+  generic candidates are no-go results
+- reproducible specialized-model screening with pinned prompt/model/corpus/tool provenance
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
@@ -70,7 +75,7 @@ load in 1.93 seconds.
 | STT model | English Small Streaming, architecture 4 |
 | Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
 | Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
-| Active cleanup candidate | None; task-specific/stronger model required |
+| Active cleanup candidate | None; VoiceInk 2B probe rejected, sub-1B task-specific training next |
 
 AGP 8.13.2 and target API 36 are kept intentionally because they match the current Moonshine sample
 and Liquid LEAP 0.10.9 Android requirements.
@@ -182,10 +187,21 @@ preservation and safety signals.
 - LFM2.5-1.2B-Instruct `Q4_K_M`: no-go; best prompt reached 13/24 exact but changed meaning, answered
   dictated content, lost technical details, and failed all self-corrections. Cached load was 1.93 s;
   post-run memory was about 901 MiB PSS (922,265 KiB).
+- The cross-family host screen also rejected Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B,
+  and Gemma 1B. Gemma 1B was closest at 32/45 raw exact but still produced three semantic/safety
+  failures.
+- The first specialized probe was the author's VoiceInk Qwen3.5-2B Q4_K_M checkpoint, evaluated
+  locally with its exact training prompt. Its fine-tune license is undeclared, so it was never a
+  distributable app dependency.
 
-Cleanup is therefore not joined to STT. The next phase is a repeatable STT-only audio evaluation;
-cleanup will be revisited with a task-specific fine-tune or a stronger model only if its Pixel
-latency and memory are acceptable.
+The VoiceInk screen is complete and is also a no-go: 38/69 raw exact, 149/163 anchors, only 2/10
+explicit corrections exact, six retained superseded corrections, three meaning/fact changes, and
+one answered dictated instruction. It is not an automatic training-label source.
+
+Cleanup is therefore not joined to STT. The active phase prepares a leakage-isolated 0.6B/0.8B
+task-specific cleanup experiment for the separate training machine. This Mac is used only for data
+tooling, model inference, and evaluation; no training job is run here. Formal STT comparison is
+deferred until cleanup is no longer the demonstrated bottleneck.
 
 See [the test log](docs/project/TEST_LOG.md) and
 [static result summaries](docs/evaluation/results/) for the durable evidence.

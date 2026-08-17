@@ -14,6 +14,12 @@ LiteRT-LM for a supported LiteRT artifact and llama.cpp for GGUF portability. Th
 should prioritize a task-specific dictation-cleanup fine-tune, not another generic tiny chat model.
 Full results: `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`.
 
+Follow-up outcome: the public VoiceInk Qwen3.5-2B task-tuned Q4_K_M checkpoint was also screened
+with its exact author prompt. It reached only 2/10 exact corrections and produced ten critical
+outputs, including six retained superseded edits, three meaning/fact changes, and one followed
+instruction. It is rejected; see
+`docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`.
+
 The latest Qwen3.5-0.8B is eligible, but it is not automatically the strongest candidate: its
 official non-thinking instruction-following result is weaker than several older or differently
 trained small models, its text model comes from a multimodal family, and its Android path is

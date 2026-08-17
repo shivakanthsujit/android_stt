@@ -32,6 +32,10 @@ except ModuleNotFoundError:
 
 
 DEFAULT_CASES = Path("docs/evaluation/cleanup_cases.jsonl")
+VOICEINK_SYSTEM_PROMPT = (
+    Path(__file__).resolve().parents[1]
+    / "docs/evaluation/prompts/voiceink-qwen35-2b-system-v1.txt"
+)
 DEFAULT_BASE_URL = "http://127.0.0.1:8080/v1"
 DEFAULT_TIMEOUT_SECONDS = 120.0
 DETERMINISTIC_SEED = 23
@@ -121,6 +125,7 @@ PROMPT_VARIANTS = (
     "command_envelope",
     "strict_minimal_edit",
     "few_shot_corrections",
+    "voiceink_task_tuned",
 )
 
 class RunnerError(Exception):
@@ -222,6 +227,14 @@ def system_prompt(prompt_variant: str) -> str:
         return STRICT_MINIMAL_SYSTEM_PROMPT
     if prompt_variant == "few_shot_corrections":
         return FEW_SHOT_SYSTEM_PROMPT
+    if prompt_variant == "voiceink_task_tuned":
+        try:
+            # Exact training prompt pinned in docs/evaluation/prompts; see its runbook.
+            return VOICEINK_SYSTEM_PROMPT.read_text(encoding="utf-8").strip()
+        except OSError as exc:
+            raise RunnerError(
+                f"cannot read VoiceInk system prompt from {VOICEINK_SYSTEM_PROMPT}: {exc}"
+            ) from exc
     raise RunnerError(f"unsupported prompt variant {prompt_variant!r}")
 
 
@@ -240,6 +253,8 @@ def user_message(prompt_variant: str, raw_text: str) -> str:
         return f"<transcript_data>\n{raw_text}\n</transcript_data>"
     if prompt_variant == "few_shot_corrections":
         return f"INPUT TRANSCRIPT:\n{raw_text}\nOUTPUT TRANSCRIPT:"
+    if prompt_variant == "voiceink_task_tuned":
+        return f"<TRANSCRIPT>\n{raw_text}\n</TRANSCRIPT>"
     raise RunnerError(f"unsupported prompt variant {prompt_variant!r}")
 
 

@@ -78,3 +78,8 @@ recorded separately. The guardrail port is parity-tested against the Kotlin impl
 The first cross-family screen and its decision are recorded in
 `results/2026-08-17-cross-family-cleanup-screen.md`. Quality screening happens on the host before
 any candidate runtime is added to the Android app.
+
+For a task-specific GGUF, use the reproducible two-corpus workflow in
+[`SPECIALIZED_CANDIDATE_SCREENING.md`](SPECIALIZED_CANDIDATE_SCREENING.md). It starts and stops a
+local `llama-server`, records model/server provenance, and keeps candidate-native prompt/runtime
+settings explicit.

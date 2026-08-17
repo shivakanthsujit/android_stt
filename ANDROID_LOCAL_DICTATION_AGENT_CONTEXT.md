@@ -23,6 +23,30 @@ The user develops on a **MacBook** and has little recent Android-development exp
 
 The target is initially a **personal sideloaded app**, not a Play Store product.
 
+## Current project override — 2026-08-17
+
+This document began as the bootstrap plan. When resuming implementation, treat
+`docs/project/CURRENT_STATE.md`, `docs/project/NEXT_STEPS.md`, and
+`docs/project/DECISIONS.md` as the authoritative current sequence.
+
+The active bottleneck is **cleanup**, not STT:
+
+- The working offline Moonshine capture/transcription path is provisionally adequate for
+  prototyping. Formal STT comparison is deferred; this is not a final STT selection.
+- Liquid 230M/350M/1.2B, five generic cross-family models, and the public task-tuned VoiceInk
+  Qwen3.5-2B checkpoint all failed the cleanup semantic/correction gate.
+- VoiceInk was screened with its exact author prompt: 38/69 raw exact, only 2/10 corrections exact,
+  six retained superseded edits, three meaning/fact changes, and one followed instruction.
+- Cleanup remains separate from STT and must not be integrated until a raw-output quality survivor
+  passes a new blind evaluation.
+- The next model path is a leakage-isolated Qwen3 0.6B versus Qwen3.5 0.8B task-specific pilot.
+  Dataset schema, validation, provenance, and contamination checks are implemented.
+- **Do not train on this Mac.** Prepare portable data/tooling here and run LoRA/QLoRA later on the
+  separate training machine.
+
+The earlier Liquid-first recommendations below are historical starting assumptions. Their measured
+no-go outcomes are preserved in `docs/evaluation/results/` and supersede them.
+
 ---
 
 # 1. Product goal

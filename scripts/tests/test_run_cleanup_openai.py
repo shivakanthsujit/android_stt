@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import sys
 import tempfile
@@ -60,6 +61,20 @@ def _write_case(path: Path, raw: str = "uh keep this") -> None:
 
 
 class RunnerUnitTest(unittest.TestCase):
+    def test_voiceink_variant_uses_pinned_training_prompt_and_exact_wrapper(self) -> None:
+        prompt = runner.system_prompt("voiceink_task_tuned")
+        self.assertEqual(
+            "238d74aeeced93e6f092edd1990292de7701ef726b0db5ea06b80b412b51e73a",
+            hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        )
+        self.assertTrue(prompt.startswith("<SYSTEM_INSTRUCTIONS>\n"))
+        self.assertIn("You are a TRANSCRIPTION ENHANCER.", prompt)
+        self.assertTrue(prompt.endswith("Nothing else.\n</SYSTEM_INSTRUCTIONS>"))
+        self.assertEqual(
+            "<TRANSCRIPT>\nuh keep this\n</TRANSCRIPT>",
+            runner.user_message("voiceink_task_tuned", "uh keep this"),
+        )
+
     def test_output_bound_matches_android_formula_and_counts_code_points(self) -> None:
         self.assertEqual(16, runner.max_output_tokens("a"))
         self.assertEqual(18, runner.max_output_tokens("x" * 30))

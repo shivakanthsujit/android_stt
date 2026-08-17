@@ -20,6 +20,8 @@ Last updated: 2026-08-17
    stop it synchronously on Stop.
 4. Treat Android's built-in on-device SpeechRecognizer as an empirical A/B candidate, not an
    assumed replacement. Pixel-specific quality and punctuation must be measured.
+5. Defer the formal STT comparison while cleanup is the demonstrated blocker. The current working
+   offline Moonshine path is a provisional input, not the final STT selection.
 
 ## Cleanup
 
@@ -52,6 +54,19 @@ Last updated: 2026-08-17
     untuned small chat model.
 13. Keep the deterministic cleaner as a near-zero-latency control, not as the selected product
     cleaner: it scored 0/7 exact on held-out self-corrections.
+14. Make task-specific cleanup the active milestone. First screen the public VoiceInk Qwen3.5-2B
+    fine-tune as a quality probe; if it is too large or slow, use it only as a reviewed teacher and
+    fine-tune a smaller Qwen base.
+15. The committed 24-case and 45-case suites are regression evidence, not training data. Because
+    the 45-case set informed guardrail fixes, create a new untouched blind v2 set before measuring
+    any trained model's generalization.
+16. A 2B model may establish achievable cleanup quality without being shippable. Android runtime
+    work remains gated on both semantic quality and a mobile-appropriate quantized artifact.
+17. Reject the VoiceInk Qwen3.5-2B Q4_K_M checkpoint after its exact native-prompt screen. It failed
+    8/10 corrections semantically/exactly, retained superseded content six times, changed facts or
+    meaning three times, and followed one dictated instruction. It is not an automatic labeler.
+18. Prepare training data, validators, manifests, and runbooks on this Mac, but run LoRA/QLoRA only
+    on the separate training machine. No local training job is authorized or needed now.
 
 ## Android/toolchain
 

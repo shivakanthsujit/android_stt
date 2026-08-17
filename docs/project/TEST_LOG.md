@@ -98,3 +98,16 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Final Android verification: offline `lintDebug testDebugUnitTest assembleDebug` succeeded (55
   tasks). Debug APK: about 62 MiB, SHA-256
   `71af1c0ef2a1967b48a4f645681d3dd82ba4435fffc6ae17035c7ba0463fae56`.
+
+## 2026-08-17 — VoiceInk Qwen3.5-2B task-tuned screen
+
+- Internal inference only; no training job. Author-published 1,274,396,352-byte Q4_K_M GGUF,
+  SHA-256 `343721d889adcec76725373f51be207e6a980eec8411e4e6c553dd6c8329d175`.
+- Exact author training prompt and `<TRANSCRIPT>` wrapper; llama.cpp build 10450; non-thinking;
+  temperature 0.1; seed 23; input-derived 16–96 token cap.
+- Seed raw: 12/24 exact, 55/61 anchors, 0/3 corrections; median TTFT 122 ms, total 492 ms.
+- Regression-v1 raw: 26/45 exact, 94/102 anchors, 2/7 corrections; median TTFT 122 ms, total 396 ms.
+- Independent audit: 21 harmless differences, 6 retained superseded corrections, 3 meaning/fact
+  changes, and 1 followed instruction. Strict no-go; no Pixel runtime work.
+- Full report and raw/provenance artifacts:
+  `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`.

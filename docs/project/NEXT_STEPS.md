@@ -59,7 +59,64 @@ Full evidence: `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.m
 
 Do not join cleanup to STT during this milestone.
 
-## Active next: Milestone 4 — STT-only evaluation
+## Active: Milestone 4 — task-specific cleanup
+
+Cleanup is the blocking stage. The current offline STT path is provisionally good enough to supply
+raw transcripts while cleanup quality is solved. Keep the stages unjoined until cleanup passes.
+
+Working references:
+
+- `docs/research/VOICEINK_QWEN35_2B_SCREEN_2026-08-17.md`
+- `docs/evaluation/SPECIALIZED_CANDIDATE_SCREENING.md`
+- `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
+
+### Immediate public-model screen
+
+- [x] Verify the exact public VoiceInk Qwen3.5-2B fine-tune artifact, license, template, and GGUF
+  quantization. Preserve model revision and file checksum.
+- [x] Run it through the existing host runner on the frozen 24-case and 45-case regression suites.
+- [x] Manually audit every non-exact response and every must-not-answer/self-correction case. Raw
+  output, not guardrail fallback, must pass the semantic gate.
+- [x] Treat the 2B model as a quality probe or teacher if it is too large for an inline Pixel
+  keyboard. Do not integrate it into Android solely because it beats the generic candidates.
+
+Decision: VoiceInk is a no-go at 38/69 raw exact and 2/10 corrections, with ten critical outputs.
+It may propose training candidates only under deterministic checks and human review; never accept
+its labels automatically. Full report:
+`docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`.
+
+### Small-model fine-tuning path
+
+Prepare all data and training inputs portably in this repository, but run training only on the
+separate training machine when it is available. Do not start training on this Mac.
+
+- [x] Freeze a training schema for raw transcript, cleaned target, transformation labels, protected
+  spans, and provenance. Never train on either committed evaluation corpus.
+- [ ] Build a balanced, reviewable training/dev corpus covering fillers, repeats, false starts,
+  explicit corrections, punctuation, commands/questions-as-data, adversarial text, names, numbers,
+  uncertainty, negation, Unicode, and technical tokens.
+- [ ] Create a new blind v2 evaluation set before training or prompt work; keep its targets and
+  results out of the optimization loop.
+- [ ] Fine-tune the smallest practical base first (Qwen3 0.6B or Qwen3.5 0.8B), using the stronger
+  task-tuned model as a teacher only when outputs pass deterministic preservation checks and human
+  review.
+- [ ] Quantize the best checkpoint and re-run seed, regression, and blind-v2 quality gates with the
+  same short output bound and non-thinking behavior.
+
+### Qualification gate
+
+- [ ] Require zero meaning changes, invented content, or answered/obeyed dictation on blind v2.
+- [ ] Require reliable explicit self-corrections and full preservation of protected names, numbers,
+  negation, uncertainty, paths, versions, and code-like tokens.
+- [ ] Compare exact match, edit precision/recall, protected-span preservation, fallback rate, and
+  manual semantic audit; do not select on aggregate exact match alone.
+- [ ] Advance only a quality-passing quantized checkpoint to Pixel. Then record load time, warm TTFT
+  and total latency, peak PSS/RSS, model bytes, thermal drift, and offline cache reuse.
+
+Decision point: use the public task-tuned model, train a smaller model, or ship conservative
+deterministic cleanup while generative corrections remain disabled.
+
+## Deferred: Milestone 5 — STT-only evaluation
 
 - Keep cleanup unloaded and do not join the pipeline.
 - Define a fixed, repeatable audio/transcript corpus covering conversational speech, names, numbers,
@@ -70,6 +127,8 @@ Do not join cleanup to STT during this milestone.
   `SpeechRecognizer` if its offline path can be made deterministic.
 - Record memory, thermal behavior, model load time, and offline cache behavior for each candidate.
 - Select an STT engine on measured quality rather than the current interactive anecdotes.
+
+This remains required before final product selection, but it is not the current bottleneck.
 
 ## Later: joined pipeline
 
@@ -82,7 +141,5 @@ Do not join cleanup to STT during this milestone.
 
 ## After the joined pipeline
 
-1. Revisit cleanup with a task-specific fine-tune or stronger acceptable model.
-2. Build the joined pipeline only after both independent stages pass.
-3. Implement the minimal voice-only `InputMethodService`.
-4. Add daily-driver lifecycle, cancel/undo, interruptions, sensitive fields, and polish.
+1. Implement the minimal voice-only `InputMethodService`.
+2. Add daily-driver lifecycle, cancel/undo, interruptions, sensitive fields, and polish.
