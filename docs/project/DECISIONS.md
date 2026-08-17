@@ -35,8 +35,15 @@ Last updated: 2026-08-17
    well, and summaries can preserve some anchors while changing intent.
 6. Require zero meaning changes, zero answered instructions after guardrails, and successful explicit
    self-correction handling before joining cleanup to STT.
-7. Park generic-model cleanup work after the 1.2B no-go. Continue with STT-only evaluation and
-   revisit cleanup with a task-specific fine-tune or stronger acceptable model.
+7. The three Liquid no-go results reject those candidates, not all small-model cleanup. Before STT
+   integration, run one bounded cross-family screen: Granite 4.0 H 350M, Qwen3-0.6B no-think, and
+   Gemma 3 270M, with Qwen3.5-0.8B and Gemma 3 1B reserved for a second wave.
+8. Screen quality before adding a runtime to the Android app. Only models with zero semantic safety
+   failures and successful self-corrections earn Pixel performance work.
+9. Prefer LiteRT-LM for the first Qwen Android run and llama.cpp for GGUF/Granite portability.
+   Benchmark LiteRT CPU and GPU on Pixel 7; do not assume a Tensor G2 NPU path.
+10. Benchmark deterministic cleanup and a hybrid deterministic/LLM router. Comparable open Android
+    keyboards show that conservative mechanical cleanup can cover common cases without generation.
 
 ## Android/toolchain
 

@@ -5,12 +5,12 @@ Last updated: 2026-08-17
 ## Repository
 
 - Branch: `main`
-- Last verified milestone commit: `3273684 Build local Moonshine dictation benchmark`
+- Last verified milestone commit: `8dce7ab Evaluate local cleanup models`
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: Phase A ordinary Android benchmark app
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and
   generic-model no-go evaluation)
-- Next milestone: 3 (STT-only evaluation; cleanup remains unjoined)
+- Next milestone: 3 (cross-family cleanup candidate screen; cleanup remains unjoined)
 
 ## Working functionality
 
@@ -35,8 +35,7 @@ Last updated: 2026-08-17
 - Google Pixel 7 (`panther`), ARM64, adb serial `33040DLH20004E`.
 - Cached Moonshine model remains installed on the device.
 - Pixel `stay_on_while_plugged_in` was restored to its original `0`; airplane mode is disabled.
-- The last committed Moonshine milestone is the privacy-correct build from commit `3273684`;
-  cleanup evaluation builds are currently uncommitted Milestone 2 work.
+- The cleanup harness and all three Liquid evaluations are committed in `8dce7ab`.
 
 ## Known issues and observations
 
@@ -72,4 +71,5 @@ Last updated: 2026-08-17
 2. Run `git status --short` and preserve any uncommitted work.
 3. Run `./scripts/check-toolchain.sh` with the Pixel attached.
 4. Run `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Start the STT-only evaluation in `NEXT_STEPS.md`. Keep cleanup independent and unjoined.
+5. Start the bounded cleanup candidate screen in `NEXT_STEPS.md`. Keep cleanup independent and
+   unjoined.

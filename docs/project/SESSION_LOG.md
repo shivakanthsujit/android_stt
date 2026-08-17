@@ -32,3 +32,11 @@
   cleanup before starting the independent STT evaluation phase.
 - Removed the temporary app/device stay-awake overrides after the evals and restored the Pixel's
   original screen-timeout behavior.
+- Committed the complete Milestone 2 cleanup harness, results, guardrails, and no-go decision as
+  `8dce7ab Evaluate local cleanup models`.
+- Researched current local-dictation projects and small on-device models. No audited open Android
+  project was found with the exact local-STT + local-small-LLM + inline-IME pipeline. The strongest
+  public patterns were task-specific Qwen fine-tuning and deterministic/hybrid cleanup.
+- Selected a bounded cross-family screen: Granite 4.0 H 350M, Qwen3-0.6B no-think, and Gemma 3
+  270M first; Qwen3.5-0.8B and Gemma 3 1B second. Chose LiteRT-LM for the first Qwen Android run and
+  llama.cpp for GGUF/Granite portability, subject to the fixed quality gate.
