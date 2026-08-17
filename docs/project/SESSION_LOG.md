@@ -219,3 +219,30 @@
   two-epoch refinement at 2e-6, and checkpoint soup. Recorded immutable primary-source links and
   a comparison with the active Qwen LoRA recipe in
   `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`.
+
+## 2026-08-18 — Full Sotto completion and interim evaluation
+
+- The full managed Sotto run completed all 4,235 optimizer steps and exited zero after 7,662.1
+  seconds. Final train loss was 0.09389; publisher-validation loss improved from 0.09679 at step
+  1,059 to 0.07938 at step 4,235. Checkpoints at 1,059, 2,118, 3,177, and 4,235 include adapter,
+  optimizer, scheduler, RNG, and trainer state. The final adapter is 40,422,168 bytes and exactly
+  matches checkpoint 4,235 with SHA-256
+  `22736a4d4aff8b5788386a80d643296874c3b54dd980404e7196a5665023fa2b`.
+- Run root:
+  `/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z`.
+  Final adapter is `final-adapter/`; resumable state is in `checkpoint-*`, `trainer_state.json`,
+  `metrics.jsonl`, and `status.json`. Raw evaluation artifacts are under `evaluation/` and remain
+  outside Git.
+- Ran the Sotto adapter concurrently on the untouched Disfl-QA dev and Nyra validation publisher
+  splits. Disfl-QA reached 472/1,000 exact with 732 guardrail flags; Nyra reached 32/250 exact with
+  76 flags. Three concurrent Qwen processes saturated the A6000 while using only about 6.0/49.1
+  GiB VRAM. The evidence does not support skipping either standalone source training.
+- Completed raw generation/scoring on the retired 24- and 45-case suites: 15/24 and 36/45 exact,
+  153/163 anchors, 7/10 self-corrections, 15/17 must-not-answer, no empty outputs, 11 guardrail
+  flags, and one cap hit. Agent review of every non-exact output found eight substantive raw-policy
+  failures. This is a large quality improvement but fails the raw semantic-safety gate and is not
+  a deployment candidate; the audit is not a human qualification.
+- Added the sanitized interim evidence report at
+  `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-interim-evaluation.json`. Full 6,921-row
+  Sotto publisher generation remains active under the same run directory and is monitored every
+  500 records with immediate failure reporting.

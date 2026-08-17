@@ -124,7 +124,7 @@ Last updated: 2026-08-17
 - A separate direct-source trainer/config now supports Sotto, Disfl-QA, Nyra, and combined
   publisher splits without weakening the reviewed-pilot Gate A path. It verifies source
   revisions/bytes/hashes, nonempty-pair counts, frozen-corpus isolation, exact optimizer steps,
-  assistant-only masking, and the no-truncation 1,024-token contract.
+  assistant-only masking, and the no-truncation 2,112-token contract.
 - The exact Qwen3-0.6B snapshot is cached and the 32-row/two-step Sotto smoke completed at run
   `direct-sotto-qwen3-0.6b-smoke2-seed23-20260817T121729Z`: step 2, train loss 1.4543, no
   truncation, 10,092,544 trainable LoRA parameters, checkpoint plus final adapter present. Two
@@ -147,12 +147,31 @@ Last updated: 2026-08-17
   batch 8 passes at the 2,050-token maximum. The authorized recipe is 2,112 tokens plus microbatch
   4 / accumulation 8, preserving effective batch 32 and all expected step counts. Evidence is
   `docs/evaluation/results/2026-08-17-direct-sotto-2112-memory-diagnostic.json`.
-- The full 135,503-row Sotto run is active at
+- The full 135,503-row Sotto run completed successfully at
   `/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z` from training
   commit `c556709`. It passed complete no-truncation audits (train maximum 1,838; validation
-  maximum 2,050). At 2026-08-17 12:56 UTC it was healthy at optimizer step 400/4,235, loss 0.1031,
-  gradient norm 0.36, with managed three-minute health and terminal-status monitors active. The
-  6,921 publisher-validation cases are prepared outside Git for immediate post-run generation.
+  maximum 2,050), reached 4,235/4,235 optimizer steps, and exited zero. Train loss was 0.09389;
+  validation loss improved from 0.09679 at step 1,059 to 0.07938 at step 4,235. Runtime was
+  7,662.1 seconds. Resumable checkpoints are under `checkpoint-1059`, `checkpoint-2118`,
+  `checkpoint-3177`, and `checkpoint-4235`; the final adapter is under `final-adapter`, and the
+  root `trainer_state.json` and `status.json` record the terminal state.
+- The final 40,422,168-byte adapter has SHA-256
+  `22736a4d4aff8b5788386a80d643296874c3b54dd980404e7196a5665023fa2b` and exactly matches the
+  step-4,235 checkpoint adapter. Its config SHA-256 is
+  `f08b77c9295ebedfee2c0230f7277c7ec5d17f33ea54d040c19440b19d71249d`.
+- Retired diagnostics are complete: 15/24 seed exact, 36/45 heldout exact, 51/69 combined, 153/163
+  anchors, 7/10 self-corrections, and 15/17 must-not-answer cases. Agent review of all 18 non-exact
+  outputs found eight substantive raw-policy failures, including intent change, answered content,
+  protected entity/name/identifier changes, and substantive deletion. Raw semantic safety fails;
+  this adapter is not a deployment candidate and guardrails cannot convert it into one.
+- Cross-dataset generation is complete. The Sotto adapter reached 472/1,000 exact on Disfl-QA dev
+  with 732 guardrail flags and 32/250 exact on Nyra validation with 76 guardrail flags. Neither
+  result justifies skipping standalone source training. Full Sotto publisher generation is still
+  running at
+  `evaluation/publisher-validation-results.jsonl`; its expected final count is 6,921.
+- Sanitized training, artifact, cross-dataset, and retired-diagnostic evidence is in
+  `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-interim-evaluation.json`. Raw publisher
+  pairs/results and model artifacts remain under `/data`, outside Git.
 - Sotto has no located formal paper; the publisher's evolving Hugging Face model card is its
   stated training research document. The closest detailed reference uses LFM2.5-350M full SFT for
   three epochs at 3e-5, effective batch 8, AdamW beta2 0.95, cosine/50-step warmup, packed 4,096
@@ -182,7 +201,7 @@ Last updated: 2026-08-17
    preflight. Do not run the Mac/Pixel steps below.
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve and monitor the
-   active Sotto-only direct-source Qwen3-0.6B run, then execute its publisher-validation and
-   retired-diagnostic evaluation from `docs/training/DIRECT_SOURCE_EXPERIMENT_PLAN.md`; preserve
-   the stricter reviewed-pilot path for later qualification work.
+5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve the completed
+   Sotto run, finish/score its active publisher-validation generation, then use the documented
+   failures to select the next separately named source/recipe experiment. Preserve the stricter
+   reviewed-pilot path for later qualification work.

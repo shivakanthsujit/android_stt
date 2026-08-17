@@ -186,23 +186,29 @@ not mean the model is deployment-safe.
 
 ## Current execution state
 
-The authorized full Sotto run is
-`/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z`. It uses all
-135,503 pinned train rows without truncation. At 2026-08-17 12:56 UTC it was healthy at step
-400/4,235 with loss 0.1031 and gradient norm 0.36. Managed process, metrics, GPU/disk/checkpoint,
-and terminal-status monitoring remain active. Publisher validation has been exported outside Git
-for evaluation immediately after completion.
+The authorized full Sotto run completed successfully at
+`/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z`. It used all
+135,503 pinned train rows without truncation, reached 4,235/4,235 steps, and exited zero. Final
+train loss is 0.09389 and final validation loss is 0.07938. Resumable checkpoints are
+`checkpoint-1059`, `checkpoint-2118`, `checkpoint-3177`, and `checkpoint-4235`; the terminal
+adapter is `final-adapter/` and matches checkpoint 4,235 exactly.
+
+Retired diagnostics and cross-dataset evaluations are complete. Raw semantic safety failed on
+eight substantive cases, and Sotto-to-Disfl-QA/Nyra transfer was not sufficient to skip either
+standalone training run. Full generation over the 6,921-row Sotto publisher validation split is
+still active under `evaluation/publisher-validation-results.jsonl`. Sanitized interim evidence and
+artifact hashes are in
+`docs/evaluation/results/2026-08-18-direct-sotto-qwen3-interim-evaluation.json`.
 
 ## What the next session should do
 
 1. Read `AGENTS.md`, `TRAINING_MACHINE_HANDOFF.md`, and this file completely.
-2. Preserve the current dirty worktree and do not disturb the active managed run.
-3. Monitor Sotto to a terminal state and verify its final adapter, trainer state, checkpoints, and
-   exit status.
-4. Evaluate publisher validation plus the retired 69 diagnostics, including raw semantic review,
-   before launching Disfl-QA, Nyra, or combined training.
-5. Use the result and the Sotto publisher-recipe comparison to decide whether the next controlled
-   study should remain a dataset comparison or test three epochs/full fine-tuning.
+2. Preserve the completed Sotto run and do not disturb its active publisher evaluator.
+3. Monitor publisher generation to 6,921/6,921, verify exit status and hashes, then score it.
+4. Launch the standalone Disfl-QA and Nyra source adapters with the identical recipe; cross-transfer
+   evidence does not justify skipping them.
+5. Compare the three source adapters before deciding whether to pay for the combined run or instead
+   test three epochs/full fine-tuning on the best source recipe.
 
 The stricter reviewed 5,000/500 pilot remains available later for safety-focused iteration. It is
 not the immediate next action for this exploratory track.

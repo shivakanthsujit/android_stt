@@ -119,10 +119,14 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   batch 8, packed 4,096-token context, AdamW beta2 0.95, and later GRPO/refinement/soup stages.
   Preserve the sourced comparison in
   `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`; do not change the active recipe.
-- [ ] Evaluate the Sotto adapter on publisher validation and the retired 69 diagnostics, including
-  raw semantic review and A6000 TTFT/total-latency/throughput/VRAM measurements.
-- [ ] If the Sotto run completes cleanly, repeat the identical recipe for full Disfl-QA, full Nyra
-  text pairs, and the combined train splits; write one four-way comparison report.
+- [ ] Finish the active 6,921-row Sotto publisher-validation generation and score it. Retired 69-case
+  generation/scoring and agent semantic review are complete: 51/69 exact but eight substantive raw
+  policy failures, so the adapter is not deployment-safe. Cross-dataset generation is also
+  complete: Disfl-QA 472/1,000 exact and Nyra 32/250 exact. See
+  `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-interim-evaluation.json`.
+- [ ] Train standalone Disfl-QA and Nyra adapters with the identical fixed recipe after publisher
+  scoring completes; cross-dataset transfer was not strong enough to skip either. Then decide
+  whether a combined run adds enough evidence to justify its cost and write the comparison report.
 - [ ] Use the evidence to choose whether the next base comparison is Qwen3.5-0.8B, Gemma 3 1B, or
   whether data/recipe changes matter more. Do not use blind-v2 during this exploratory iteration.
 
