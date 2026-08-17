@@ -124,8 +124,15 @@ Last updated: 2026-08-17
 - A separate direct-source trainer/config now supports Sotto, Disfl-QA, Nyra, and combined
   publisher splits without weakening the reviewed-pilot Gate A path. It verifies source
   revisions/bytes/hashes, nonempty-pair counts, frozen-corpus isolation, exact optimizer steps,
-  assistant-only masking, and the no-truncation 1,024-token contract. No model download, adapter,
-  checkpoint, or GPU training run exists yet. The next action is the two-step Sotto smoke.
+  assistant-only masking, and the no-truncation 1,024-token contract.
+- The exact Qwen3-0.6B snapshot is cached and the 32-row/two-step Sotto smoke completed at run
+  `direct-sotto-qwen3-0.6b-smoke2-seed23-20260817T121729Z`: step 2, train loss 1.4543, no
+  truncation, 10,092,544 trainable LoRA parameters, checkpoint plus final adapter present. Two
+  earlier mechanical attempts failed before any optimizer step and led to committed Transformers
+  5.14 compatibility fixes for mapped chat-template output and `TrainingArguments`.
+- The full one-epoch Sotto run has not started. Its required pre-run push is blocked because
+  `dante` has neither working HTTPS GitHub credentials nor an authorized GitHub SSH key. Local
+  commits are complete; do not waive the push gate implicitly.
 - The current base-model reassessment keeps Qwen3-0.6B plus BF16 rank-16 LoRA for the controlled
   source comparison, then prioritizes Qwen3.5-0.8B as the stronger-base follow-up. Gemma 3 1B is
   the quality alternative and LFM2.5-350M is the deployment-speed wildcard; Gemma 4 E2B is outside

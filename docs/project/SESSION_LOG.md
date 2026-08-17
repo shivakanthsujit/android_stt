@@ -147,3 +147,14 @@
   raw/target overlap with the 69 frozen diagnostic surfaces was found.
 - All 97 script tests and all 10 host tests pass. Verified the idle 49,140 MiB RTX A6000, driver
   550.144.03, PyTorch 2.6.0+cu124, CUDA 12.4, and BF16 availability before the smoke launch.
+- The smoke caught two mechanical incompatibilities before training: Transformers 5.14 returns a
+  mapping from Qwen's chat template and no longer accepts `overwrite_output_dir` in
+  `TrainingArguments`. Added focused compatibility fixes to the shared/direct trainers; all 98
+  script tests and 10 host tests pass afterward.
+- The third, unchanged smoke attempt completed at run
+  `direct-sotto-qwen3-0.6b-smoke2-seed23-20260817T121729Z`: two optimizer steps, 1.4543 final train
+  loss, 5.019 seconds trainer runtime, maximum formatted length 229 train/273 validation tokens,
+  no truncation, checkpoint-2, and a 40,422,168-byte final adapter.
+- Committed the pipeline and compatibility fixes locally through `9318f32`. Push is blocked:
+  HTTPS cannot obtain credentials and the existing SSH key is not authorized for GitHub. The full
+  one-epoch Sotto run remains unlaunched pending the required pre-run push or explicit direction.

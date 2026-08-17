@@ -99,7 +99,9 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   pilot Gate A path.
 - [x] Fix Qwen3-0.6B, one epoch, BF16 LoRA rank 16, effective batch 32, learning rate 2e-4, seed
   23, assistant-only loss, and a no-thinking 1,024-token format for the four-way comparison.
-- [ ] Run one 32-row/two-step mechanical smoke, then train the full 135,503-row Sotto train split.
+- [x] Run one 32-row/two-step mechanical smoke on Sotto and verify checkpoint/final-adapter output.
+- [ ] Restore GitHub authentication on `dante` and push the local training commits, then train the
+  full 135,503-row Sotto train split without changing the fixed recipe.
 - [ ] Evaluate the Sotto adapter on publisher validation and the retired 69 diagnostics, including
   raw semantic review and A6000 TTFT/total-latency/throughput/VRAM measurements.
 - [ ] If the Sotto run completes cleanly, repeat the identical recipe for full Disfl-QA, full Nyra

@@ -158,3 +158,16 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - GPU preflight: NVIDIA RTX A6000, UUID `GPU-8d6979b1-ddb6-1476-40ce-4ab6cd4f527b`, driver
   550.144.03, 49,140 MiB total and 31 MiB used, 32 °C, idle at observation. Locked environment:
   PyTorch 2.6.0+cu124, CUDA 12.4, CUDA visible, BF16 supported.
+- Final post-fix script suite: 98/98 passed; host suite: 10/10 passed.
+- Successful smoke run:
+  `/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-smoke2-seed23-20260817T121729Z`.
+  It completed step 2 with train loss 1.4542877 and 5.019 seconds trainer runtime. The tokenization
+  audit found zero over-limit rows in the 32-row train/validation subsets, with maxima 229/273.
+  `checkpoint-2/trainer_state.json`, trainer state, and a 40,422,168-byte
+  `final-adapter/adapter_model.safetensors` are present. The adapter has 10,092,544 trainable
+  parameters over 606,142,464 total parameters.
+- Failed smoke directories are retained for diagnosis. The `20260817T121432Z` attempt failed on
+  mapped chat-template output; the `20260817T121559Z` attempt failed on the removed
+  `overwrite_output_dir` argument. Both failed before optimizer step 1. The earlier tmux launch
+  `20260817T121303Z` was externally terminated during tokenizer download and retains a stale
+  `running` status; it produced no metric or checkpoint.
