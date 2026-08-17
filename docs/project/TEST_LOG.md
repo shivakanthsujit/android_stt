@@ -17,6 +17,11 @@
 - `bash -n scripts/training/setup_vllm_env.sh`, server command rendering, JSON evidence validation,
   and `git diff --check` passed. Blind-v2 was not read or used, and this work did not score or
   modify the separately managed sequential evaluation.
+- Post-run row comparison: both committed diagnostic suites are bit-for-bit equal between
+  sequential and vLLM inference. Publisher vLLM runs have 110–124 model-text differences and
+  48–61 exact-status flips relative to sequential, with net raw-exact deltas from -1 to -12 rows.
+  Two 64-client repeats differ on 75 outputs and 32 exact statuses. Every publisher result retains
+  the same 6,921 IDs, zero empty outputs, and 48 cap hits; guardrail flags range from 3,097 to 3,102.
 
 ## 2026-08-17 — RTX Phase 0 and public-data pipeline fixtures
 

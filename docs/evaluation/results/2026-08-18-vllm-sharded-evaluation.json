@@ -17,6 +17,8 @@
     "max_num_seqs": 256,
     "max_num_batched_tokens": 16384,
     "prefix_caching": true,
+    "batch_invariant_generation": false,
+    "batch_invariance_available_in_pinned_vllm": false,
     "request_payload_logging": false,
     "uvicorn_access_logging_during_measured_run": true,
     "uvicorn_access_logging_in_final_profile": false,
@@ -104,6 +106,96 @@
     "best_observed_generation_tokens_per_second": 1426.2,
     "observed_waiting_requests": 0,
     "observed_preemption": false
+  },
+  "output_reproducibility": {
+    "conclusion": "Deterministic sharding and validated merging preserve membership and order, but pinned vLLM 0.8.5 generation is not batch-invariant. Sequential and vLLM quality scores are not case-level interchangeable.",
+    "sequential_publisher": {
+      "raw_exact_count": 4751,
+      "raw_exact_rate": 0.6864614940037567,
+      "guardrail_flag_count": 3098,
+      "output_cap_count": 48,
+      "empty_output_count": 0
+    },
+    "vllm_publisher_runs": [
+      {
+        "label": "initial-16",
+        "clients": 16,
+        "raw_exact_count": 4750,
+        "guardrail_flag_count": 3102,
+        "output_cap_count": 48,
+        "model_text_differences_from_sequential": 115,
+        "exact_status_flips_from_sequential": 61,
+        "exact_gains_vs_sequential": 30,
+        "exact_losses_vs_sequential": 31
+      },
+      {
+        "label": "final-16",
+        "clients": 16,
+        "raw_exact_count": 4746,
+        "guardrail_flag_count": 3098,
+        "output_cap_count": 48,
+        "model_text_differences_from_sequential": 110,
+        "exact_status_flips_from_sequential": 49,
+        "exact_gains_vs_sequential": 22,
+        "exact_losses_vs_sequential": 27
+      },
+      {
+        "label": "final-32",
+        "clients": 32,
+        "raw_exact_count": 4744,
+        "guardrail_flag_count": 3098,
+        "output_cap_count": 48,
+        "model_text_differences_from_sequential": 112,
+        "exact_status_flips_from_sequential": 51,
+        "exact_gains_vs_sequential": 22,
+        "exact_losses_vs_sequential": 29
+      },
+      {
+        "label": "final-64",
+        "clients": 64,
+        "raw_exact_count": 4739,
+        "guardrail_flag_count": 3101,
+        "output_cap_count": 48,
+        "model_text_differences_from_sequential": 119,
+        "exact_status_flips_from_sequential": 54,
+        "exact_gains_vs_sequential": 21,
+        "exact_losses_vs_sequential": 33
+      },
+      {
+        "label": "final-64-repeat",
+        "clients": 64,
+        "raw_exact_count": 4739,
+        "guardrail_flag_count": 3098,
+        "output_cap_count": 48,
+        "model_text_differences_from_sequential": 113,
+        "exact_status_flips_from_sequential": 48,
+        "exact_gains_vs_sequential": 18,
+        "exact_losses_vs_sequential": 30,
+        "model_text_differences_from_other_64_run": 75,
+        "exact_status_flips_from_other_64_run": 32
+      },
+      {
+        "label": "final-128",
+        "clients": 128,
+        "raw_exact_count": 4745,
+        "guardrail_flag_count": 3097,
+        "output_cap_count": 48,
+        "model_text_differences_from_sequential": 124,
+        "exact_status_flips_from_sequential": 50,
+        "exact_gains_vs_sequential": 22,
+        "exact_losses_vs_sequential": 28
+      }
+    ],
+    "all_publisher_runs": {
+      "records": 6921,
+      "empty_output_count": 0,
+      "output_cap_count": 48
+    },
+    "diagnostic_output_equality": {
+      "cleanup_cases_24": true,
+      "cleanup_cases_heldout_v1_45": true
+    },
+    "comparison_policy": "Use one pinned backend/version/hardware/server profile/client count for checkpoint comparisons and repeat borderline results. Do not directly compare sequential and vLLM quality scores."
   },
   "diagnostic_corpora": [
     {

@@ -142,7 +142,11 @@ Last updated: 2026-08-18
     strict resume/merge validation, raw scoring, and 64 clients as the measured publisher default.
     Re-benchmark concurrency for a different model or workload. For future multimodal Qwen3.5
     served on a compatible newer vLLM/driver stack, use text-only language-model mode and omit MTP
-    for high-concurrency throughput.
+    for high-concurrency throughput. Deterministic sharding does not imply batch-invariant model
+    output: the v0.8.5 publisher sweep varied by up to 12 exact rows and changed 110–124 outputs
+    relative to sequential inference. Compare checkpoints only within the same fixed backend and
+    concurrency, repeat borderline results, and treat a future batch-invariant vLLM upgrade as a
+    new performance/correctness profile.
 
 ## Android/toolchain
 

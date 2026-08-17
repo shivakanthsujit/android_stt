@@ -126,7 +126,9 @@ to evaluation before completing the stricter balanced/reviewed corpus.
 - [x] Add the isolated vLLM serving environment and deterministic multi-client evaluation path.
   Smoke the served LoRA, validate publisher plus both committed diagnostic merges, and sweep full
   publisher concurrency. Use 64 clients for this Qwen3-0.6B/A6000 workload (83 seconds for 6,921
-  cases); remeasure if the base, output distribution, or GPU changes.
+  cases); remeasure if the base, output distribution, or GPU changes. Sharding is deterministic,
+  but vLLM 0.8.5 generation is not batch-invariant, so keep the serving profile fixed, repeat
+  borderline comparisons, and do not mix its quality scores with sequential inference scores.
 - [ ] Train the standalone Disfl-QA adapter next with the identical fixed recipe, then run its
   publisher validation and retired-diagnostic raw evaluation. Train Nyra afterward. Decide whether
   to train the combined adapter only after comparing all three standalone adapters; do not assume

@@ -286,3 +286,11 @@
 - Full verification passed: 111/111 script tests, 10/10 host tests, shell syntax, command rendering,
   smoke inference, diagnostic/publisher merges, and `git diff --check`. Sanitized evidence is
   `docs/evaluation/results/2026-08-18-vllm-sharded-evaluation.json`.
+- A subsequent row-by-row comparison found that the 24- and 45-case vLLM diagnostics match their
+  sequential outputs exactly, but publisher generation is not batch-invariant. Sequential raw
+  exact was 4,751; vLLM runs ranged from 4,739 to 4,750. Each vLLM run changed 110–124 outputs
+  relative to sequential inference, while two 64-client repeats changed 75 outputs relative to
+  each other despite matching at 4,739 exact. All runs retained 6,921 rows, zero empty outputs,
+  and 48 cap hits, confirming a generation reproducibility boundary rather than a shard/merge bug.
+- Documented the fixed-backend comparison rule and stopped the local vLLM server after completing
+  all requested evaluations.

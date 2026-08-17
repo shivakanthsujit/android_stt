@@ -222,7 +222,10 @@ Start with [the vLLM serving guide](docs/training/VLLM_SERVING.md), then use
 Qwen's non-thinking chat-template option and records raw output for qualification; guardrail output
 is parallel evidence and cannot turn a raw semantic failure into a passing checkpoint. The runner
 refuses blind evaluation paths and records per-row source, shard, corpus-hash, and configuration
-fingerprints for reproducibility.
+fingerprints for reproducibility. Those guarantees cover evaluation membership and provenance, not
+batch-invariant GPU generation: vLLM 0.8.5 showed small case-level output variation as concurrency
+changed. Use the same pinned 64-client profile for checkpoint comparisons and repeat borderline
+results; do not compare its score directly with sequential Transformers inference.
 
 ## Airplane-mode acceptance check
 

@@ -69,3 +69,26 @@ decoding, output bounds, or case membership correctness. On the current Qwen3-0.
 publisher workload, a full-corpus sweep found 64 clients fastest among 16, 32, 64, and 128. Treat
 64 as the current default, not a universal constant: sequence lengths, output lengths, model size,
 and GPU can move the optimum.
+
+## Reproducibility boundary
+
+Deterministic sharding guarantees case membership, assignment, resume validation, and merge order;
+it does not make GPU inference batch-invariant. The pinned vLLM 0.8.5 server can choose slightly
+different greedy tokens as continuous-batching composition changes, even with temperature zero and
+a request seed. The measured publisher exact counts were 4,750, 4,746, 4,744, 4,739, 4,739, and
+4,745 across the initial 16-client run and final 16/32/64/64-repeat/128-client runs, versus 4,751
+from sequential Transformers inference. Every run still contained exactly 6,921 cases, zero empty
+outputs, and 48 cap hits. Each vLLM run differed from sequential output on 110–124 rows; the two
+64-client repeats differed from each other on 75 rows despite sharing the same 4,739 exact count.
+The aggregate exact-rate range is narrow (68.47–68.63% for vLLM versus 68.65% sequential), but the
+runs are not interchangeable at the case level. The committed 24- and 45-case diagnostics did
+match sequential inference bit-for-bit.
+
+Use one pinned backend and concurrency for checkpoint comparisons. For this workload, use the
+64-client vLLM profile consistently and repeat any borderline comparison; do not compare a
+sequential score directly with a vLLM score. Current vLLM documents that default online inference
+is not reproducible across batching and provides batch invariance in newer releases, with a
+performance cost. That feature is absent from the pinned CUDA-12.4-compatible v0.8.5 release, so
+adopting it requires a separately pinned newer environment and a fresh throughput/correctness
+sweep. See <https://docs.vllm.ai/en/stable/usage/reproducibility/> and
+<https://docs.vllm.ai/en/stable/features/batch_invariance/>.

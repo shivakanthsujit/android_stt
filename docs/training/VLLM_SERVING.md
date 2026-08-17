@@ -83,6 +83,22 @@ merge wall time was 91, 87, 83, and 84 seconds at 16, 32, 64, and 128 clients re
 64-client intervals reached about 18.1k prompt tokens/s and 1.43k generated tokens/s without
 waiting requests or preemption.
 
+This throughput profile is not batch-invariant. On publisher validation, vLLM raw exact counts
+ranged from 4,739 to 4,750 across concurrency/repeat runs, compared with 4,751 from the sequential
+Transformers evaluator. The maximum aggregate delta was 12/6,921 (0.17 percentage points), but
+110–124 generated rows per vLLM run differed from the sequential output, and two identical
+64-client configurations differed on 75 rows. The 24- and 45-case diagnostics matched exactly.
+This is an inference reproducibility boundary rather than a shard completeness problem: every
+publisher merge contained all 6,921 cases with the same corpus hash and 48 cap hits.
+
+Keep backend, vLLM version, hardware, server profile, and 64-client load fixed when comparing
+checkpoints, and repeat a result near a decision boundary. Do not equate sequential and vLLM scores
+case-for-case. Newer vLLM releases document online batch invariance via
+`VLLM_BATCH_INVARIANT=1`, but it is a beta feature with a performance tradeoff and is not present
+in v0.8.5. Evaluate it only in a separately pinned, driver-compatible environment:
+<https://docs.vllm.ai/en/stable/usage/reproducibility/> and
+<https://docs.vllm.ai/en/stable/features/batch_invariance/>.
+
 ## Qwen3.5 follow-up
 
 `Qwen/Qwen3.5-0.8B` is a multimodal hybrid model even when the workload contains only text. It is

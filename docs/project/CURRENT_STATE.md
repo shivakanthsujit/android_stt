@@ -173,7 +173,11 @@ Last updated: 2026-08-18
   shards by case ID, resumes only validated prefixes, records raw and parallel guardrail evidence,
   refuses blind paths, and validates a source-order merge. Complete publisher sweeps took 91, 87,
   83, and 84 seconds at 16, 32, 64, and 128 clients; 64 is the measured default for this workload.
-  The server remains available on `127.0.0.1:8000`, and all raw results remain under `/data`.
+  The server was stopped after evaluation. Sharding and merge membership are deterministic, but
+  vLLM 0.8.5 generation is not batch-invariant: publisher exact counts ranged from 4,739 to 4,750
+  versus 4,751 sequential, with a maximum 0.17-point aggregate delta and 110–124 changed outputs
+  per run. Use one fixed 64-client backend for comparisons and repeat borderline results. All raw
+  results remain under `/data`.
 - Cross-dataset generation is complete. The Sotto adapter reached 472/1,000 exact on Disfl-QA dev
   with 732 guardrail flags and 32/250 exact on Nyra validation with 76 guardrail flags. Neither
   result justifies skipping standalone source training.
@@ -214,4 +218,6 @@ Last updated: 2026-08-18
    Sotto run and launch the fixed-recipe standalone Disfl-QA experiment, followed by Nyra. Compare
    the three source adapters before deciding on combined training. Preserve the stricter
    reviewed-pilot path for later qualification work. Use the locked vLLM server plus 64 sharded
-   clients for subsequent large evaluations unless a changed model/workload is re-benchmarked.
+   clients for subsequent large evaluations unless a changed model/workload is re-benchmarked;
+   repeat results near a decision threshold and do not compare them directly with sequential
+   inference scores.
