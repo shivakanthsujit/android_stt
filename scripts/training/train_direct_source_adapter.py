@@ -326,8 +326,10 @@ def main() -> int:
     if args.run_purpose == "smoke":
         train_rows = train_rows[:32]
         validation_rows = validation_rows[:32]
-    if args.run_dir.exists() and any(args.run_dir.iterdir()):
-        raise RuntimeError("new run directory must not already contain files")
+    if args.run_dir.exists():
+        unexpected = [path.name for path in args.run_dir.iterdir() if path.name != "console.log"]
+        if unexpected:
+            raise RuntimeError(f"new run directory contains unexpected files: {sorted(unexpected)}")
     args.run_dir.mkdir(parents=True, exist_ok=True)
     (args.run_dir / "resolved-config.json").write_text(
         json.dumps(resolved, indent=2, sort_keys=True) + "\n", encoding="utf-8"
