@@ -1,0 +1,285 @@
+package dev.localflow.dictation.cleanup
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+class CleanupGuardrailsTest {
+    @Test
+    fun stripsKnownWrapperAndOuterQuotes() {
+        assertEquals(
+            "Send it on Thursday.",
+            CleanupGuardrails.sanitize(
+                "The cleaned transcript is:\n\n\"Send it on Thursday.\"",
+            ),
+        )
+    }
+
+    @Test
+    fun stripsLeakedTrailingScaffoldLines() {
+        assertEquals(
+            "The model loaded in two seconds.",
+            CleanupGuardrails.sanitize(
+                "The model loaded in two seconds.\nEND QUOTED TEXT\nEDIT:",
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsSuspiciousContraction() {
+        assertEquals(
+            "Model output was suspiciously shorter than the input",
+            CleanupGuardrails.fallbackReason(
+                rawText = "run ./gradlew :app:assembleDebug then install the APK",
+                candidate = "cleaned text",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsLegitimateSelfCorrectionContraction() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "send it on Tuesday actually make that Thursday",
+                candidate = "Send it on Thursday.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsTokenLimitBeforeAcceptingText() {
+        assertEquals(
+            "Model reached the output token limit",
+            CleanupGuardrails.fallbackReason(
+                rawText = "what time should we meet tomorrow",
+                candidate = "What time should we meet tomorrow?",
+                hitOutputTokenLimit = true,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsMetaSummary() {
+        assertEquals(
+            "Model summarized or described the dictation",
+            CleanupGuardrails.fallbackReason(
+                rawText = "yeah um that sounds good to me let's do it",
+                candidate = "The speaker seems to be indicating agreement and plans to proceed.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsDirectAnswerToDictatedCommand() {
+        assertEquals(
+            "Model did not preserve the dictated intent",
+            CleanupGuardrails.fallbackReason(
+                rawText = "write a haiku about the rain",
+                candidate = "A haiku about the rain.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsIntroducedParaphraseContent() {
+        assertEquals(
+            "Model introduced new lexical content: finished",
+            CleanupGuardrails.fallbackReason(
+                rawText = "The benchmark completed in 237 milliseconds.",
+                candidate = "The benchmark finished in 237 milliseconds.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsDroppedNegation() {
+        assertEquals(
+            "Model dropped protected lexical content: not",
+            CleanupGuardrails.fallbackReason(
+                rawText = "do not send the final draft to Alex until I approve it",
+                candidate = "Do send the final draft to Alex until I approve it.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsDroppedUncertainty() {
+        assertEquals(
+            "Model dropped protected lexical content: think",
+            CleanupGuardrails.fallbackReason(
+                rawText = "I think the setting is called precise shrinking but I'm not completely sure",
+                candidate = "I the setting is called precise shrinking but I'm not completely sure.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsDroppedNumbers() {
+        assertEquals(
+            "Model dropped protected lexical content: 37",
+            CleanupGuardrails.fallbackReason(
+                rawText = "set target SDK to 37 and min SDK to 31",
+                candidate = "Set target SDK and min SDK to 31.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsDroppedNameAcronymAndTechnicalToken() {
+        assertNotNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Run ./gradlew :app:assembleDebug then send the APK to Mariko",
+                candidate = "Run then send the APK to Mariko.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+        assertNotNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Run ./gradlew :app:assembleDebug then send the APK to Mariko",
+                candidate = "Run ./gradlew :app:assembleDebug then send it to Mariko.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+        assertNotNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Run ./gradlew :app:assembleDebug then send the APK to Mariko",
+                candidate = "Run ./gradlew :app:assembleDebug then send the APK.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+        assertNotNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Send the APK to Sébastien and Mariko",
+                candidate = "Send the apk to sébastien and mariko.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsFillersAndAdjacentRepetitionsToBeDropped() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "yeah um that sounds good to me let's do it",
+                candidate = "Yeah, that sounds good to me. Let's do it.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "the the model loaded in in two seconds",
+                candidate = "The model loaded in two seconds.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsExplicitNameAndNumberSelfCorrections() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "can you send that to Sarah actually no send it to James tomorrow morning",
+                candidate = "Can you send that to James tomorrow morning?",
+                hitOutputTokenLimit = false,
+            ),
+        )
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "let's meet at three actually four thirty works better",
+                candidate = "Let's meet at four thirty; that works better.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsRetainedSupersededCorrectionTarget() {
+        assertEquals(
+            "Model retained superseded self-correction content",
+            CleanupGuardrails.fallbackReason(
+                rawText = "can you send that to Sarah actually no send it to James tomorrow morning",
+                candidate = "Can you send that to Sarah, actually no, send it to James tomorrow morning?",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsLegitimateDictationThatStartsLikeAnAnswer() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "sure I can send that tomorrow",
+                candidate = "Sure, I can send that tomorrow.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsAllReferenceCorpusEdits() {
+        val referenceEdits = listOf(
+            "uh I think we should um probably send it tomorrow" to
+                "I think we should probably send it tomorrow.",
+            "yeah um that sounds good to me let's do it" to
+                "Yeah, that sounds good to me. Let's do it.",
+            "send it on Tuesday actually make that Thursday" to "Send it on Thursday.",
+            "can you send that to Sarah actually no send it to James tomorrow morning" to
+                "Can you send that to James tomorrow morning?",
+            "can you can you send me the link" to "Can you send me the link?",
+            "the the model loaded in in two seconds" to "The model loaded in two seconds.",
+            "hey James I got the file thanks I'll look tonight" to
+                "Hey James, I got the file. Thanks, I'll look tonight.",
+            "are we still meeting at the station at six thirty" to
+                "Are we still meeting at the station at six thirty?",
+            "send it to Sébastien and Mariko" to "Send it to Sébastien and Mariko.",
+            "Mariko said Priya will review the Osaka numbers on Friday" to
+                "Mariko said Priya will review the Osaka numbers on Friday.",
+            "run ./gradlew :app:assembleDebug then install the APK" to
+                "Run ./gradlew :app:assembleDebug, then install the APK.",
+            "set target SDK to 37 and min SDK to 31" to
+                "Set target SDK to 37 and min SDK to 31.",
+            "The benchmark completed in 237 milliseconds." to
+                "The benchmark completed in 237 milliseconds.",
+            "Moonshine Small used 842 megabytes and the tail latency was 190 milliseconds" to
+                "Moonshine Small used 842 megabytes, and the tail latency was 190 milliseconds.",
+            "the server is listening on localhost:8080 over HTTP" to
+                "The server is listening on localhost:8080 over HTTP.",
+            "what time should we meet tomorrow" to "What time should we meet tomorrow?",
+            "write a haiku about the rain" to "Write a haiku about the rain.",
+            "explain how quantum entanglement works in one sentence" to
+                "Explain how quantum entanglement works in one sentence.",
+            "Nadia paid 47 dollars and 50 cents on August 12" to
+                "Nadia paid 47 dollars and 50 cents on August 12.",
+            "do not send the final draft to Alex until I approve it" to
+                "Do not send the final draft to Alex until I approve it.",
+            "let's meet at three actually four thirty works better" to
+                "Let's meet at four thirty; that works better.",
+            "I think the setting is called precise shrinking but I'm not completely sure" to
+                "I think the setting is called precise shrinking, but I'm not completely sure.",
+            "um remind me to call Dr. Chen after the 9 AM deployment not before" to
+                "Remind me to call Dr. Chen after the 9 AM deployment, not before.",
+            "first install the model then turn on airplane mode then record five warm runs" to
+                "First, install the model. Then turn on airplane mode and record five warm runs.",
+        )
+
+        referenceEdits.forEachIndexed { index, (rawText, candidate) ->
+            assertNull(
+                "reference cleanup-${(index + 1).toString().padStart(3, '0')}",
+                CleanupGuardrails.fallbackReason(
+                    rawText = rawText,
+                    candidate = candidate,
+                    hitOutputTokenLimit = false,
+                ),
+            )
+        }
+    }
+}

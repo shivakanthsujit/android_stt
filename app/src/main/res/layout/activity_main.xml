@@ -64,15 +64,116 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <TextView
+        <EditText
             android:id="@+id/transcriptText"
             android:layout_width="match_parent"
-            android:layout_height="160dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@color/local_flow_surface"
             android:gravity="top|start"
+            android:importantForAutofill="no"
+            android:inputType="textCapSentences|textMultiLine"
+            android:minHeight="160dp"
             android:padding="16dp"
-            android:text="@string/transcript_placeholder"
+            android:hint="@string/transcript_placeholder"
+            android:textColor="@color/local_flow_text"
+            android:textSize="18sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="@string/cleanup_benchmark"
+            android:textColor="@color/local_flow_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/cleanupStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@color/local_flow_surface"
+            android:padding="16dp"
+            android:text="@string/status_cleanup_model_not_loaded"
+            android:textColor="@color/local_flow_text"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/loadCleanupModelButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="@string/load_cleanup_model" />
+
+        <Button
+            android:id="@+id/cleanTextButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:enabled="false"
+            android:text="@string/clean_text" />
+
+        <Button
+            android:id="@+id/runCleanupEvalButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:enabled="false"
+            android:text="@string/run_cleanup_evaluation" />
+
+        <TextView
+            android:id="@+id/evaluationStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/status_evaluation_idle"
+            android:textColor="@color/local_flow_muted"
+            android:textIsSelectable="true"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/raw_model_output"
+            android:textColor="@color/local_flow_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/modelOutputText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@color/local_flow_surface"
+            android:gravity="top|start"
+            android:minHeight="100dp"
+            android:padding="16dp"
+            android:text="@string/model_output_placeholder"
+            android:textColor="@color/local_flow_muted"
+            android:textIsSelectable="true"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/cleaned_transcript"
+            android:textColor="@color/local_flow_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/cleanedText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@color/local_flow_surface"
+            android:gravity="top|start"
+            android:minHeight="120dp"
+            android:padding="16dp"
+            android:text="@string/cleaned_transcript_placeholder"
             android:textColor="@color/local_flow_text"
             android:textIsSelectable="true"
             android:textSize="18sp" />

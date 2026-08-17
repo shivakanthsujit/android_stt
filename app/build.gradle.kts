@@ -37,9 +37,18 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    sourceSets {
+        getByName("main").assets.srcDir(rootProject.file("docs/evaluation"))
+    }
 }
 
 dependencies {
+    implementation("ai.liquid.leap:leap-sdk:0.10.9")
+    implementation("ai.liquid.leap:leap-model-downloader:0.10.9")
+    // LEAP exposes Flow and suspend APIs, but declares coroutines as a runtime dependency.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
     implementation("ai.moonshine:moonshine-voice:0.1.2") {
         // MicTranscriber.load() uses Moonshine's direct foreground downloader. The optional
         // WorkManager downloader would otherwise add unused boot/foreground-service permissions.

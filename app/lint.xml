@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- leap-model-downloader includes an optional notification-based WorkManager worker. Local
+         Flow never registers or calls that worker: it uses inline loadModel(forceLocal = true),
+         and removes POST_NOTIFICATIONS plus the worker's foreground/background privileges from
+         the merged manifest. Ignore only the diagnostic whose message names that unused class. -->
+    <issue id="NotificationPermission">
+        <ignore regexp="usage from ai\.liquid\.leap\.downloader\.service\.LeapModelDownloadWorker" />
+    </issue>
+</lint>

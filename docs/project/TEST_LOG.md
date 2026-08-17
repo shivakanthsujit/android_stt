@@ -1,0 +1,77 @@
+# Test log
+
+All tests below used a physical Google Pixel 7 unless stated otherwise. Raw transcript contents are
+not persisted here; only representative accuracy observations and timing are recorded.
+
+## 2026-08-17 — Milestone 1 Moonshine
+
+### Build verification
+
+- Command: `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`
+- Result: successful; 55 tasks; lint has no errors.
+- Unit tests: `SttResult` monotonic metric tests passed.
+- Final APK SHA-256 at commit `3273684`:
+  `1b95121403d2e3469031f487ea45ed1311cf0cf8fe6cf4dfb6d78d915d36859e`
+- APK size: about 31 MiB, ARM64 only.
+
+### Model/cache
+
+- First Small Streaming download and load: 21,549 ms.
+- Subsequent warm loads: 1,029–1,064 ms.
+- Airplane-mode force-stop/cold-launch load from cache: 1,064 ms; transcription succeeded.
+- Airplane mode was disabled again after the test.
+
+### Transcription/timing
+
+- Short benchmark utterance: accurately recognized; finalization proxy initially 250 ms.
+- Explicit low-level Transcriber implementation: finalization tail 0–7 ms in observed runs.
+- Long user evaluation: 59,551 ms of recording; 7 ms finalization; the full recording continued
+  until Stop, but accuracy and sentence segmentation were unsatisfactory.
+
+### Microphone lifecycle regression test
+
+1. Before Start, `cmd appops get dev.localflow.dictation RECORD_AUDIO` had no `(running)` marker.
+2. During dictation it reported `RECORD_AUDIO ... (running)`.
+3. Immediately after Stop the `(running)` marker disappeared and AppOps showed a completed duration.
+4. A repeated final-build cycle recorded 18,881 ms and again showed no active operation after Stop.
+
+Conclusion: the model remains warm, while microphone capture is active only between Start and Stop.
+
+## 2026-08-17 — LFM2.5-230M cleanup-only evaluation
+
+- Liquid LEAP 0.10.9; LFM2.5-230M Q4_K_M.
+- First download/load: 38,616 ms; cached warm loads: 662–989 ms.
+- Direct-text corpus: 24 cases × 3 prompt variants; no microphone use.
+- Final 72-run matrix completed fully offline in 44,176 ms.
+- Best safe variant: isolated rules; 3/24 strict exact, 96.7% anchor preservation, 3/24
+  guardrail fallbacks, 530 ms median TTFT, 661 ms median total.
+- Decision: 230M is too unreliable as the default cleanup model; proceed to 350M comparison.
+- Full summary and raw static-corpus outputs:
+  `docs/evaluation/results/2026-08-17-lfm25-230m-q4km.md`.
+
+## 2026-08-17 — LFM2.5-350M cleanup-only evaluation
+
+- Same Pixel, LEAP version, corpus, prompt variants, seed, bounds, and guardrails as 230M.
+- First model download/load: 55,706 ms.
+- Full matrix: 60,162 ms.
+- Best isolated prompt: 1/24 strict exact and 77.0% anchor preservation.
+- Observed meaning-changing negation failure; 350M is a no-go and worse than 230M.
+- Full summary and raw outputs: `docs/evaluation/results/2026-08-17-lfm25-350m-q4km.md`.
+
+## 2026-08-17 — LFM2.5-1.2B-Instruct cleanup-only evaluation
+
+- Liquid LEAP 0.10.9; LFM2.5-1.2B-Instruct `Q4_K_M`; about 697 MiB download.
+- First download/load: 248,559 ms. Cached airplane-mode load: 1,928 ms; airplane mode restored.
+- A/B/C matrix: 72 runs in 240,634 ms. Best exact score was isolated rules at 13/24, but it had
+  meaning-changing summaries/answers, lost technical content, and failed all self-corrections.
+- Safest copying variant: command envelope at 6/24 exact, 98.4% anchor preservation, and 2,807 ms
+  median total; it under-edited and relied on fallbacks.
+- Focused D/E matrix: 48 runs in 304,337 ms. Strict minimal editing scored 0/24; few-shot scored
+  8/24 with 6,956 ms median total and sometimes copied a demonstration.
+- Post-run memory: 922,265 KiB PSS, 980,028 KiB RSS. Overall thermal status 0; battery about 33.6 °C.
+- Decision: no-go for automatic cleanup. Full summary and raw outputs:
+  `docs/evaluation/results/2026-08-17-lfm25-1.2b-instruct-q4km.md`.
+- Final cleanup-harness APK: about 61 MiB; SHA-256
+  `fa924ce4c4f4d9bd5695219802c1189938294959236616000adde08866bfe4c9`.
+- Final build passed lint, unit tests, and assembly. Temporary screen-awake settings were removed;
+  device `stay_on_while_plugged_in=0` and airplane mode was disabled.

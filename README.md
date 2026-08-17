@@ -1,12 +1,12 @@
 # Local Flow for Android
 
-Local Flow is a Pixel-first, fully local dictation project. The current milestone is an ordinary
-Android benchmark app that records microphone speech, transcribes it with **Moonshine Small
-Streaming English**, displays the raw transcript, and reports end-of-speech finalization latency.
+Local Flow is a Pixel-first, fully local dictation project. The ordinary Android benchmark app can
+record microphone speech and transcribe it with **Moonshine Small Streaming English**. The active
+milestone separately benchmarks Liquid LFM2.5 cleanup models against a fixed direct-text corpus
+before joining speech recognition and cleanup.
 
-This intentionally comes before the cleanup language model and Android keyboard. Keeping the first
-milestone as a normal Activity makes microphone/model integration measurable before IME lifecycle
-work is introduced.
+Keeping these stages independently measurable in a normal Activity makes model quality, latency,
+offline behavior, and microphone lifecycle observable before Android keyboard work is introduced.
 
 ## Current milestone
 
@@ -20,29 +20,38 @@ Implemented:
 - provisional and final raw transcript display
 - monotonic recording-duration and STT-tail metrics
 - transcript-free `LocalFlow` diagnostic logs
+- Liquid LEAP 0.10.9 cleanup model download, progress, cache reuse, unload, and generation metrics
+- editable direct-text cleanup with raw pre-guard output and conservative output fallbacks
+- a 24-case, multi-prompt cleanup batch runner with JSONL export and deterministic host scoring
+- completed Pixel 7 evaluations of LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M`; all are no-go
+  results, with 230M retained as the latency baseline and 1.2B as the capability baseline
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
 
-- Liquid LFM2.5 cleanup
+- a cleanup model that has passed the fixed quality/safety bar
 - joined STT → cleanup pipeline
 - Android `InputMethodService`
 
 See [ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md](ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md) for the
 product plan and milestone sequence.
 
+For a concise new-session handoff, current progress, decisions, device evidence, and the ordered
+work queue, start at [docs/project/README.md](docs/project/README.md).
+
 ## Privacy and networking
 
 Audio and transcripts are processed on the phone. They are not uploaded and the app contains no
 analytics or cloud transcription fallback.
 
-The app has network permission only because the first **Load model** action downloads Moonshine's
-model assets. Moonshine Small Streaming English 0.1.2 is currently about 158 MiB. The model is kept
-under the app's no-backup files directory, survives app updates, and is removed by clearing app data
-or uninstalling the app.
+The app has network permission only because the first load of each selected Moonshine or Liquid
+model downloads its assets. Moonshine Small Streaming English 0.1.2 is currently about 158 MiB.
+Downloaded models are kept in app-private persistent storage, reused by later offline runs, and
+removed by clearing app data or uninstalling the app.
 
-After one successful load, the normal transcription path should work in airplane mode. The offline
-acceptance check is documented below.
+After each model has loaded successfully once, its normal benchmark path should work in airplane
+mode. The smaller cleanup matrices completed fully offline, and 1.2B passed a cached airplane-mode
+load in 1.93 seconds.
 
 ## Pinned toolchain and dependencies
 
@@ -59,9 +68,12 @@ acceptance check is documented below.
 | ABI | arm64-v8a |
 | Moonshine Voice | `ai.moonshine:moonshine-voice:0.1.2` |
 | STT model | English Small Streaming, architecture 4 |
+| Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
+| Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
+| Active cleanup candidate | None; task-specific/stronger model required |
 
 AGP 8.13.2 and target API 36 are kept intentionally because they match the current Moonshine sample
-and Liquid LEAP 0.10.9 Android requirements for the next milestone.
+and Liquid LEAP 0.10.9 Android requirements.
 
 ## One-time Mac setup
 
@@ -139,7 +151,7 @@ Filtered diagnostic logs:
 
 The app deliberately does not write transcript text to logs.
 
-## First-run benchmark flow
+## First-run speech benchmark flow
 
 1. Make sure the Pixel has internet access.
 2. Open Local Flow and tap **Load model**.
@@ -156,16 +168,38 @@ was already captured; it does not keep the microphone open while finalizing.
 `STT tail` is measured from the Stop tap (the V1 proxy for speech end) until Moonshine supplies the
 final flushed transcript. All timing uses `SystemClock.elapsedRealtimeNanos()`.
 
+## Cleanup-only evaluation status
+
+The cleanup harness accepts editable text directly, so cleanup models can be compared without STT
+errors or microphone timing contaminating the result. The fixed evaluation uses 24 cases and
+multiple prompt variants, records pre-guard and final output, and scores strict matches plus
+preservation and safety signals.
+
+- LFM2.5-230M `Q4_K_M`: no-go; best prompt was 3/24 exact with 96.7% anchor preservation and a
+  661 ms median total generation time.
+- LFM2.5-350M `Q4_K_M`: no-go; best prompt was 1/24 exact with 77.0% anchor preservation and one
+  observed meaning-changing negation failure.
+- LFM2.5-1.2B-Instruct `Q4_K_M`: no-go; best prompt reached 13/24 exact but changed meaning, answered
+  dictated content, lost technical details, and failed all self-corrections. Cached load was 1.93 s;
+  post-run memory was about 901 MiB PSS (922,265 KiB).
+
+Cleanup is therefore not joined to STT. The next phase is a repeatable STT-only audio evaluation;
+cleanup will be revisited with a task-specific fine-tune or a stronger model only if its Pixel
+latency and memory are acceptable.
+
+See [the test log](docs/project/TEST_LOG.md) and
+[static result summaries](docs/evaluation/results/) for the durable evidence.
+
 ## Airplane-mode acceptance check
 
-Do this only after **Load model** has completed once while online:
+Do this separately for each benchmark model, only after its first load has completed while online:
 
 1. Force-stop Local Flow.
 2. Enable airplane mode and leave Wi-Fi disabled.
 3. Reopen Local Flow.
-4. Tap **Load model**. It should load from local app storage without a download failure.
-5. Run at least three dictations and confirm final transcripts appear.
-6. Force-stop and reopen the app once more while still offline, then repeat a dictation.
+4. Load the selected model. It should load from local app storage without a download failure.
+5. Run the relevant speech or direct-text benchmark and confirm a result appears.
+6. Force-stop and reopen the app once more while still offline, then repeat the benchmark.
 
 Clearing Local Flow's storage or uninstalling it removes the model and makes an online first load
 necessary again.
@@ -179,8 +213,8 @@ Run local unit tests and build verification:
 ./gradlew testDebugUnitTest assembleDebug
 ```
 
-Device microphone quality, finalization latency, cache behavior, and airplane-mode operation require
-the physical Pixel 7; they cannot be established by JVM unit tests.
+Device microphone quality, finalization latency, cleanup quality/latency, cache behavior, and
+airplane-mode operation require the physical Pixel 7; they cannot be established by JVM unit tests.
 
 ## Vendor references
 
@@ -189,5 +223,5 @@ the physical Pixel 7; they cannot be established by JVM unit tests.
 - Moonshine 0.1.2 release: <https://github.com/moonshine-ai/moonshine/releases/tag/v0.1.2>
 - Android physical-device setup: <https://developer.android.com/studio/run/device>
 - Android command-line builds: <https://developer.android.com/build/building-cmdline>
-- Liquid LEAP Android quick start (next milestone):
+- Liquid LEAP Android quick start:
   <https://docs.liquid.ai/deployment/on-device/sdk/quick-start>
