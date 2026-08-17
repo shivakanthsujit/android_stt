@@ -195,6 +195,27 @@ Last updated: 2026-08-18
   source comparison, then prioritizes Qwen3.5-0.8B as the stronger-base follow-up. Gemma 3 1B is
   the quality alternative and LFM2.5-350M is the deployment-speed wildcard; Gemma 4 E2B is outside
   the sub-1B experiment.
+- The fixed-recipe Disfl-QA standalone run completed at
+  `/data/rise/android_stt/runs/direct-disfl-qa-qwen3-0.6b-e1-seed23-20260817T165542Z`: 225/225
+  steps, 7,181/1,000 rows, no truncation, 0.19946 train loss, and 0.14729 final validation loss.
+  Its own-source vLLM score was 765/1,000 exact, but transfer collapsed to 100/6,921 Sotto and
+  30/250 Nyra. Exhaustive review of its 62 non-exact retired outputs found 23 substantive raw
+  policy failures. It is source-specific and rejected; sanitized evidence is
+  `docs/evaluation/results/2026-08-18-direct-disfl-qa-qwen3-evaluation.json`.
+- The fixed-recipe Nyra standalone run completed at
+  `/data/rise/android_stt/runs/direct-nyra-qwen3-0.6b-e1-seed23-20260817T171059Z`: 140/140 steps,
+  4,458/250 rows, no truncation, 0.12580 train loss, and 0.07235 final validation loss. Its
+  same-profile vLLM results were 150/250 own-source, 1,479/6,921 Sotto, and 73/1,000 Disfl-QA.
+  Retired diagnostics reached 38/69 exact but all 10 self-corrections missed exact targets, and
+  exhaustive review of all 31 non-exact outputs found 18 substantive raw policy failures. It is
+  rejected; sanitized evidence is
+  `docs/evaluation/results/2026-08-18-direct-nyra-qwen3-evaluation.json`.
+- Poor cross-source transfer and raw-safety failure across all three standalone adapters justify
+  the predeclared combined experiment. The unchanged one-epoch combined run is active at
+  `/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z` from pinned
+  training commit `79d22a2`: 147,142 train rows, 8,171 validation rows, expected 4,599 optimizer
+  steps, effective batch 32, and the same 2,112-token no-truncation contract. Durable 180-second
+  telemetry plus terminal/error monitors are attached. Do not use blind-v2 for this decision.
 
 ## Toolchain
 
@@ -215,9 +236,8 @@ Last updated: 2026-08-18
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
 5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve the completed
-   Sotto run and launch the fixed-recipe standalone Disfl-QA experiment, followed by Nyra. Compare
-   the three source adapters before deciding on combined training. Preserve the stricter
-   reviewed-pilot path for later qualification work. Use the locked vLLM server plus 64 sharded
-   clients for subsequent large evaluations unless a changed model/workload is re-benchmarked;
-   repeat results near a decision threshold and do not compare them directly with sequential
-   inference scores.
+   Sotto, Disfl-QA, and Nyra runs and monitor the active fixed-recipe combined run to terminal
+   status. Then evaluate the combined adapter with the locked vLLM server, 64 sharded publisher
+   clients, four diagnostic clients, raw semantic review, and no blind-v2 use. Preserve the
+   stricter reviewed-pilot path for later qualification work; repeat borderline results and do
+   not compare fixed-profile vLLM scores directly with sequential inference scores.

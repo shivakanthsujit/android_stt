@@ -1,0 +1,160 @@
+{
+  "schema_version": "direct-disfl-qa-qwen3-evaluation-v1",
+  "created_at": "2026-08-17T17:10:24Z",
+  "contains_example_text": false,
+  "status": "complete_no_go",
+  "run": {
+    "run_id": "direct-disfl-qa-qwen3-0.6b-e1-seed23-20260817T165542Z",
+    "run_dir": "/data/rise/android_stt/runs/direct-disfl-qa-qwen3-0.6b-e1-seed23-20260817T165542Z",
+    "training_commit": "79d22a27c9e03112d2f44380d5fb8d8113815058",
+    "global_step": 225,
+    "epochs": 1.0,
+    "train_records": 7181,
+    "validation_records": 1000,
+    "train_loss": 0.1994640858968099,
+    "final_validation_loss": 0.14728668332099915,
+    "best_validation_loss": 0.14714135229587555,
+    "best_validation_step": 224,
+    "train_runtime_seconds": 356.1683,
+    "train_samples_per_second": 20.162,
+    "train_steps_per_second": 0.632,
+    "maximum_train_tokens": 310,
+    "maximum_validation_tokens": 254,
+    "truncated_records": 0,
+    "terminal_status": "complete"
+  },
+  "artifacts": {
+    "final_adapter": "/data/rise/android_stt/runs/direct-disfl-qa-qwen3-0.6b-e1-seed23-20260817T165542Z/final-adapter",
+    "final_adapter_model_bytes": 40422168,
+    "checkpoint_steps": [56, 112, 168, 224, 225],
+    "final_adapter_matches_checkpoint_225": true,
+    "hashes": {
+      "adapter_model_sha256": "5ace28413759ae8d21c08d52370bcde1e262b183d5e86d46776c947ddff6d255",
+      "adapter_config_sha256": "ce28fff111b799875f7f7966893819251257224460f940320fb6495994e48768",
+      "resolved_config_sha256": "e7b553ae6fb1658def4b6fbc1299e44795a1529c57849a9e104da1c0e5e8cafe",
+      "trainer_state_sha256": "ad61a25e526e5fc0bd47af083aeb07f470d953bcb2769ce82e2361dc52488b37"
+    }
+  },
+  "inference_profile": {
+    "backend": "vllm-0.8.5-cu124-bf16-lora",
+    "publisher_clients": 64,
+    "retired_diagnostic_clients": 4,
+    "temperature": 0.0,
+    "thinking": false,
+    "raw_output_selected_for_scoring": true,
+    "batch_invariant": false,
+    "comparison_note": "Compare these scores only with runs using the same pinned vLLM profile and client count; the backend is not batch-invariant.",
+    "config_sha256": "03e9749f3ac4a28236f84f37068e11e34123a4303d715dff215d107adf0c654a",
+    "environment_report_sha256": "1f37e01f921f60bf1706a78d5448b736b9098d8100bdf6c66a195296c9611805"
+  },
+  "publisher_validation": {
+    "records": 1000,
+    "raw_exact": {"count": 765, "total": 1000, "rate": 0.765},
+    "empty_outputs": 0,
+    "guardrail_flags": 838,
+    "output_cap_hits": 0,
+    "latency_ms": {
+      "ttft_median": 625.6675275,
+      "ttft_p95": 813.664859,
+      "total_median": 713.5147405,
+      "total_p95": 916.745025
+    },
+    "results_sha256": "e58be45669e5de983fa2d0beb503232fa2fbba0a6143687c5975b13241bb12d6",
+    "score_sha256": "b42ae9c061ea853af478b3b520cdb7296baa57ff416a418f16bf8b28d613a03b"
+  },
+  "retired_diagnostics": {
+    "records": 69,
+    "seed_exact": {"count": 3, "total": 24, "rate": 0.125},
+    "heldout_exact": {"count": 4, "total": 45, "rate": 0.08888888888888889},
+    "combined_exact": {"count": 7, "total": 69, "rate": 0.10144927536231885},
+    "preservation_anchors": {"preserved": 138, "total": 163, "rate": 0.8466257668711656},
+    "self_correction_exact": {"count": 0, "total": 10, "rate": 0.0},
+    "must_not_answer_exact": {"count": 4, "total": 17, "rate": 0.23529411764705882},
+    "clean_no_op_exact": {"count": 3, "total": 5, "rate": 0.6},
+    "empty_outputs": 0,
+    "guardrail_flags": 22,
+    "output_cap_hits": 0,
+    "raw_semantic_safety": {
+      "status": "fail",
+      "reviewer_kind": "codex_agent_audit_not_human_qualification",
+      "non_exact_cases_reviewed": 62,
+      "substantive_policy_failures": 23,
+      "unsafe_case_ids": [
+        "cleanup-001",
+        "cleanup-002",
+        "cleanup-003",
+        "cleanup-007",
+        "cleanup-009",
+        "cleanup-010",
+        "cleanup-012",
+        "cleanup-017",
+        "cleanup-018",
+        "heldout-001",
+        "heldout-002",
+        "heldout-004",
+        "heldout-011",
+        "heldout-012",
+        "heldout-013",
+        "heldout-014",
+        "heldout-015",
+        "heldout-016",
+        "heldout-023",
+        "heldout-025",
+        "heldout-030",
+        "heldout-031",
+        "heldout-036"
+      ],
+      "failure_classes": {
+        "dictated_intent_or_action_change": 8,
+        "protected_name_entity_or_literal_deletion": 8,
+        "uncertainty_subject_or_tone_deletion": 6,
+        "numeric_relation_swap": 1
+      },
+      "guardrail_cannot_rescue_raw_model": true,
+      "deployment_candidate": false
+    },
+    "result_hashes": {
+      "seed_sha256": "c6d39e9a4c4af23045ca1b085b9d3e4d118763b978c09f6fc0086f0e0a0fa7bc",
+      "heldout_sha256": "c4621fb26a99176272699d8be83d4b8ed6d9b035b1e95467f492dc11b4b1a860"
+    },
+    "score_hashes": {
+      "seed_sha256": "4b9ec6f2aadb3a1dd408103a3bb853b738cac01f184acad585ad79e668e2425f",
+      "heldout_sha256": "57f3032780471d695daa60e080e5a400f9c83201ef574c4fc931b560c7ad9fdf"
+    }
+  },
+  "cross_dataset_validation": {
+    "sotto": {
+      "records": 6921,
+      "raw_exact": 100,
+      "raw_exact_rate": 0.014448779078167894,
+      "empty_outputs": 0,
+      "guardrail_flags": 2131,
+      "output_cap_hits": 47,
+      "results_sha256": "4b6ce263e4209317c5e66ecf38f9897dc4262216e4b262e0d09ffc6f086a0ef4",
+      "score_sha256": "69534a8524e43a75cf446b176bc08a6256afee5ed1420aea903f17c331164ece"
+    },
+    "nyra": {
+      "records": 250,
+      "raw_exact": 30,
+      "raw_exact_rate": 0.12,
+      "no_op_exact": 2,
+      "no_op_total": 16,
+      "empty_outputs": 0,
+      "guardrail_flags": 185,
+      "output_cap_hits": 0,
+      "results_sha256": "a675c2514cc97daab9a70d2703956c00cbd0d701c145e87a3db7f6b38539d105",
+      "score_sha256": "9423e8cbccbb29a75f3cf803cba88ca127d4b86e784eff795ba907cde12509ce"
+    }
+  },
+  "decision": {
+    "deployment_candidate": false,
+    "source_specificity": "high",
+    "reason": "The adapter learns Disfl-QA's question-restart distribution but collapses on project diagnostics and both other publisher validation sets, with 23 substantive raw semantic-policy failures.",
+    "next_experiment": "Complete the unchanged Nyra standalone run and evaluation, then compare all standalone adapters before combined training."
+  },
+  "selection_constraints": {
+    "blind_v2_used": false,
+    "retired_diagnostics_used_for_training": false,
+    "raw_model_output_controls_safety_decision": true
+  }
+}

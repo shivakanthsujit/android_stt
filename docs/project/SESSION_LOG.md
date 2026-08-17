@@ -294,3 +294,27 @@
   and 48 cap hits, confirming a generation reproducibility boundary rather than a shard/merge bug.
 - Documented the fixed-backend comparison rule and stopped the local vLLM server after completing
   all requested evaluations.
+
+## 2026-08-18 — Standalone Disfl-QA/Nyra results and combined launch
+
+- Completed the unchanged Disfl-QA run at
+  `/data/rise/android_stt/runs/direct-disfl-qa-qwen3-0.6b-e1-seed23-20260817T165542Z`: 225 steps,
+  0.19946 train loss, 0.14729 final dev loss, no truncation, five resumable checkpoints, and a
+  verified 40,422,168-byte final adapter. The fixed vLLM profile scored 765/1,000 own-source,
+  100/6,921 Sotto, and 30/250 Nyra exact. Full retired-output review found 23 substantive safety
+  failures, so the adapter is rejected.
+- Completed the unchanged Nyra run at
+  `/data/rise/android_stt/runs/direct-nyra-qwen3-0.6b-e1-seed23-20260817T171059Z`: 140 steps,
+  0.12580 train loss, 0.07235 final dev loss, no truncation, four resumable checkpoints, and a
+  verified 40,422,168-byte final adapter. Fixed-profile vLLM scored 150/250 own-source,
+  1,479/6,921 Sotto, and 73/1,000 Disfl-QA. Retired exactness was 38/69 with zero of ten exact
+  self-corrections; exhaustive review of all 31 non-exact raw outputs found 18 substantive safety
+  failures. The adapter is rejected.
+- Recorded text-free, hash-addressed Disfl-QA and Nyra reports under `docs/evaluation/results/`;
+  raw pairs, outputs, checkpoints, review queues, and weights remain outside Git under `/data`.
+- The standalone matrix establishes high source specificity, so launched the predeclared combined
+  run unchanged at
+  `/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z` from pinned
+  commit `79d22a2`. It contains 147,142 train and 8,171 validation rows, expects 4,599 optimizer
+  steps, passed frozen-surface overlap checks, and has durable 180-second telemetry plus terminal
+  and error monitoring. No blind-v2 surface was used.

@@ -147,6 +147,18 @@ Last updated: 2026-08-18
     relative to sequential inference. Compare checkpoints only within the same fixed backend and
     concurrency, repeat borderline results, and treat a future batch-invariant vLLM upgrade as a
     new performance/correctness profile.
+32. Reject the one-epoch Disfl-QA-only and Nyra-only Qwen3-0.6B adapters as deployment candidates.
+    Disfl-QA is strong only on its own publisher distribution and has 23 substantive raw failures
+    on the retired diagnostics; Nyra has weaker own-source exactness, zero of ten exact explicit
+    corrections, and 18 substantive raw failures. Guardrail fallback cannot rescue either raw
+    model. Keep their adapters, checkpoints, vLLM results, review queues, and hashes under `/data`
+    as experimental evidence.
+33. Proceed with the predeclared fixed-recipe combined direct-source adapter. This is justified by
+    measured source specialization: every standalone model transfers poorly to at least one other
+    publisher split, and none passes raw semantic safety. Keep Qwen3-0.6B, one epoch, rank-16 BF16
+    LoRA, effective batch 32, seed 23, learning rate 2e-4, and the 2,112-token no-truncation policy
+    unchanged so the result remains a dataset comparison. Evaluate all source splits and retired
+    diagnostics with the fixed vLLM profile; never use blind-v2 for this exploratory decision.
 
 ## Android/toolchain
 

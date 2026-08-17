@@ -129,10 +129,16 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   cases); remeasure if the base, output distribution, or GPU changes. Sharding is deterministic,
   but vLLM 0.8.5 generation is not batch-invariant, so keep the serving profile fixed, repeat
   borderline comparisons, and do not mix its quality scores with sequential inference scores.
-- [ ] Train the standalone Disfl-QA adapter next with the identical fixed recipe, then run its
-  publisher validation and retired-diagnostic raw evaluation. Train Nyra afterward. Decide whether
-  to train the combined adapter only after comparing all three standalone adapters; do not assume
-  cross-source transfer or the combined run is useful.
+- [x] Train and evaluate the standalone Disfl-QA and Nyra adapters with the identical recipe and
+  fixed vLLM profile. Disfl-QA reached 765/1,000 exact on its source but only 100/6,921 Sotto and
+  30/250 Nyra, with 23 substantive retired-diagnostic safety failures. Nyra reached 150/250 on its
+  source but only 1,479/6,921 Sotto and 73/1,000 Disfl-QA, with 18 substantive safety failures.
+  Both are source-specific no-go results.
+- [ ] Complete and evaluate the justified combined adapter. The active run is
+  `direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z` with 147,142/8,171 rows and 4,599
+  expected optimizer steps. After terminal artifact verification, run the same vLLM profile on
+  the combined publisher validation, each source split, and both retired diagnostics; audit every
+  non-exact retired raw output before deciding the next base/data/recipe experiment.
 - [ ] Use the evidence to choose whether the next base comparison is Qwen3.5-0.8B, Gemma 3 1B, or
   whether data/recipe changes matter more. Do not use blind-v2 during this exploratory iteration.
 

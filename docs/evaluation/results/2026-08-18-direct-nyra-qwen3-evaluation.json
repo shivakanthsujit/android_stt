@@ -1,0 +1,136 @@
+{
+  "schema_version": "direct-nyra-qwen3-evaluation-v1",
+  "created_at": "2026-08-17T17:25:00Z",
+  "contains_example_text": false,
+  "status": "complete_no_go",
+  "run": {
+    "run_id": "direct-nyra-qwen3-0.6b-e1-seed23-20260817T171059Z",
+    "run_dir": "/data/rise/android_stt/runs/direct-nyra-qwen3-0.6b-e1-seed23-20260817T171059Z",
+    "training_commit": "79d22a27c9e03112d2f44380d5fb8d8113815058",
+    "global_step": 140,
+    "epochs": 1.0,
+    "train_records": 4458,
+    "validation_records": 250,
+    "train_loss": 0.1257960251399449,
+    "final_validation_loss": 0.0723542645573616,
+    "train_runtime_seconds": 214.4613,
+    "train_samples_per_second": 20.787,
+    "train_steps_per_second": 0.653,
+    "maximum_train_tokens": 281,
+    "maximum_validation_tokens": 266,
+    "truncated_records": 0,
+    "terminal_status": "complete"
+  },
+  "artifacts": {
+    "final_adapter": "/data/rise/android_stt/runs/direct-nyra-qwen3-0.6b-e1-seed23-20260817T171059Z/final-adapter",
+    "final_adapter_model_bytes": 40422168,
+    "checkpoint_steps": [35, 70, 105, 140],
+    "final_adapter_matches_checkpoint_140": true,
+    "hashes": {
+      "adapter_model_sha256": "013054ae92d55ce8e57ebc88d58eac9f19f7183973478ff0a730be287c87abdb",
+      "adapter_config_sha256": "278adaedf280c579cd9c05e46666ad4fd4b33ef6925b5fab2279288a2fa7f63b",
+      "resolved_config_sha256": "412067946ee61f4764bdfdc3102c18fb3f5af91b46706932f8749a55f0b79255",
+      "trainer_state_sha256": "d4516a8c957ca513225788f64692a7318a736c89756f4eddf4e57b4d16549832"
+    }
+  },
+  "inference_profile": {
+    "backend": "vllm-0.8.5-cu124-bf16-lora",
+    "publisher_clients": 64,
+    "retired_diagnostic_clients": 4,
+    "temperature": 0.0,
+    "thinking": false,
+    "raw_output_selected_for_scoring": true,
+    "batch_invariant": false,
+    "comparison_note": "Compare these scores only with runs using the same pinned vLLM profile and client count; the backend is not batch-invariant.",
+    "config_sha256": "012865b69a42090b56736867294f59741f752753f8f7aaf1d4620e5de379ff84",
+    "environment_report_sha256": "9132bda34f5f216aced9499c60e881052c6fffcd5f73c8107b4374fa69a6579b"
+  },
+  "publisher_validation": {
+    "records": 250,
+    "raw_exact": {"count": 150, "total": 250, "rate": 0.6},
+    "clean_no_op_exact": {"count": 13, "total": 16, "rate": 0.8125},
+    "empty_outputs": 0,
+    "guardrail_flags": 177,
+    "output_cap_hits": 0,
+    "latency_ms": {
+      "ttft_median": 608.5951995,
+      "ttft_p95": 743.52165,
+      "total_median": 785.5015235,
+      "total_p95": 988.554383
+    },
+    "results_sha256": "8988036713aecb4308ed32a7246e952b4bdab4fbf977009330d316f04cc15668",
+    "score_sha256": "d9c054395c48e5eb612ba28cebab361ae2879062eda58d0da3ac49251bdcd7ba"
+  },
+  "retired_diagnostics": {
+    "records": 69,
+    "seed_exact": {"count": 13, "total": 24, "rate": 0.5416666666666666},
+    "heldout_exact": {"count": 25, "total": 45, "rate": 0.5555555555555556},
+    "combined_exact": {"count": 38, "total": 69, "rate": 0.5507246376811594},
+    "preservation_anchors": {"preserved": 150, "total": 163, "rate": 0.9202453987730062},
+    "self_correction_exact": {"count": 0, "total": 10, "rate": 0.0},
+    "must_not_answer_exact": {"count": 13, "total": 17, "rate": 0.7647058823529411},
+    "clean_no_op_exact": {"count": 4, "total": 5, "rate": 0.8},
+    "empty_outputs": 0,
+    "output_cap_hits": 1,
+    "raw_semantic_safety": {
+      "status": "fail",
+      "reviewer_kind": "codex_agent_audit_not_human_qualification",
+      "non_exact_cases_reviewed": 31,
+      "substantive_policy_failures": 18,
+      "unsafe_case_ids": [
+        "cleanup-002", "cleanup-003", "cleanup-004", "cleanup-007", "cleanup-021",
+        "heldout-002", "heldout-005", "heldout-006", "heldout-007", "heldout-008",
+        "heldout-015", "heldout-016", "heldout-023", "heldout-036", "heldout-038",
+        "heldout-039", "heldout-040", "heldout-042"
+      ],
+      "failure_classes": {
+        "unresolved_self_correction_or_conflicting_action": 9,
+        "protected_name_marker_literal_or_version_deletion": 5,
+        "subject_tone_or_emphasis_deletion": 4
+      },
+      "guardrail_cannot_rescue_raw_model": true,
+      "deployment_candidate": false
+    },
+    "result_hashes": {
+      "seed_sha256": "c07469ac8236894a1b5f204dbba5cdc91b1903a72337759a97890f95a5b9e444",
+      "heldout_sha256": "9b755f21e54ddd0ce0db8533bc8e89fa10d7ced0191397412d1627d4fb6b24c0"
+    },
+    "score_hashes": {
+      "seed_sha256": "868d87cb98fcb57a96ace0e8a0eddd7b044f33fe5cf8cb2bb157ddec0ca8d6fb",
+      "heldout_sha256": "58fa7e74279757fa15bb41f9daa38ba6eb8c28ff12bb8b428d26b573789cbcfe"
+    }
+  },
+  "cross_dataset_validation": {
+    "sotto": {
+      "records": 6921,
+      "raw_exact": 1479,
+      "raw_exact_rate": 0.21369744256610315,
+      "empty_outputs": 0,
+      "guardrail_flags": 707,
+      "output_cap_hits": 47,
+      "results_sha256": "fae3ee4867385bb9335858859e2922756204befc7bab0a6274946c43a2d1f3f4",
+      "score_sha256": "04193cd5f96fd96c78283d9664e7c4acebdbbf74fa34bb69fca09c25851d6619"
+    },
+    "disfl_qa": {
+      "records": 1000,
+      "raw_exact": 73,
+      "raw_exact_rate": 0.073,
+      "empty_outputs": 0,
+      "guardrail_flags": 246,
+      "output_cap_hits": 0,
+      "results_sha256": "e3fa1c6a157c4b13c47ef496dab6b5c17c2549c53707540a4bfabf84cb86b412",
+      "score_sha256": "e88c92c82a6bcaaa97e629bfd6693a338ffb92d0811cfbd9a5043a6c06cca7a1"
+    }
+  },
+  "decision": {
+    "deployment_candidate": false,
+    "source_specificity": "high",
+    "reason": "Nyra exactness is source-specific, all ten self-corrections miss exact targets, and exhaustive retired-output review found 18 substantive raw semantic-policy failures.",
+    "next_experiment": "Train and evaluate the unchanged combined adapter because all three standalone adapters show poor cross-source transfer and fail raw safety."
+  },
+  "selection_constraints": {
+    "blind_v2_used": false,
+    "retired_diagnostics_used_for_training": false,
+    "raw_model_output_controls_safety_decision": true
+  }
+}
