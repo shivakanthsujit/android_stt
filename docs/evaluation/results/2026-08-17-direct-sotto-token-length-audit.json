@@ -1,0 +1,63 @@
+{
+  "audit_version": "direct-source-full-token-length-audit-v1",
+  "contains_example_text": false,
+  "experiment": "sotto",
+  "model": {
+    "id": "Qwen/Qwen3-0.6B",
+    "revision": "61641f84fa567ab7b58e216b4930d2fe28bfd045"
+  },
+  "repository_commit": "53a5551a6cb9330eaa707545ba9e1f0adc575a3e",
+  "source_manifest_sha256": "500a62d09fb48e8e287cd01c46aa7e708cc3a3acd6c8079651a444e850645702",
+  "training_config_sha256": "cefa1745efd8add61c8ac5e5bc49c905eb6cdc45df011412b706cdf0a272f081",
+  "train": {
+    "configured_limit": 1024,
+    "maximum_formatted_tokens": 1838,
+    "over_limit_records": 775,
+    "power_of_two_length_buckets": {
+      "128": 0,
+      "256": 129077,
+      "512": 2160,
+      "1024": 3491,
+      "2048": 775
+    },
+    "records": 135503,
+    "ten_longest": [
+      {"formatted_tokens": 1838, "id": "direct-sotto-train-21278"},
+      {"formatted_tokens": 1814, "id": "direct-sotto-train-89354"},
+      {"formatted_tokens": 1811, "id": "direct-sotto-train-63308"},
+      {"formatted_tokens": 1771, "id": "direct-sotto-train-46949"},
+      {"formatted_tokens": 1766, "id": "direct-sotto-train-97751"},
+      {"formatted_tokens": 1758, "id": "direct-sotto-train-23589"},
+      {"formatted_tokens": 1712, "id": "direct-sotto-train-116288"},
+      {"formatted_tokens": 1711, "id": "direct-sotto-train-41169"},
+      {"formatted_tokens": 1695, "id": "direct-sotto-train-68859"},
+      {"formatted_tokens": 1690, "id": "direct-sotto-train-122908"}
+    ]
+  },
+  "validation": {
+    "configured_limit": 1024,
+    "maximum_formatted_tokens": 2050,
+    "over_limit_records": 46,
+    "power_of_two_length_buckets": {
+      "128": 0,
+      "256": 6783,
+      "512": 91,
+      "1024": 1,
+      "2048": 45,
+      "4096": 1
+    },
+    "records": 6921,
+    "ten_longest": [
+      {"formatted_tokens": 2050, "id": "direct-sotto-validation-6666"},
+      {"formatted_tokens": 1659, "id": "direct-sotto-validation-4310"},
+      {"formatted_tokens": 1599, "id": "direct-sotto-validation-58"},
+      {"formatted_tokens": 1598, "id": "direct-sotto-validation-3581"},
+      {"formatted_tokens": 1549, "id": "direct-sotto-validation-1449"},
+      {"formatted_tokens": 1548, "id": "direct-sotto-validation-836"},
+      {"formatted_tokens": 1526, "id": "direct-sotto-validation-697"},
+      {"formatted_tokens": 1440, "id": "direct-sotto-validation-1110"},
+      {"formatted_tokens": 1436, "id": "direct-sotto-validation-4365"},
+      {"formatted_tokens": 1421, "id": "direct-sotto-validation-6786"}
+    ]
+  }
+}

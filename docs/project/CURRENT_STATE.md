@@ -130,9 +130,16 @@ Last updated: 2026-08-17
   truncation, 10,092,544 trainable LoRA parameters, checkpoint plus final adapter present. Two
   earlier mechanical attempts failed before any optimizer step and led to committed Transformers
   5.14 compatibility fixes for mapped chat-template output and `TrainingArguments`.
-- The full one-epoch Sotto run has not started. Its required pre-run push is blocked because
-  `dante` has neither working HTTPS GitHub credentials nor an authorized GitHub SSH key. Local
-  commits are complete; do not waive the push gate implicitly.
+- The user explicitly waived the pre-run push gate for local commit `53a5551`. The first managed
+  full-run launch exposed a monitor/startup race and exited before run state or optimizer work;
+  its directory is preserved. A second clean launch reached the full-corpus no-truncation audit
+  and failed before model load because row 75 formats to 1,294 tokens under the fixed 1,024-token
+  limit. No optimizer step ran.
+- The completed text-free audit found 775/135,503 Sotto train rows and 46/6,921 publisher-validation
+  rows above 1,024 tokens, with maxima of 1,838 and 2,050 respectively. The evidence is
+  `docs/evaluation/results/2026-08-17-direct-sotto-token-length-audit.json`. Do not truncate, drop,
+  or change the fixed sequence policy without an explicit recipe decision and a new longest-row
+  memory smoke.
 - The current base-model reassessment keeps Qwen3-0.6B plus BF16 rank-16 LoRA for the controlled
   source comparison, then prioritizes Qwen3.5-0.8B as the stronger-base follow-up. Gemma 3 1B is
   the quality alternative and LFM2.5-350M is the deployment-speed wildcard; Gemma 4 E2B is outside

@@ -158,3 +158,25 @@
 - Committed the pipeline and compatibility fixes locally through `9318f32`. Push is blocked:
   HTTPS cannot obtain credentials and the existing SSH key is not authorized for GitHub. The full
   one-epoch Sotto run remains unlaunched pending the required pre-run push or explicit direction.
+
+## 2026-08-17 — Full Sotto launch blocked by whole-corpus sequence audit
+
+- Accepted the user's explicit direction to launch from local commit `53a5551` without the
+  previously required GitHub push. Re-ran all 98 training tests and 10 host tests; the locked
+  Python 3.10.12 / PyTorch 2.6.0+cu124 / CUDA 12.4 BF16 environment and idle RTX A6000 passed.
+- The initial managed launch `direct-sotto-qwen3-0.6b-e1-seed23-20260817T122428Z` exposed a race:
+  the read-only monitor created its files while the trainer was still checking that the new run
+  directory contained only its managed console log. The trainer rejected the unexpected files
+  before creating run state or taking an optimizer step. The evidence directory was preserved and
+  the orphan monitor was stopped.
+- Relaunched the identical recipe as
+  `direct-sotto-qwen3-0.6b-e1-seed23-20260817T122523Z`, attaching the monitor only after the trainer
+  wrote `status.json`. The trainer then failed closed before model load or optimizer work because
+  `direct-sotto-train-75` formats to 1,294 tokens, above the fixed 1,024-token ceiling.
+- Completed a text-free full-split audit: 775/135,503 train rows exceed 1,024 tokens (maximum
+  1,838), and 46/6,921 validation rows exceed it (maximum 2,050). No source text was emitted or
+  committed. Preserved the aggregate evidence in
+  `docs/evaluation/results/2026-08-17-direct-sotto-token-length-audit.json`.
+- Stopped at the documented recipe decision. Truncation and silent row dropping remain prohibited;
+  the recommended recovery is a fixed 2,112-token limit across the four-way comparison followed
+  by a longest-row memory smoke before a newly named full Sotto run.

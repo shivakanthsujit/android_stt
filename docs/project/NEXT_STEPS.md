@@ -100,8 +100,13 @@ to evaluation before completing the stricter balanced/reviewed corpus.
 - [x] Fix Qwen3-0.6B, one epoch, BF16 LoRA rank 16, effective batch 32, learning rate 2e-4, seed
   23, assistant-only loss, and a no-thinking 1,024-token format for the four-way comparison.
 - [x] Run one 32-row/two-step mechanical smoke on Sotto and verify checkpoint/final-adapter output.
-- [ ] Restore GitHub authentication on `dante` and push the local training commits, then train the
-  full 135,503-row Sotto train split without changing the fixed recipe.
+- [x] Record the user's explicit waiver of the pre-run push gate for local commit `53a5551` and
+  attempt the full managed launch without pushing.
+- [x] Diagnose the fail-closed 1,024-token startup failure across the complete Sotto split: 775
+  train and 46 validation rows exceed the limit; maxima are 1,838 and 2,050 tokens.
+- [ ] Decide explicitly whether to raise the fixed four-way maximum sequence policy (recommended:
+  2,112 tokens), then run a longest-row memory smoke and relaunch the full 135,503-row Sotto split
+  unchanged otherwise. Do not silently truncate or describe a filtered subset as the full run.
 - [ ] Evaluate the Sotto adapter on publisher validation and the retired 69 diagnostics, including
   raw semantic review and A6000 TTFT/total-latency/throughput/VRAM measurements.
 - [ ] If the Sotto run completes cleanly, repeat the identical recipe for full Disfl-QA, full Nyra
