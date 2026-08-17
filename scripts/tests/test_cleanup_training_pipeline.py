@@ -44,6 +44,19 @@ environment_checker = load("check_training_environment")
 
 
 class CleanupTrainingPipelineTest(unittest.TestCase):
+    def test_chat_template_accepts_transformers_batch_encoding_shape(self) -> None:
+        class MappingTokenizer:
+            def apply_chat_template(self, *_args, **_kwargs):
+                return {"input_ids": [1, 2, 3], "attention_mask": [1, 1, 1]}
+
+        self.assertEqual(
+            [1, 2, 3],
+            trainer.apply_template(
+                MappingTokenizer(), [{"role": "user", "content": "fixture"}],
+                add_generation_prompt=True, kwargs={},
+            ),
+        )
+
     def test_direct_source_config_keeps_gate_a_path_separate_and_counts_exact(self) -> None:
         config_path = REPO / "training/config/direct-source-training-v1.json"
         config = json.loads(config_path.read_text(encoding="utf-8"))

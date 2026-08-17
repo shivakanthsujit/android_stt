@@ -56,6 +56,11 @@ def apply_template(tokenizer: Any, messages: list[dict[str, str]], *, add_genera
         add_generation_prompt=add_generation_prompt,
         **kwargs,
     )
+    if hasattr(value, "get"):
+        input_ids = value.get("input_ids")
+        if input_ids is None:
+            raise RuntimeError("chat template mapping did not contain input_ids")
+        value = input_ids
     if hasattr(value, "tolist"):
         value = value.tolist()
     if value and isinstance(value[0], list):
