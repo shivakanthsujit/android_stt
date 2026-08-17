@@ -108,10 +108,17 @@ to evaluation before completing the stricter balanced/reviewed corpus.
 - [x] Run text-free worst-case memory diagnostics for the 2,112-token proposal. Original microbatch
   8 OOMs; both microbatch 4 / accumulation 8 and gradient-checkpointed microbatch 8 pass while
   preserving effective batch 32.
-- [ ] Explicitly authorize the recommended fixed four-way change to 2,112 tokens, microbatch 4,
-  and accumulation 8; then commit it, run a managed longest-row smoke, and relaunch the full
-  135,503-row Sotto split unchanged otherwise. Do not silently truncate or describe a filtered
-  subset as the full run.
+- [x] Apply the authorized fixed four-way change to 2,112 tokens, microbatch 4, and accumulation 8;
+  commit it and launch the full 135,503-row Sotto split unchanged otherwise. The exact longest-row
+  diagnostic already passed, and the user explicitly directed launch without another managed
+  smoke. The active run is
+  `direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z`; do not silently truncate or describe a
+  filtered subset as the full run.
+- [x] Research the Sotto publisher's own training settings. No formal paper was found; the official
+  model-card lineage uses LFM2.5-350M full SFT, most clearly three epochs at 3e-5 with effective
+  batch 8, packed 4,096-token context, AdamW beta2 0.95, and later GRPO/refinement/soup stages.
+  Preserve the sourced comparison in
+  `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`; do not change the active recipe.
 - [ ] Evaluate the Sotto adapter on publisher validation and the retired 69 diagnostics, including
   raw semantic review and A6000 TTFT/total-latency/throughput/VRAM measurements.
 - [ ] If the Sotto run completes cleanly, repeat the identical recipe for full Disfl-QA, full Nyra

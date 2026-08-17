@@ -140,14 +140,25 @@ Last updated: 2026-08-17
   `docs/evaluation/results/2026-08-17-direct-sotto-token-length-audit.json`. Do not truncate, drop,
   or change the fixed sequence policy without an explicit recipe decision and a new longest-row
   memory smoke.
-- The proposed 2,112-token limit is within Qwen3-0.6B's pinned 40,960-token context, but the exact
+- The authorized 2,112-token limit is within Qwen3-0.6B's pinned 40,960-token context, but the exact
   longest train row OOMs at the original microbatch 8 without checkpointing. Two-step worst-case
   diagnostics pass with either microbatch 4 / accumulation 8 (31.87 GB peak allocated, 13.84 s)
   or microbatch 8 / accumulation 4 plus gradient checkpointing (29.09 GB, 17.76 s); validation
-  batch 8 passes at the 2,050-token maximum. The recommended pending recipe decision is 2,112
-  tokens plus microbatch 4 / accumulation 8, preserving effective batch 32 and all expected step
-  counts. Evidence is
+  batch 8 passes at the 2,050-token maximum. The authorized recipe is 2,112 tokens plus microbatch
+  4 / accumulation 8, preserving effective batch 32 and all expected step counts. Evidence is
   `docs/evaluation/results/2026-08-17-direct-sotto-2112-memory-diagnostic.json`.
+- The full 135,503-row Sotto run is active at
+  `/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z` from training
+  commit `c556709`. It passed complete no-truncation audits (train maximum 1,838; validation
+  maximum 2,050). At 2026-08-17 12:56 UTC it was healthy at optimizer step 400/4,235, loss 0.1031,
+  gradient norm 0.36, with managed three-minute health and terminal-status monitors active. The
+  6,921 publisher-validation cases are prepared outside Git for immediate post-run generation.
+- Sotto has no located formal paper; the publisher's evolving Hugging Face model card is its
+  stated training research document. The closest detailed reference uses LFM2.5-350M full SFT for
+  three epochs at 3e-5, effective batch 8, AdamW beta2 0.95, cosine/50-step warmup, packed 4,096
+  context, BF16+TF32, and seed 42, followed by GRPO/refinement stages. This is follow-up evidence,
+  not a directly transferable Qwen LoRA recipe. The immutable-source comparison is
+  `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`.
 - The current base-model reassessment keeps Qwen3-0.6B plus BF16 rank-16 LoRA for the controlled
   source comparison, then prioritizes Qwen3.5-0.8B as the stronger-base follow-up. Gemma 3 1B is
   the quality alternative and LFM2.5-350M is the deployment-speed wildcard; Gemma 4 E2B is outside
@@ -171,7 +182,7 @@ Last updated: 2026-08-17
    preflight. Do not run the Mac/Pixel steps below.
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, the immediate next action is
-   the Sotto-only direct-source Qwen3-0.6B run in
-   `docs/training/DIRECT_SOURCE_EXPERIMENT_PLAN.md`; preserve the stricter reviewed-pilot path for
-   later qualification work.
+5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve and monitor the
+   active Sotto-only direct-source Qwen3-0.6B run, then execute its publisher-validation and
+   retired-diagnostic evaluation from `docs/training/DIRECT_SOURCE_EXPERIMENT_PLAN.md`; preserve
+   the stricter reviewed-pilot path for later qualification work.

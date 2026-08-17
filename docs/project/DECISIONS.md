@@ -117,6 +117,13 @@ Last updated: 2026-08-17
     gradient accumulation 8 across the four-way comparison to retain effective batch 32: the
     original microbatch 8 OOMed on the 1,838-token longest train row, while the revised recipe
     passed the exact two-step worst-case A6000 diagnostic without gradient checkpointing.
+28. Treat Sotto's official Hugging Face model-card history as a training reference, not as a formal
+    paper or a recipe to copy into the active Qwen run. Its clearest SFT record uses full tuning of
+    LFM2.5-350M for three epochs at 3e-5, effective batch 8, packed 4,096-token context, AdamW
+    beta2 0.95, and later GRPO/refinement/soup stages. Keep the current one-epoch rank-16 Qwen LoRA
+    dataset comparison unchanged. If it is useful but undertrained or adapter-limited, run
+    separately named three-epoch and full-BF16 comparisons; do not silently extend or reinterpret
+    the current 4,235-step run.
 
 ## Android/toolchain
 

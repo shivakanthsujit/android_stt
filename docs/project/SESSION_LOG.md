@@ -193,3 +193,29 @@
   tokens plus microbatch 4 / accumulation 8 because it preserves effective batch and expected
   optimizer-step counts, avoids global checkpoint recomputation, and was faster in this bounded
   worst-case comparison. The full run remains paused for explicit recipe authorization.
+
+## 2026-08-17 — Full Sotto training launch and publisher-recipe check
+
+- Accepted the user's explicit authorization to train/evaluate without a pre-run push and to use
+  the RTX A6000 autonomously. Committed the 2,112-token, microbatch-4/accumulation-8 fixed recipe
+  as `c556709`; it preserves effective batch 32, one epoch, rank-16 LoRA, and all 135,503 Sotto
+  rows. The earlier exact longest-row diagnostic served as the memory proof; per explicit user
+  direction, no additional managed smoke delayed the full run.
+- Launched the managed run
+  `direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z`. Complete token audits passed with no
+  truncation (train maximum 1,838; publisher-validation maximum 2,050). At 2026-08-17 12:56 UTC
+  the run was healthy at step 400/4,235, loss 0.1031, gradient norm 0.36. Three-minute GPU/disk/
+  process/checkpoint monitoring and a terminal-status monitor remain active; no OOM, NaN, stall,
+  checkpoint, thermal, or disk anomaly has been observed.
+- Added and committed the outside-Git publisher-validation exporter as `64e8931`. Exported all
+  6,921 pinned publisher-validation pairs under the run directory so full generation/scoring can
+  begin immediately after the terminal adapter is verified. All 99 training tests and 10 host
+  tests pass; unrelated untracked `t.txt` remains untouched.
+- Checked the publisher's official Sotto materials. No formal paper was found; Sotto calls its
+  evolving Hugging Face model card the full training research document. The most complete v23 SFT
+  disclosure is LFM2.5-350M full tuning on 157,556 rows for three epochs, LR 3e-5, microbatch 1 /
+  accumulation 8, cosine with 50 warmup steps, AdamW beta2 0.95, weight decay 0.01, BF16+TF32,
+  packed 4,096-token context, and seed 42. Later production versions add GRPO, targeted data,
+  two-epoch refinement at 2e-6, and checkpoint soup. Recorded immutable primary-source links and
+  a comparison with the active Qwen LoRA recipe in
+  `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`.

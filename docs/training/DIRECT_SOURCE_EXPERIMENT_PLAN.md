@@ -1,6 +1,6 @@
 # Direct-source cleanup experiments
 
-Status: approved direction; implementation and first training run are next
+Status: implemented; full Sotto run active and monitored
 
 This is the new-session handoff for the fast experimental track. The purpose is to train real
 models quickly, evaluate their raw behavior, and use evidence to improve the data and recipe. It
@@ -101,6 +101,21 @@ One epoch is intentional: it gets a complete comparable result quickly. If Sotto
 still improving, extend the recipe in a new, explicitly named 3-epoch experiment rather than
 quietly changing the four-way comparison.
 
+### Sotto publisher-recipe reference
+
+Sotto does not publish a formal paper recipe. Its evolving official model card describes an
+LFM2.5-350M full-fine-tuning lineage, not this Qwen LoRA experiment. The clearest v23 SFT settings
+are three epochs, learning rate 3e-5, microbatch 1 / accumulation 8, AdamW beta2 0.95, weight decay
+0.01, cosine decay with 50 warmup steps, packed 4,096-token context, BF16+TF32, and seed 42. Later
+production releases add GRPO, targeted data, and checkpoint averaging. See
+`docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md` for immutable primary-source links,
+the full comparison, and source caveats.
+
+These settings are a follow-up basis, not a reason to mutate the active run. Its Qwen base, LoRA
+adaptation, effective batch 32, one epoch, and 2e-4 adapter learning rate are intentionally held
+fixed for the first dataset comparison. If this run learns useful behavior but remains
+undertrained or adapter-limited, evaluate separately named three-epoch and/or full-tuning studies.
+
 Before Sotto, run only one bounded mechanical smoke: the 32 longest formatted train/validation
 examples and two optimizer steps. Its job
 is to catch tokenizer/template, CUDA, LoRA-target, or memory failures. Do not run the old long
@@ -169,20 +184,25 @@ Success for the first run means the Sotto adapter and trainer state exist, the p
 raw publisher/project evaluations complete, and a text-free comparison report is written. It does
 not mean the model is deployment-safe.
 
+## Current execution state
+
+The authorized full Sotto run is
+`/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z`. It uses all
+135,503 pinned train rows without truncation. At 2026-08-17 12:56 UTC it was healthy at step
+400/4,235 with loss 0.1031 and gradient norm 0.36. Managed process, metrics, GPU/disk/checkpoint,
+and terminal-status monitoring remain active. Publisher validation has been exported outside Git
+for evaluation immediately after completion.
+
 ## What the next session should do
 
 1. Read `AGENTS.md`, `TRAINING_MACHINE_HANDOFF.md`, and this file completely.
-2. Preserve the current dirty worktree. No model training has started yet.
-3. Verify the existing source manifest and the RTX A6000/CUDA environment once.
-4. Add a separate direct-source config/loader/trainer path. The current
-   `train_cleanup_adapter.py` deliberately requires the reviewed 5,000/500 Gate A dataset; do not
-   fake that Gate A report or weaken the qualification path. Reuse its encoding, telemetry,
-   LoRA, checkpoint, inference, and scorer components.
-5. Make the direct loader support all four experiment definitions, but execute Sotto first.
-6. Run the one 32-example/two-step smoke, then launch the full one-epoch Sotto run immediately if
-   it passes.
-7. Monitor Sotto to a terminal state, evaluate its raw outputs, and record the result before
-   launching Disfl-QA, Nyra, or combined training.
+2. Preserve the current dirty worktree and do not disturb the active managed run.
+3. Monitor Sotto to a terminal state and verify its final adapter, trainer state, checkpoints, and
+   exit status.
+4. Evaluate publisher validation plus the retired 69 diagnostics, including raw semantic review,
+   before launching Disfl-QA, Nyra, or combined training.
+5. Use the result and the Sotto publisher-recipe comparison to decide whether the next controlled
+   study should remain a dataset comparison or test three epochs/full fine-tuning.
 
 The stricter reviewed 5,000/500 pilot remains available later for safety-focused iteration. It is
 not the immediate next action for this exploratory track.
