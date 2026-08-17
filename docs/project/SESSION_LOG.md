@@ -180,3 +180,16 @@
 - Stopped at the documented recipe decision. Truncation and silent row dropping remain prohibited;
   the recommended recovery is a fixed 2,112-token limit across the four-way comparison followed
   by a longest-row memory smoke before a newly named full Sotto run.
+- Verified the pinned Qwen3-0.6B context supports 40,960 positions. A transient exact longest-row
+  test showed that raising only the ceiling is insufficient: the 1,838-token train row at the
+  original microbatch 8 OOMed around 46.14 GiB process memory while requesting another 8.32 GiB.
+- Compared two full-data/effective-batch-preserving alternatives without changing committed
+  configuration. Microbatch 4 / accumulation 8 passed two optimizer steps at 31,865,443,328 peak
+  allocated bytes in 13.84 seconds. Microbatch 8 / accumulation 4 with gradient checkpointing also
+  passed at 29,088,355,840 bytes in 17.76 seconds. Eval batch 8 passed the 2,050-token longest
+  validation row at 26,304,277,504 bytes.
+- Recorded the text-free result in
+  `docs/evaluation/results/2026-08-17-direct-sotto-2112-memory-diagnostic.json`. Recommend 2,112
+  tokens plus microbatch 4 / accumulation 8 because it preserves effective batch and expected
+  optimizer-step counts, avoids global checkpoint recomputation, and was faster in this bounded
+  worst-case comparison. The full run remains paused for explicit recipe authorization.

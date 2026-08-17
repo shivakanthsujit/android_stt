@@ -104,9 +104,13 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   attempt the full managed launch without pushing.
 - [x] Diagnose the fail-closed 1,024-token startup failure across the complete Sotto split: 775
   train and 46 validation rows exceed the limit; maxima are 1,838 and 2,050 tokens.
-- [ ] Decide explicitly whether to raise the fixed four-way maximum sequence policy (recommended:
-  2,112 tokens), then run a longest-row memory smoke and relaunch the full 135,503-row Sotto split
-  unchanged otherwise. Do not silently truncate or describe a filtered subset as the full run.
+- [x] Run text-free worst-case memory diagnostics for the 2,112-token proposal. Original microbatch
+  8 OOMs; both microbatch 4 / accumulation 8 and gradient-checkpointed microbatch 8 pass while
+  preserving effective batch 32.
+- [ ] Explicitly authorize the recommended fixed four-way change to 2,112 tokens, microbatch 4,
+  and accumulation 8; then commit it, run a managed longest-row smoke, and relaunch the full
+  135,503-row Sotto split unchanged otherwise. Do not silently truncate or describe a filtered
+  subset as the full run.
 - [ ] Evaluate the Sotto adapter on publisher validation and the retired 69 diagnostics, including
   raw semantic review and A6000 TTFT/total-latency/throughput/VRAM measurements.
 - [ ] If the Sotto run completes cleanly, repeat the identical recipe for full Disfl-QA, full Nyra

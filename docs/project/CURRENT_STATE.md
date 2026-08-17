@@ -140,6 +140,14 @@ Last updated: 2026-08-17
   `docs/evaluation/results/2026-08-17-direct-sotto-token-length-audit.json`. Do not truncate, drop,
   or change the fixed sequence policy without an explicit recipe decision and a new longest-row
   memory smoke.
+- The proposed 2,112-token limit is within Qwen3-0.6B's pinned 40,960-token context, but the exact
+  longest train row OOMs at the original microbatch 8 without checkpointing. Two-step worst-case
+  diagnostics pass with either microbatch 4 / accumulation 8 (31.87 GB peak allocated, 13.84 s)
+  or microbatch 8 / accumulation 4 plus gradient checkpointing (29.09 GB, 17.76 s); validation
+  batch 8 passes at the 2,050-token maximum. The recommended pending recipe decision is 2,112
+  tokens plus microbatch 4 / accumulation 8, preserving effective batch 32 and all expected step
+  counts. Evidence is
+  `docs/evaluation/results/2026-08-17-direct-sotto-2112-memory-diagnostic.json`.
 - The current base-model reassessment keeps Qwen3-0.6B plus BF16 rank-16 LoRA for the controlled
   source comparison, then prioritizes Qwen3.5-0.8B as the stronger-base follow-up. Gemma 3 1B is
   the quality alternative and LFM2.5-350M is the deployment-speed wildcard; Gemma 4 E2B is outside

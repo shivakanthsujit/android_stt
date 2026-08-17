@@ -1,0 +1,54 @@
+{
+  "contains_example_text": false,
+  "diagnostic_version": "sotto-proposed-2112-memory-v1",
+  "model": {
+    "id": "Qwen/Qwen3-0.6B",
+    "max_position_embeddings": 40960,
+    "revision": "61641f84fa567ab7b58e216b4930d2fe28bfd045"
+  },
+  "proposed_max_sequence_tokens": 2112,
+  "repository_commit": "ae90057ad1225424513b53a6dc0a4ca3eb338530",
+  "tests": [
+    {
+      "gradient_accumulation_steps": 4,
+      "gradient_checkpointing": false,
+      "microbatch": 8,
+      "requested_allocation": "8.32 GiB",
+      "result": "cuda_oom",
+      "train_formatted_tokens": 1838,
+      "reported_process_memory_in_use": "46.14 GiB"
+    },
+    {
+      "gradient_accumulation_steps": 8,
+      "gradient_checkpointing": false,
+      "losses": [0.25935599207878113, 0.16480552405118942],
+      "microbatch": 4,
+      "optimizer_steps": 2,
+      "peak_allocated_bytes": 31865443328,
+      "peak_reserved_bytes": 34665922560,
+      "result": "pass",
+      "seconds": 13.844010269269347,
+      "train_formatted_tokens": 1838
+    },
+    {
+      "gradient_accumulation_steps": 4,
+      "gradient_checkpointing": true,
+      "losses": [0.2589958608150482, 0.1622501127421856],
+      "microbatch": 8,
+      "optimizer_steps": 2,
+      "peak_allocated_bytes": 29088355840,
+      "peak_reserved_bytes": 34240200704,
+      "result": "pass",
+      "seconds": 17.756920715793967,
+      "train_formatted_tokens": 1838
+    }
+  ],
+  "validation": {
+    "batch": 8,
+    "formatted_tokens": 2050,
+    "peak_allocated_bytes": 26304277504,
+    "peak_reserved_bytes": 27395096576,
+    "result": "pass",
+    "seconds": 0.7086573280394077
+  }
+}
