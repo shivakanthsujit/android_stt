@@ -384,7 +384,7 @@ def main() -> int:
 
         common = config["common"]
         training_args = TrainingArguments(
-            output_dir=str(args.run_dir), overwrite_output_dir=False,
+            output_dir=str(args.run_dir),
             num_train_epochs=common["epochs"], max_steps=args.max_steps,
             per_device_train_batch_size=common["train_batch_size"], per_device_eval_batch_size=common["eval_batch_size"],
             gradient_accumulation_steps=common["gradient_accumulation_steps"],
