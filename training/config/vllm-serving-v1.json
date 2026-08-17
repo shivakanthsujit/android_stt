@@ -1,0 +1,43 @@
+{
+  "config_version": "cleanup-vllm-serving-v1",
+  "vllm": {
+    "source_path": "/home/shiva/vllm",
+    "revision": "ba41cc90e8ef7f236347b2f1599eec2cbb9e1f0d",
+    "release": "v0.8.5",
+    "package_version": "0.8.5",
+    "transformers_version": "4.51.3",
+    "observed_main_revision": "017e9f4448b700e85ee16023287b025693c72b9e",
+    "torch_backend": "cu124",
+    "python": "3.10",
+    "environment_path": "/data/rise/android_stt/vllm/env",
+    "artifact_root": "/data/rise/android_stt/vllm"
+  },
+  "model": {
+    "model_id": "Qwen/Qwen3-0.6B",
+    "revision": "61641f84fa567ab7b58e216b4930d2fe28bfd045",
+    "snapshot_path": "/data/rise/android_stt/cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/61641f84fa567ab7b58e216b4930d2fe28bfd045",
+    "served_base_name": "qwen3-0.6b-base"
+  },
+  "adapter": {
+    "served_name": "sotto-qwen3-0.6b-e1-seed23",
+    "path": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z/final-adapter",
+    "run_path": "/data/rise/android_stt/runs/direct-sotto-qwen3-0.6b-e1-seed23-20260817T124158Z",
+    "rank": 16,
+    "adapter_model_sha256": "22736a4d4aff8b5788386a80d643296874c3b54dd980404e7196a5665023fa2b",
+    "adapter_config_sha256": "f08b77c9295ebedfee2c0230f7277c7ec5d17f33ea54d040c19440b19d71249d"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 4096,
+    "max_num_seqs": 256,
+    "max_num_batched_tokens": 16384,
+    "enable_prefix_caching": true,
+    "enable_thinking": false,
+    "generation_config": "vllm",
+    "disable_request_logging": true,
+    "disable_access_logging": true
+  }
+}

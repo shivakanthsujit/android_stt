@@ -1,5 +1,23 @@
 # Test log
 
+## 2026-08-18 — vLLM sharded evaluation
+
+- Locked environment verification passed with Python 3.10.19, vLLM 0.8.5, Torch 2.6.0+cu124,
+  Transformers 4.51.3, CUDA visibility, A6000 BF16 matmul, exact source/model/adapter/config hashes,
+  and a clean vLLM v0.8.5 source checkout.
+- Server smoke passed for both `/v1/models` registration and a non-thinking completion through the
+  startup-loaded `sotto-qwen3-0.6b-e1-seed23` LoRA.
+- The 16-client initial publisher run produced and validated all 6,921 rows. The committed 24-case
+  and 45-case corpora likewise merged 24/24 and 45/45 rows. All outputs remain outside Git.
+- Final-profile complete publisher sweeps validated 6,921/6,921 rows at each concurrency: 16 clients
+  in 91 seconds, 32 in 87 seconds, 64 in 83 seconds, and 128 in 84 seconds. A quiet 64-client repeat
+  also completed in 83 seconds with every request succeeding on its first attempt.
+- Latest unit verification: `python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v`
+  passed 111/111; `python3 -m unittest discover -s tests -p 'test_*.py' -v` passed 10/10.
+- `bash -n scripts/training/setup_vllm_env.sh`, server command rendering, JSON evidence validation,
+  and `git diff --check` passed. Blind-v2 was not read or used, and this work did not score or
+  modify the separately managed sequential evaluation.
+
 ## 2026-08-17 — RTX Phase 0 and public-data pipeline fixtures
 
 - Preflight repository commit: `2ae244cf761d91846396b6f96161955e7666e3d5`.

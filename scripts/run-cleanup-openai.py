@@ -9,6 +9,7 @@ writing one scorer-compatible JSON object after every completed case.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -35,6 +36,9 @@ DEFAULT_CASES = Path("docs/evaluation/cleanup_cases.jsonl")
 VOICEINK_SYSTEM_PROMPT = (
     Path(__file__).resolve().parents[1]
     / "docs/evaluation/prompts/voiceink-qwen35-2b-system-v1.txt"
+)
+CLEANUP_INSTRUCTION_V2 = (
+    Path(__file__).resolve().parents[1] / "training/config/cleanup-instruction-v2.txt"
 )
 DEFAULT_BASE_URL = "http://127.0.0.1:8080/v1"
 DEFAULT_TIMEOUT_SECONDS = 120.0
@@ -126,6 +130,7 @@ PROMPT_VARIANTS = (
     "strict_minimal_edit",
     "few_shot_corrections",
     "voiceink_task_tuned",
+    "cleanup_instruction_v2",
 )
 
 class RunnerError(Exception):
@@ -139,6 +144,7 @@ class EvaluationCase:
     expected: str
     categories: tuple[str, ...]
     must_preserve: tuple[str, ...]
+    must_remove: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -196,6 +202,18 @@ def load_cases(path: Path) -> tuple[EvaluationCase, ...]:
             expected = _require_string(row, "expected", location)
             categories = _require_string_list(row, "categories", location)
             must_preserve = _require_string_list(row, "must_preserve", location)
+            must_remove_value = row.get("must_remove", [])
+            if not isinstance(must_remove_value, list) or any(
+                not isinstance(item, str) or not item for item in must_remove_value
+            ):
+                raise RunnerError(
+                    f"{location}: 'must_remove' must be a list of non-empty strings"
+                )
+            split = row.get("split")
+            if isinstance(split, str) and split.casefold().startswith("blind"):
+                raise RunnerError(
+                    f"{location}: this optimization-side runner refuses blind records"
+                )
             if not case_id:
                 raise RunnerError(f"{location}: 'id' must not be empty")
             if not raw:
@@ -204,11 +222,81 @@ def load_cases(path: Path) -> tuple[EvaluationCase, ...]:
                 raise RunnerError(f"{location}: duplicate case id {case_id!r}")
             seen.add(case_id)
             cases.append(
-                EvaluationCase(case_id, raw, expected, categories, must_preserve)
+                EvaluationCase(
+                    case_id,
+                    raw,
+                    expected,
+                    categories,
+                    must_preserve,
+                    tuple(must_remove_value),
+                )
             )
     if not cases:
         raise RunnerError(f"{path}: contains no JSON records")
-    return tuple(sorted(cases, key=lambda item: item.case_id))
+    # File order is part of the evaluation contract. A merged sharded run is
+    # restored to this order even though assignment itself is ID-hash based.
+    return tuple(cases)
+
+
+def reject_blind_cases_path(path: Path) -> None:
+    if "blind" in str(path).casefold():
+        raise RunnerError("this optimization-side runner refuses blind evaluation inputs")
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(block)
+    except OSError as exc:
+        raise RunnerError(f"cannot hash {path}: {exc}") from exc
+    return digest.hexdigest()
+
+
+def stable_shard_index(case_id: str, shard_count: int) -> int:
+    """Assign IDs reproducibly without depending on Python hashing or file order."""
+
+    digest = hashlib.sha256(case_id.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") % shard_count
+
+
+def evaluation_fingerprint(
+    *,
+    cases_sha256: str,
+    model: str,
+    quantization: str,
+    prompt_variant: str,
+    temperature: float,
+    stream: bool,
+    include_seed: bool,
+    url: str,
+    request_extra: dict[str, Any],
+    raw_scoring: bool,
+    selected_case_ids: Sequence[str],
+) -> str:
+    prompt_sha256 = hashlib.sha256(
+        system_prompt(prompt_variant).encode("utf-8")
+    ).hexdigest()
+    contract = {
+        "schema_version": "cleanup-openai-evaluation-contract-v1",
+        "cases_sha256": cases_sha256,
+        "model": model,
+        "quantization": quantization,
+        "prompt_variant": prompt_variant,
+        "prompt_sha256": prompt_sha256,
+        "temperature": temperature,
+        "stream": stream,
+        "seed": DETERMINISTIC_SEED if include_seed else None,
+        "url": url,
+        "request_extra": request_extra,
+        "raw_scoring": raw_scoring,
+        "selected_case_ids": list(selected_case_ids),
+    }
+    encoded = json.dumps(
+        contract, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def max_output_tokens(raw_text: str) -> int:
@@ -235,6 +323,13 @@ def system_prompt(prompt_variant: str) -> str:
             raise RunnerError(
                 f"cannot read VoiceInk system prompt from {VOICEINK_SYSTEM_PROMPT}: {exc}"
             ) from exc
+    if prompt_variant == "cleanup_instruction_v2":
+        try:
+            return CLEANUP_INSTRUCTION_V2.read_text(encoding="utf-8").strip()
+        except OSError as exc:
+            raise RunnerError(
+                f"cannot read cleanup instruction from {CLEANUP_INSTRUCTION_V2}: {exc}"
+            ) from exc
     raise RunnerError(f"unsupported prompt variant {prompt_variant!r}")
 
 
@@ -255,6 +350,8 @@ def user_message(prompt_variant: str, raw_text: str) -> str:
         return f"INPUT TRANSCRIPT:\n{raw_text}\nOUTPUT TRANSCRIPT:"
     if prompt_variant == "voiceink_task_tuned":
         return f"<TRANSCRIPT>\n{raw_text}\n</TRANSCRIPT>"
+    if prompt_variant == "cleanup_instruction_v2":
+        return f"Transcript:\n{raw_text}"
     raise RunnerError(f"unsupported prompt variant {prompt_variant!r}")
 
 
@@ -562,6 +659,7 @@ def make_result_record(
     prompt_variant: str,
     output_tokens: int,
     temperature: float,
+    raw_scoring: bool = False,
 ) -> dict[str, Any]:
     model_text = chat_result.text.strip()
     normalized_finish_reason = (chat_result.finish_reason or "").casefold()
@@ -584,6 +682,13 @@ def make_result_record(
     selected_text, used_fallback, fallback_reason = select_text(
         evaluation_case.raw, model_text, hit_output_token_limit
     )
+    guardrail_selected_text = selected_text
+    guardrail_would_fallback = used_fallback
+    guardrail_fallback_reason = fallback_reason
+    if raw_scoring:
+        selected_text = model_text
+        used_fallback = False
+        fallback_reason = None
     record: dict[str, Any] = {
         "case_id": evaluation_case.case_id,
         "model_name": model,
@@ -594,11 +699,17 @@ def make_result_record(
         "expected": evaluation_case.expected,
         "categories": list(evaluation_case.categories),
         "must_preserve": list(evaluation_case.must_preserve),
+        "must_remove": list(evaluation_case.must_remove),
         "model_text": model_text,
         "selected_text": selected_text,
         "exact_match": selected_text.strip() == evaluation_case.expected.strip(),
         "used_fallback": used_fallback,
         "fallback_reason": fallback_reason,
+        "raw_exact_match": model_text == evaluation_case.expected.strip(),
+        "raw_model_output_is_selected_for_scoring": raw_scoring,
+        "guardrail_would_fallback": guardrail_would_fallback,
+        "guardrail_fallback_reason": guardrail_fallback_reason,
+        "guardrail_selected_text": guardrail_selected_text,
         "timings": {
             "ttft_ms": chat_result.ttft_ms,
             "total_ms": chat_result.total_ms,
@@ -616,19 +727,78 @@ def make_result_record(
     return record
 
 
-def _open_output(path: str, overwrite: bool) -> tuple[TextIO, bool]:
+def _open_output(path: str, overwrite: bool, resume: bool) -> tuple[TextIO, bool]:
     if path == "-":
+        if resume:
+            raise RunnerError("--resume requires a file output")
         return sys.stdout, False
     output_path = Path(path)
-    if output_path.exists() and not overwrite:
+    if output_path.exists() and not overwrite and not resume:
         raise RunnerError(
-            f"output already exists: {output_path}; pass --overwrite to replace it"
+            f"output already exists: {output_path}; pass --resume to continue it "
+            "or --overwrite to replace it"
         )
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        return output_path.open("w", encoding="utf-8"), True
+        mode = "a" if resume else "w"
+        return output_path.open(mode, encoding="utf-8", newline="\n"), True
     except OSError as exc:
         raise RunnerError(f"cannot open output {output_path}: {exc}") from exc
+
+
+def load_resume_case_ids(
+    path: Path,
+    *,
+    assigned_cases: Sequence[EvaluationCase],
+    source_indices: dict[str, int],
+    shard_count: int,
+    shard_index: int,
+    cases_sha256: str,
+    fingerprint: str,
+) -> set[str]:
+    if not path.exists():
+        return set()
+    seen: list[str] = []
+    try:
+        handle = path.open("r", encoding="utf-8")
+    except OSError as exc:
+        raise RunnerError(f"cannot read resume output {path}: {exc}") from exc
+    with handle:
+        for line_number, line in enumerate(handle, 1):
+            if not line.strip():
+                raise RunnerError(f"{path}:{line_number}: blank resume records are forbidden")
+            location = f"{path}:{line_number}"
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise RunnerError(
+                    f"{location}: invalid/incomplete JSON; preserve the file for diagnosis: "
+                    f"{exc.msg}"
+                ) from exc
+            if not isinstance(row, dict):
+                raise RunnerError(f"{location}: expected a JSON object")
+            case_id = row.get("case_id")
+            if not isinstance(case_id, str) or not case_id:
+                raise RunnerError(f"{location}: case_id must be a non-empty string")
+            expected_metadata = {
+                "source_index": source_indices.get(case_id),
+                "shard_count": shard_count,
+                "shard_index": shard_index,
+                "cases_sha256": cases_sha256,
+                "evaluation_fingerprint": fingerprint,
+            }
+            for key, expected in expected_metadata.items():
+                if row.get(key) != expected:
+                    raise RunnerError(
+                        f"{location}: {key} does not match this shard invocation"
+                    )
+            seen.append(case_id)
+    expected_prefix = [case.case_id for case in assigned_cases[: len(seen)]]
+    if seen != expected_prefix:
+        raise RunnerError(
+            f"{path}: completed records are not the duplicate-free assigned-case prefix"
+        )
+    return set(seen)
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
@@ -655,6 +825,14 @@ def build_argument_parser() -> argparse.ArgumentParser:
         default=DEFAULT_TEMPERATURE,
         help="sampling temperature recorded in results (default: 0.1)",
     )
+    parser.add_argument(
+        "--raw-scoring",
+        action="store_true",
+        help=(
+            "score raw model output while still recording the guardrail decision; "
+            "required for checkpoint qualification"
+        ),
+    )
     stream_group = parser.add_mutually_exclusive_group()
     stream_group.add_argument("--stream", dest="stream", action="store_true")
     stream_group.add_argument("--no-stream", dest="stream", action="store_false")
@@ -673,6 +851,12 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--retries", type=int, default=0)
     parser.add_argument("--retry-delay", type=float, default=0.5)
     parser.add_argument(
+        "--progress-every",
+        type=int,
+        default=1,
+        help="emit progress every N pending cases; 0 disables progress output",
+    )
+    parser.add_argument(
         "--case-id",
         action="append",
         default=[],
@@ -683,7 +867,19 @@ def build_argument_parser() -> argparse.ArgumentParser:
         type=Path,
         help="JSON object merged into each request without overriding fixed fields",
     )
-    parser.add_argument("--overwrite", action="store_true")
+    shard_group = parser.add_argument_group("deterministic sharding")
+    shard_group.add_argument(
+        "--shard-count",
+        type=int,
+        default=1,
+        help="total concurrent clients; assignment is SHA-256(case_id) modulo this value",
+    )
+    shard_group.add_argument(
+        "--shard-index", type=int, default=0, help="zero-based shard handled by this client"
+    )
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument("--resume", action="store_true")
+    output_group.add_argument("--overwrite", action="store_true")
     return parser
 
 
@@ -694,13 +890,20 @@ def run(arguments: argparse.Namespace) -> int:
         raise RunnerError("--retries must not be negative")
     if arguments.retry_delay < 0:
         raise RunnerError("--retry-delay must not be negative")
+    if arguments.progress_every < 0:
+        raise RunnerError("--progress-every must not be negative")
     if not 0 <= arguments.temperature <= 2:
         raise RunnerError("--temperature must be between 0 and 2")
     if not arguments.model.strip():
         raise RunnerError("--model must not be empty")
     if not arguments.quantization.strip():
         raise RunnerError("--quantization must not be empty")
+    if arguments.shard_count <= 0:
+        raise RunnerError("--shard-count must be positive")
+    if not 0 <= arguments.shard_index < arguments.shard_count:
+        raise RunnerError("--shard-index must be in [0, --shard-count)")
 
+    reject_blind_cases_path(arguments.cases)
     cases = load_cases(arguments.cases)
     requested_case_ids = set(arguments.case_id)
     if requested_case_ids:
@@ -713,9 +916,48 @@ def run(arguments: argparse.Namespace) -> int:
     url = chat_completions_url(arguments.base_url)
     request_extra = load_request_extra(arguments.request_extra)
     api_key = os.environ.get(arguments.api_key_env) if arguments.api_key_env else None
-    output, should_close = _open_output(arguments.output, arguments.overwrite)
+    cases_sha256 = sha256_file(arguments.cases)
+    fingerprint = evaluation_fingerprint(
+        cases_sha256=cases_sha256,
+        model=arguments.model,
+        quantization=arguments.quantization,
+        prompt_variant=arguments.prompt_variant,
+        temperature=arguments.temperature,
+        stream=arguments.stream,
+        include_seed=not arguments.omit_seed,
+        url=url,
+        request_extra=request_extra,
+        raw_scoring=arguments.raw_scoring,
+        selected_case_ids=[case.case_id for case in cases],
+    )
+    source_indices = {case.case_id: index for index, case in enumerate(cases)}
+    assigned_cases = tuple(
+        case
+        for case in cases
+        if stable_shard_index(case.case_id, arguments.shard_count)
+        == arguments.shard_index
+    )
+    completed = (
+        load_resume_case_ids(
+            Path(arguments.output),
+            assigned_cases=assigned_cases,
+            source_indices=source_indices,
+            shard_count=arguments.shard_count,
+            shard_index=arguments.shard_index,
+            cases_sha256=cases_sha256,
+            fingerprint=fingerprint,
+        )
+        if arguments.resume and arguments.output != "-"
+        else set()
+    )
+    output, should_close = _open_output(
+        arguments.output, arguments.overwrite, arguments.resume
+    )
     try:
-        for index, evaluation_case in enumerate(cases, 1):
+        pending_cases = tuple(
+            case for case in assigned_cases if case.case_id not in completed
+        )
+        for index, evaluation_case in enumerate(pending_cases, 1):
             output_tokens = max_output_tokens(evaluation_case.raw)
             payload = build_request_payload(
                 model=arguments.model,
@@ -727,11 +969,17 @@ def run(arguments: argparse.Namespace) -> int:
                 temperature=arguments.temperature,
                 request_extra=request_extra,
             )
-            print(
-                f"[{index}/{len(cases)}] {evaluation_case.case_id}",
-                file=sys.stderr,
-                flush=True,
-            )
+            if arguments.progress_every and (
+                index == 1
+                or index == len(pending_cases)
+                or index % arguments.progress_every == 0
+            ):
+                print(
+                    f"[shard {arguments.shard_index + 1}/{arguments.shard_count} "
+                    f"case {index}/{len(pending_cases)}] {evaluation_case.case_id}",
+                    file=sys.stderr,
+                    flush=True,
+                )
             chat_result = call_chat_endpoint(
                 url=url,
                 payload=payload,
@@ -748,6 +996,16 @@ def run(arguments: argparse.Namespace) -> int:
                 prompt_variant=arguments.prompt_variant,
                 output_tokens=output_tokens,
                 temperature=arguments.temperature,
+                raw_scoring=arguments.raw_scoring,
+            )
+            record.update(
+                {
+                    "source_index": source_indices[evaluation_case.case_id],
+                    "shard_count": arguments.shard_count,
+                    "shard_index": arguments.shard_index,
+                    "cases_sha256": cases_sha256,
+                    "evaluation_fingerprint": fingerprint,
+                }
             )
             output.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")))
             output.write("\n")

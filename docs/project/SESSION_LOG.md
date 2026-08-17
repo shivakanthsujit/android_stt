@@ -263,3 +263,26 @@
   deployment decision.
 - Selected the fixed-recipe standalone Disfl-QA adapter as the next controlled run, followed by
   Nyra. The combined run remains conditional on comparing the three standalone source adapters.
+
+## 2026-08-18 — vLLM serving and sharded evaluation
+
+- Cloned the official vLLM repository to `/home/shiva/vllm`, inspected current main for Qwen3.5
+  guidance, then pinned the clean v0.8.5 commit compatible with the host's CUDA 12.4 driver stack.
+  Created an isolated, fully locked uv environment under `/data/rise/android_stt/vllm` with Python
+  3.10.19, vLLM 0.8.5, Torch 2.6.0+cu124, and Transformers 4.51.3.
+- Added a hash-verifying local-only server launcher for the pinned Qwen3-0.6B snapshot and completed
+  Sotto rank-16 LoRA. The profile uses BF16, 90% GPU memory, a 4,096-token request limit, 256
+  sequences, a 16,384-token scheduler budget, prefix caching, vLLM generation defaults, and no
+  request-payload or Uvicorn access logging. The smoke completion returned the expected text.
+- Added deterministic SHA-256 case sharding, independent OpenAI clients, strict prefix resume,
+  per-row corpus/config/shard provenance, raw qualification output with parallel guardrail fields,
+  and a fail-closed source-order merger. The authoring path rejects blind inputs.
+- Ran and validated the full 6,921 publisher rows plus the committed 24- and 45-case diagnostic
+  corpora through the served LoRA. No sequential evaluation score or artifact was modified.
+- Swept 16, 32, 64, and 128 publisher clients on the final server profile. Validated-merge wall
+  times were 91, 87, 83, and 84 seconds; 64 clients is the measured default. Peak observed vLLM
+  intervals reached 18.1k prompt tokens/s and 1.43k generated tokens/s with no waiting requests or
+  preemption. Raw outputs and server artifacts remain outside Git under `/data`.
+- Full verification passed: 111/111 script tests, 10/10 host tests, shell syntax, command rendering,
+  smoke inference, diagnostic/publisher merges, and `git diff --check`. Sanitized evidence is
+  `docs/evaluation/results/2026-08-18-vllm-sharded-evaluation.json`.

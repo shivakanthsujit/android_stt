@@ -6,6 +6,7 @@ import json
 import sys
 import tempfile
 import unittest
+import urllib.error
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -61,6 +62,16 @@ def _write_case(path: Path, raw: str = "uh keep this") -> None:
 
 
 class RunnerUnitTest(unittest.TestCase):
+    def test_cleanup_instruction_v2_uses_training_prompt_and_exact_wrapper(self) -> None:
+        self.assertEqual(
+            runner.CLEANUP_INSTRUCTION_V2.read_text(encoding="utf-8").strip(),
+            runner.system_prompt("cleanup_instruction_v2"),
+        )
+        self.assertEqual(
+            "Transcript:\nuh keep this",
+            runner.user_message("cleanup_instruction_v2", "uh keep this"),
+        )
+
     def test_voiceink_variant_uses_pinned_training_prompt_and_exact_wrapper(self) -> None:
         prompt = runner.system_prompt("voiceink_task_tuned")
         self.assertEqual(
@@ -271,6 +282,122 @@ class RunnerUnitTest(unittest.TestCase):
             )
             with self.assertRaisesRegex(runner.RunnerError, "duplicate case id"):
                 runner.load_cases(path)
+
+    def test_hash_shards_are_disjoint_complete_and_order_independent(self) -> None:
+        case_ids = ["zeta", "alpha", "middle", "case-004", "case-005"]
+        assignments = {
+            case_id: runner.stable_shard_index(case_id, 3) for case_id in case_ids
+        }
+        self.assertEqual(
+            assignments,
+            {
+                case_id: runner.stable_shard_index(case_id, 3)
+                for case_id in reversed(case_ids)
+            },
+        )
+        assigned = [
+            case_id
+            for shard_index in range(3)
+            for case_id in case_ids
+            if assignments[case_id] == shard_index
+        ]
+        self.assertCountEqual(case_ids, assigned)
+        self.assertEqual(len(case_ids), len(set(assigned)))
+
+    def test_raw_scoring_preserves_parallel_guardrail_evidence(self) -> None:
+        case = runner.EvaluationCase(
+            "case",
+            "The benchmark completed in 237 milliseconds.",
+            "The benchmark completed in 237 milliseconds.",
+            (),
+            (),
+        )
+        chat_result = runner.ChatResult(
+            "The benchmark finished in 237 milliseconds.",
+            "stop",
+            None,
+            None,
+            2.0,
+            4.0,
+            1,
+        )
+        record = runner.make_result_record(
+            evaluation_case=case,
+            chat_result=chat_result,
+            model="model",
+            quantization="bf16-lora",
+            prompt_variant="cleanup_instruction_v2",
+            output_tokens=16,
+            temperature=0.0,
+            raw_scoring=True,
+        )
+        self.assertEqual(chat_result.text, record["selected_text"])
+        self.assertFalse(record["used_fallback"])
+        self.assertTrue(record["guardrail_would_fallback"])
+        self.assertEqual(case.raw, record["guardrail_selected_text"])
+        self.assertTrue(record["raw_model_output_is_selected_for_scoring"])
+
+    def test_resume_appends_only_after_valid_completed_prefix(self) -> None:
+        response = json.dumps(
+            {
+                "choices": [
+                    {
+                        "message": {"content": "Keep this."},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {"completion_tokens": 3},
+            }
+        ).encode()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cases = root / "cases.jsonl"
+            output = root / "results.jsonl"
+            rows = [
+                {
+                    "id": case_id,
+                    "raw": "uh keep this",
+                    "expected": "Keep this.",
+                    "categories": ["fillers"],
+                    "must_preserve": ["Keep this"],
+                }
+                for case_id in ("first", "second")
+            ]
+            cases.write_text(
+                "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
+            )
+            with mock.patch.object(
+                runner.urllib.request,
+                "urlopen",
+                side_effect=[_FakeResponse(response), urllib.error.URLError("down")],
+            ), self.assertRaises(SystemExit):
+                runner.main(
+                    [
+                        "--model", "model", "--cases", str(cases), "--output", str(output),
+                        "--no-stream", "--raw-scoring", "--temperature", "0",
+                        "--prompt-variant", "cleanup_instruction_v2",
+                    ]
+                )
+            self.assertEqual(1, len(output.read_text(encoding="utf-8").splitlines()))
+            with mock.patch.object(
+                runner.urllib.request, "urlopen", return_value=_FakeResponse(response)
+            ) as urlopen:
+                self.assertEqual(
+                    0,
+                    runner.main(
+                        [
+                            "--model", "model", "--cases", str(cases), "--output", str(output),
+                            "--no-stream", "--raw-scoring", "--temperature", "0",
+                            "--prompt-variant", "cleanup_instruction_v2", "--resume",
+                        ]
+                    ),
+                )
+            self.assertEqual(1, urlopen.call_count)
+            completed = [
+                json.loads(line)["case_id"]
+                for line in output.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(["first", "second"], completed)
 
 
 if __name__ == "__main__":

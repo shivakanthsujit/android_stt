@@ -209,6 +209,21 @@ deferred until cleanup is no longer the demonstrated bottleneck.
 See [the test log](docs/project/TEST_LOG.md) and
 [static result summaries](docs/evaluation/results/) for the durable evidence.
 
+## RTX A6000 vLLM evaluation
+
+The training machine has a separate, locked vLLM 0.8.5 / CUDA 12.4 environment for serving the
+pinned Qwen3-0.6B base and a startup-loaded LoRA. One local server can feed multiple deterministic
+evaluation clients; shard assignment, strict resume checks, and validated source-order merging are
+built into the launcher. Large environments, model artifacts, shards, and raw results stay under
+`/data/rise/android_stt/`, outside Git.
+
+Start with [the vLLM serving guide](docs/training/VLLM_SERVING.md), then use
+[the sharded evaluation guide](docs/evaluation/SHARDED_OPENAI_EVAL.md). The client always sends
+Qwen's non-thinking chat-template option and records raw output for qualification; guardrail output
+is parallel evidence and cannot turn a raw semantic failure into a passing checkpoint. The runner
+refuses blind evaluation paths and records per-row source, shard, corpus-hash, and configuration
+fingerprints for reproducibility.
+
 ## Airplane-mode acceptance check
 
 Do this separately for each benchmark model, only after its first load has completed while online:

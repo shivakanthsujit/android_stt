@@ -168,6 +168,12 @@ Last updated: 2026-08-18
   48 output-cap hits, and 3,098 guardrail flags. Generation exited zero with exactly 6,921 result
   rows. Mixed-concurrency A6000 latency was 91.5 ms median TTFT and 583.4 ms median total; do not
   treat it as a clean standalone benchmark.
+- A separate locked vLLM 0.8.5 / Python 3.10 / Torch 2.6.0+cu124 environment now serves the pinned
+  Qwen3-0.6B base and completed Sotto LoRA on the A6000. The deterministic multi-client runner
+  shards by case ID, resumes only validated prefixes, records raw and parallel guardrail evidence,
+  refuses blind paths, and validates a source-order merge. Complete publisher sweeps took 91, 87,
+  83, and 84 seconds at 16, 32, 64, and 128 clients; 64 is the measured default for this workload.
+  The server remains available on `127.0.0.1:8000`, and all raw results remain under `/data`.
 - Cross-dataset generation is complete. The Sotto adapter reached 472/1,000 exact on Disfl-QA dev
   with 732 guardrail flags and 32/250 exact on Nyra validation with 76 guardrail flags. Neither
   result justifies skipping standalone source training.
@@ -207,4 +213,5 @@ Last updated: 2026-08-18
 5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve the completed
    Sotto run and launch the fixed-recipe standalone Disfl-QA experiment, followed by Nyra. Compare
    the three source adapters before deciding on combined training. Preserve the stricter
-   reviewed-pilot path for later qualification work.
+   reviewed-pilot path for later qualification work. Use the locked vLLM server plus 64 sharded
+   clients for subsequent large evaluations unless a changed model/workload is re-benchmarked.

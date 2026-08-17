@@ -1,6 +1,6 @@
 # Decisions
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 ## Product and architecture
 
@@ -135,6 +135,14 @@ Last updated: 2026-08-17
     exactness was 472/1,000 for Disfl-QA with 732 guardrail flags and 32/250 for Nyra with 76 flags.
     Run the identical one-epoch source adapters after Sotto publisher scoring; decide on the combined
     run afterward rather than assuming it is necessary.
+31. Serve RTX evaluation checkpoints through a separately locked vLLM environment rather than the
+    training environment. For the current Qwen3-0.6B LoRA on one A6000, pin vLLM 0.8.5 with the
+    CUDA 12.4 wheel stack, BF16, prefix caching, a 16,384-token scheduler budget, no request/access
+    logging, and request-level `enable_thinking=false`. Use deterministic SHA-256 case sharding,
+    strict resume/merge validation, raw scoring, and 64 clients as the measured publisher default.
+    Re-benchmark concurrency for a different model or workload. For future multimodal Qwen3.5
+    served on a compatible newer vLLM/driver stack, use text-only language-model mode and omit MTP
+    for high-concurrency throughput.
 
 ## Android/toolchain
 

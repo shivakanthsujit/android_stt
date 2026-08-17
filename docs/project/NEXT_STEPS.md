@@ -1,6 +1,6 @@
 # Next steps
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 ## Completed: Milestone 2 — Liquid cleanup model evaluation
 
@@ -123,6 +123,10 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   48 capped, and 3,098 guardrail-flagged outputs. The evaluator exited zero and the cases, results,
   provenance, and score artifacts are hashed in
   `docs/evaluation/results/2026-08-18-direct-sotto-qwen3-evaluation.json`.
+- [x] Add the isolated vLLM serving environment and deterministic multi-client evaluation path.
+  Smoke the served LoRA, validate publisher plus both committed diagnostic merges, and sweep full
+  publisher concurrency. Use 64 clients for this Qwen3-0.6B/A6000 workload (83 seconds for 6,921
+  cases); remeasure if the base, output distribution, or GPU changes.
 - [ ] Train the standalone Disfl-QA adapter next with the identical fixed recipe, then run its
   publisher validation and retired-diagnostic raw evaluation. Train Nyra afterward. Decide whether
   to train the combined adapter only after comparing all three standalone adapters; do not assume

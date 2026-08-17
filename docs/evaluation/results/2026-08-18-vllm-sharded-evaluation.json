@@ -1,0 +1,134 @@
+{
+  "schema_version": "vllm-sharded-evaluation-evidence-v1",
+  "date": "2026-08-18",
+  "host_role": "separate RTX A6000 training machine",
+  "repository_commit_before_changes": "79d22a27c9e03112d2f44380d5fb8d8113815058",
+  "server": {
+    "vllm_version": "0.8.5",
+    "vllm_source_revision": "ba41cc90e8ef7f236347b2f1599eec2cbb9e1f0d",
+    "python_version": "3.10.19",
+    "torch_version": "2.6.0+cu124",
+    "transformers_version": "4.51.3",
+    "gpu": "NVIDIA RTX A6000",
+    "gpu_total_mib": 49140,
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 4096,
+    "max_num_seqs": 256,
+    "max_num_batched_tokens": 16384,
+    "prefix_caching": true,
+    "request_payload_logging": false,
+    "uvicorn_access_logging_during_measured_run": true,
+    "uvicorn_access_logging_in_final_profile": false,
+    "run_config_sha256": "4baae8e8851db5d8038624baa6326c123b7c176e8a1d5929624a00005e8da813",
+    "final_config_sha256": "ae0ae62aab555c1ca01c3eea9f8bc9fba4af7d9c6f9cb588c0518507b3590e49",
+    "environment_lock_sha256": "33b5886e9c3df35a263a26ee682b2257d7ec47c648b9040c5d95a04bb6ac5c28"
+  },
+  "model": {
+    "base": "Qwen/Qwen3-0.6B",
+    "base_revision": "61641f84fa567ab7b58e216b4930d2fe28bfd045",
+    "adapter_served_name": "sotto-qwen3-0.6b-e1-seed23",
+    "adapter_model_sha256": "22736a4d4aff8b5788386a80d643296874c3b54dd980404e7196a5665023fa2b",
+    "adapter_config_sha256": "f08b77c9295ebedfee2c0230f7277c7ec5d17f33ea54d040c19440b19d71249d"
+  },
+  "client": {
+    "prompt_variant": "cleanup_instruction_v2",
+    "temperature": 0.0,
+    "enable_thinking": false,
+    "raw_model_output_selected_for_scoring": true,
+    "guardrail_output_recorded_in_parallel": true,
+    "request_extra_sha256": "d0884f217d7d3661f19a7596c4aafdaed3ee34e259fa57b93e386c714da740b0",
+    "runner_sha256": "708440a2ed276d5836293fb190178be8884428d66e87b16341dd4c7790c5b59b",
+    "launcher_sha256": "e4bfcaef88d0f06fdadefca3ef019963eaa8706ff2fa6f1f355e1474abf31804",
+    "merger_sha256": "57b0a270874765ad46c58cdf72d35bc3147cb4b19fecf487545737213016fe5a"
+  },
+  "publisher_validation": {
+    "case_count": 6921,
+    "client_count": 16,
+    "cases_sha256": "25cbb028524515a40e3f116425b73403045c3c178d23401347287cc6a7117881",
+    "results_sha256": "ce05904f7158c0fd54ed2e57b2a2c465d933e57d78ee47aea1e1a6cbe5d3b717",
+    "evaluation_fingerprint": "d5dfb9879425059217f414e48cb30872a31a824e4288ca7815382fac18ade9f1",
+    "validated_merged_rows": 6921,
+    "wall_seconds_from_first_shard_create_to_merge": 91.23,
+    "cases_per_second": 75.86,
+    "maximum_request_attempts": 1,
+    "median_ttft_ms": 83.44,
+    "median_total_ms": 179.69,
+    "raw_exact_count": 4750,
+    "guardrail_flag_count": 3102,
+    "output_cap_count": 48,
+    "observed_gpu_sample": {
+      "timestamp": "2026-08-18T01:17:56+09:00",
+      "memory_used_mib": 44491,
+      "utilization_percent": 78,
+      "power_watts": 198.09
+    },
+    "observed_vllm_interval_metrics": {
+      "prompt_tokens_per_second": 8491.8,
+      "generation_tokens_per_second": 690.5,
+      "prefix_cache_hit_rate_percent": 87.6
+    }
+  },
+  "throughput_sweep": {
+    "method": "Complete 6921-case publisher runs with the final no-access-log server profile; wall time is first shard creation through validated merged-file completion, rounded to whole seconds.",
+    "runs": [
+      {
+        "clients": 16,
+        "wall_seconds": 91,
+        "cases_per_second": 76.05,
+        "results_sha256": "0aa669417fc4ef20f0a3be88decb36d9cb79b45f1762314ce4fc964d5e40e9bb"
+      },
+      {
+        "clients": 32,
+        "wall_seconds": 87,
+        "cases_per_second": 79.55,
+        "results_sha256": "cacc5370c43c797642f2f4d0275b904584288c1d04a2eae79bd54968cb7547fd"
+      },
+      {
+        "clients": 64,
+        "wall_seconds": 83,
+        "cases_per_second": 83.39,
+        "results_sha256": "f01eed01fae47f5770200704cc56514c9739ea110888bfc886f8b83533b3bc0f"
+      },
+      {
+        "clients": 128,
+        "wall_seconds": 84,
+        "cases_per_second": 82.39,
+        "results_sha256": "7ac7f5646132d3211491ebd970a461aa439ad92602dddde16de63f2896bf30db"
+      }
+    ],
+    "selected_client_count": 64,
+    "selected_quiet_validation_results_sha256": "921ec7f58e81dca13ef777b19f1e3d1b4c799cd843cccf35bf9b3f3810c8c765",
+    "selected_quiet_validation_wall_seconds": 83,
+    "best_observed_prompt_tokens_per_second": 18102.7,
+    "best_observed_generation_tokens_per_second": 1426.2,
+    "observed_waiting_requests": 0,
+    "observed_preemption": false
+  },
+  "diagnostic_corpora": [
+    {
+      "name": "cleanup_cases",
+      "case_count": 24,
+      "client_count": 4,
+      "validated_merged_rows": 24,
+      "results_sha256": "b6b59445ffea2f8b0d4b6663fb57d3aa22d399636334a0d65b9b88d419d3825a"
+    },
+    {
+      "name": "cleanup_cases_heldout_v1",
+      "case_count": 45,
+      "client_count": 4,
+      "validated_merged_rows": 45,
+      "results_sha256": "3259ac356fa9300dba4c4a3d066b5499f844898b144e11ed38644461b11a4e3d"
+    }
+  ],
+  "validation": {
+    "smoke_test": "passed",
+    "publisher_merge": "passed",
+    "diagnostic_merges": "passed",
+    "script_tests": "111/111 passed",
+    "host_tests": "10/10 passed",
+    "blind_v2_used": false,
+    "sequential_evaluation_scored_or_modified_by_this_work": false
+  },
+  "artifact_policy": "Raw cases, shard files, merged outputs, server logs, environments, model weights, adapters, and checkpoints remain outside Git under /data. This report contains aggregate and cryptographic evidence only."
+}
