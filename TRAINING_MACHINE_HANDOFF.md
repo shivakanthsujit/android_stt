@@ -1,6 +1,6 @@
 # Cleanup training-machine handoff
 
-Status: ready for a new RTX A6000 session to build the training pipeline
+Status: RTX Phase 0 and reproducible pipeline implemented; durable import/review/Gate A next
 
 This is the entry point for continuing Local Flow cleanup work on the separate training machine.
 It contains the authority, constraints, source pins, execution order, deliverables, and recovery
@@ -14,8 +14,11 @@ Build a conservative, task-specific, sub-1B transcript cleanup model that:
 - removes clear fillers, immediate repetitions, abandoned starts, and superseded correction text;
 - applies explicit self-corrections;
 - fixes conservative punctuation and capitalization;
-- otherwise preserves the speaker's exact meaning and wording; and
-- never answers, executes, summarizes, refuses, or elaborates on dictated content.
+- repairs clear grammar errors and contextually obvious ASR misrecognitions in dedicated reviewed
+  strata;
+- otherwise preserves the speaker's exact meaning and wording;
+- applies only the versioned allowlist of explicit transcript-formatting directives; and
+- never answers, performs external actions, summarizes, refuses, or elaborates on dictated content.
 
 The first controlled experiment compares matching adapters for:
 
@@ -37,8 +40,8 @@ sizes.
 4. `docs/project/DECISIONS.md`
 5. `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
 6. `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
-7. `docs/training/DATASET_SCHEMA_V1.md`
-8. `docs/training/cleanup_training_record_v1.schema.json`
+7. `docs/training/DATASET_SCHEMA_V2.md`
+8. `docs/training/cleanup_training_record_v2.schema.json`
 9. `docs/evaluation/README.md`
 10. `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`
 11. `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`
@@ -49,7 +52,7 @@ update both documents explicitly before training.
 
 ## Current repository boundary
 
-Already implemented and committed:
+Implemented in the current Phase 0 checkpoint:
 
 - two frozen evaluation-only corpora containing 69 total cases;
 - historical raw outputs and semantic audits for rejected cleanup models;
@@ -58,16 +61,20 @@ Already implemented and committed:
 - standard-library dataset validator with review, provenance, frozen-overlap, split-leakage,
   lexical-addition, and deterministic manifest checks;
 - task-specific training design and acceptance gates; and
-- exact immutable revisions for three candidate public datasets.
+- exact immutable revisions for three candidate public datasets;
+- a locked CUDA 12.4 uv environment and fail-closed A6000/environment check;
+- pinned/resumable source fetch, real-schema import/quarantine, and text-free coverage profiling;
+- deterministic pending-only supplements for measured paragraph/adversarial/Unicode gaps;
+- family/near-duplicate split grouping, quota-aware pilot selection, human-review tooling, and
+  Gate A validation; and
+- matched LoRA train/resume/inference/scoring and read-only run-monitoring tools.
 
 Not implemented yet:
 
-- dataset fetch/import/filter/audit scripts;
 - accepted train/dev rows or blind-v2 rows;
-- a locked Python/CUDA environment;
-- model training configuration and launcher;
-- direct checkpoint inference/evaluation;
-- checkpoint selection report;
+- completed human decisions, attestations, or a passing Gate A report;
+- downloaded pinned base-model snapshots or any GPU smoke/pilot run;
+- checkpoint evaluation/selection report;
 - adapter merge and Q4 export; or
 - Android conversion/integration for a trained model.
 
@@ -138,7 +145,8 @@ The environment deliverables are:
 
 - a lockfile or fully pinned requirements file;
 - an idempotent setup/check script;
-- a captured environment report including `pip freeze`, PyTorch/CUDA visibility, and GPU details;
+- a captured environment report including a complete installed-distribution inventory (without
+  requiring `pip` inside a pip-free uv environment), PyTorch/CUDA visibility, and GPU details;
   and
 - a 32-example forward/backward smoke test before any full run.
 
@@ -168,17 +176,19 @@ download does not match the recorded revision or if schema columns differ from e
 Treat every external row as untrusted candidate material. In particular:
 
 - Sotto is synthetic and its public card's counts are internally inconsistent across revisions.
-- Do not automatically accept `grammar` or `misheard_words` rows; they violate this project's
-  no-guessing/minimal-edit policy.
-- Quarantine crutch-word removal, list/paragraph formatting, mixed, medical, legal, financial, and
-  novel-token examples for explicit review.
+- Retain `grammar` and `misheard_words` rows as separate review queues and pilot strata; never
+  auto-approve them, and reject speculative or meaning-changing repairs during human review.
+- Include explicit spoken punctuation/list/paragraph formatting as a dedicated reviewed pilot
+  stratum. Quarantine every such row for directive-scope, item-order, and invention review.
+- Quarantine crutch-word removal, mixed, medical, legal, financial, protected-literal, and every
+  novel-token example for explicit review with exact `allowed_additions`.
 - Do not automatically delete uncertainty, stance, discourse, negation, or repeated words that may
   be intentional.
 - Do not use the public source splits directly. Build project splits by semantic family/template
   after deduplication so siblings cannot cross train/dev.
 - Preserve source license and attribution in every converted record and in the dataset manifest.
 
-The importer must convert candidate rows into `cleanup-training-record-v1`, infer only conservative
+The importer must convert candidate rows into `cleanup-training-record-v2`, infer only conservative
 anchors/categories, and mark them pending review. It must not mark generated labels approved.
 
 ## Phase 3: build the pilot dataset
@@ -187,12 +197,16 @@ The pilot target is 5,000 train and 500 dev records. Use the distribution and cr
 from the training plan, with corrections deliberately overrepresented. A practical initial
 5,000-row train mixture is:
 
-- 1,500 explicit self-corrections and false starts;
-- 1,000 fillers and immediate repetitions;
-- 1,000 clean/no-op examples;
-- 750 Disfl-QA question corrections;
-- 500 technical/name/number/version/negation/uncertainty cases; and
-- 250 adversarial edit-but-do-not-answer cases.
+- 950 explicit self-corrections and false starts;
+- 550 fillers and immediate repetitions;
+- 500 clean/no-op examples;
+- 500 Disfl-QA question corrections;
+- 400 technical/name/number/version/negation/uncertainty cases;
+- 500 explicit spoken punctuation/list/paragraph formatting cases;
+- 500 conservative grammar-repair cases;
+- 500 context-supported ASR-repair cases;
+- 300 mixed/crutch-word cases; and
+- 300 adversarial edit-but-do-not-answer cases.
 
 This mixture is a starting target, not permission to accept unsafe rows to fill a quota. Build the
 500-row dev set independently at roughly the same risk/category proportions, with no shared family,
@@ -216,7 +230,11 @@ Required processing order:
 The repository validator is necessary but not sufficient. Add near-duplicate checks using token
 3-grams, character 5-grams, and normalized edit similarity as required by the training plan.
 
-Do not train until Gate A passes and its report is committed. The training-machine session may
+Do not train until pilot Gate A passes and its report is committed. Pilot Gate A means all selected
+train/dev rows are human-approved, dev is fully reviewed, quotas/leakage/provenance checks pass,
+and the sealed blind-evaluator contract exists without any blind reference being visible to this
+context. Full-v1 Gate A later adds the independently double-reviewed/adjudicated blind hash. The
+training-machine session may
 prepare candidate data, but final approval still requires the review policy described in the
 training plan. Automated or model-based review is not a substitute for the required human review
 on safety-critical and blind references.

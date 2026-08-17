@@ -86,8 +86,50 @@ Last updated: 2026-08-17
 - `TRAINING_MACHINE_HANDOFF.md` is the self-contained entry point for the RTX A6000 session. It
   authorizes building the missing data/training/evaluation pipeline and running the pilot there,
   subject to Gate A, monitoring, artifact, review, and blind-isolation rules.
+- RTX Phase 0 hardware/storage checks pass on host `dante`: the user verified NVIDIA-SMI
+  550.144.03, CUDA compatibility 12.4, an idle 49,140 MiB RTX A6000, and about 9.6 TiB free under
+  the writable `/data/rise/android_stt/` artifact root. The exact CUDA 12.4 environment lock is
+  synchronized under `/data/rise/android_stt/env`; the exact package check and BF16 CUDA matmul
+  pass. See
+  `docs/training/2026-08-17-RTX-A6000-PHASE0.md`.
+- The first reproducible data-pipeline checkpoint now contains pinned-source configuration, a
+  revision-verifying/hash-recording fetcher, conservative Sotto/Disfl-QA/Nyra import and
+  quarantine logic, pre-split family/near-duplicate grouping, exact pilot quota checks, and unit
+  tests. The 14-file, 1.1 GiB pinned source snapshot passes identity/byte/SHA verification; the
+  real importer dry run passes, no public row is approved, and the durable `/data` import remains
+  to be created.
+- A text-free profile of all 147,142 mappable pinned rows records 63,990 candidates, 81,325
+  quarantined rows, and 1,827 rejected rows without consuming source-native holdouts. Even as an
+  optimistic upper bound, public data is short by 326 adversarial-primary rows, 53 paragraph rows,
+  402 adversarial cross-cutting rows, and 524 Unicode/multilingual rows for the 5,000/500 pilot.
+  The sanitized profile is `docs/evaluation/results/2026-08-17-cleanup-source-profile.json`.
+- A deterministic supplemental generator now produces 2,800 pending, non-blind candidates outside
+  Git: 720 adversarial-primary, 400 paragraph-primary, and 1,576 Unicode/multilingual cross-cutting
+  rows, plus edit-bearing adversarial variants. Its dry run passes the V2 validator for all 2,800
+  rows. The quota builder reserves rare cross-cutting supply and satisfies minima during selection;
+  no generated or public row is auto-approved.
+- Dataset/annotation contract V2 treats explicit bullet/numbered-list, paragraph-break, and
+  spoken-punctuation directives as reviewed editor controls while preserving arbitrary commands
+  as text. Following product clarification, the 5,000/500 pilot also has dedicated 500/50 strata
+  for conservative grammar repair and context-supported ASR repair, retains mixed/crutch,
+  high-stakes, protected, and declared lexical-addition candidates for human review, and still
+  rejects invented formatting items automatically.
 - Do not start LoRA/QLoRA training on this Mac; use it for Android work, authoring/validation, local
   inference screens, and result analysis only.
+- The immediate experimental direction is now four direct-source adapters: Sotto, Disfl-QA, Nyra,
+  and all three combined. Hold Qwen3-0.6B and a one-epoch LoRA recipe fixed so the experiment
+  measures the dataset effect; train Sotto first and evaluate its raw output before launching the
+  other three. This fast evidence track is documented in
+  `docs/training/DIRECT_SOURCE_EXPERIMENT_PLAN.md` and does not qualify an adapter for deployment.
+- A separate direct-source trainer/config now supports Sotto, Disfl-QA, Nyra, and combined
+  publisher splits without weakening the reviewed-pilot Gate A path. It verifies source
+  revisions/bytes/hashes, nonempty-pair counts, frozen-corpus isolation, exact optimizer steps,
+  assistant-only masking, and the no-truncation 1,024-token contract. No model download, adapter,
+  checkpoint, or GPU training run exists yet. The next action is the two-step Sotto smoke.
+- The current base-model reassessment keeps Qwen3-0.6B plus BF16 rank-16 LoRA for the controlled
+  source comparison, then prioritizes Qwen3.5-0.8B as the stronger-base follow-up. Gemma 3 1B is
+  the quality alternative and LFM2.5-350M is the deployment-speed wildcard; Gemma 4 E2B is outside
+  the sub-1B experiment.
 
 ## Toolchain
 
@@ -107,5 +149,7 @@ Last updated: 2026-08-17
    preflight. Do not run the Mac/Pixel steps below.
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Continue active Milestone 4 in `NEXT_STEPS.md`. The training-machine next action is the pinned
-   source fetch/import/audit pipeline—not an immediate unvalidated full training run.
+5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, the immediate next action is
+   the Sotto-only direct-source Qwen3-0.6B run in
+   `docs/training/DIRECT_SOURCE_EXPERIMENT_PLAN.md`; preserve the stricter reviewed-pilot path for
+   later qualification work.

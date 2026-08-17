@@ -89,6 +89,24 @@ its labels automatically. Full report:
 
 ### Small-model fine-tuning path
 
+#### Immediate direct-source evidence track
+
+The next training-machine session starts with
+`docs/training/DIRECT_SOURCE_EXPERIMENT_PLAN.md`. This exploratory track intentionally gets models
+to evaluation before completing the stricter balanced/reviewed corpus.
+
+- [x] Add a separate direct-source loader/config/trainer without weakening or faking the reviewed
+  pilot Gate A path.
+- [x] Fix Qwen3-0.6B, one epoch, BF16 LoRA rank 16, effective batch 32, learning rate 2e-4, seed
+  23, assistant-only loss, and a no-thinking 1,024-token format for the four-way comparison.
+- [ ] Run one 32-row/two-step mechanical smoke, then train the full 135,503-row Sotto train split.
+- [ ] Evaluate the Sotto adapter on publisher validation and the retired 69 diagnostics, including
+  raw semantic review and A6000 TTFT/total-latency/throughput/VRAM measurements.
+- [ ] If the Sotto run completes cleanly, repeat the identical recipe for full Disfl-QA, full Nyra
+  text pairs, and the combined train splits; write one four-way comparison report.
+- [ ] Use the evidence to choose whether the next base comparison is Qwen3.5-0.8B, Gemma 3 1B, or
+  whether data/recipe changes matter more. Do not use blind-v2 during this exploratory iteration.
+
 Prepare all data and training inputs portably in this repository, but run training only on the
 separate training machine when it is available. Do not start training on this Mac.
 
@@ -99,7 +117,7 @@ separate training machine when it is available. Do not start training on this Ma
   as untrusted until project validation/review.
 - [x] Add a self-contained RTX A6000 handoff covering environment preflight, source pins, data
   isolation, training/evaluation deliverables, monitoring, resume, artifacts, and blind-v2 rules.
-- [ ] Build the pinned source fetcher, importer, conservative filter/quarantine rules,
+- [x] Build the pinned source fetcher, importer, conservative filter/quarantine rules,
   near-duplicate family splitter, and deterministic source manifest.
 - [ ] Build a balanced, reviewable training/dev corpus covering fillers, repeats, false starts,
   explicit corrections, punctuation, commands/questions-as-data, adversarial text, names, numbers,
@@ -112,6 +130,14 @@ separate training machine when it is available. Do not start training on this Ma
   review.
 - [ ] Quantize the best checkpoint and re-run seed, regression, and blind-v2 quality gates with the
   same short output bound and non-thinking behavior.
+
+Training-machine checkpoint (2026-08-17): fetch/import/filter/source-holdout/family-split/quota,
+Gate A, training/resume, inference/scoring, and read-only monitoring code is implemented and fixture
+tested. The locked CUDA environment, source fetch/verification, real importer dry run, and sanitized
+coverage census pass. The measured public gaps now have a deterministic pending-only supplemental
+generator. The balanced-corpus item remains open until the durable `/data` import/supplement outputs
+are built, source licenses and all selected rows are human-reviewed, and Gate A/release manifests
+pass. The next external step is durable import and pending review selection.
 
 ### Qualification gate
 

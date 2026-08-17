@@ -20,10 +20,10 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 
-SCHEMA_VERSION = "cleanup-training-record-v1"
+SCHEMA_VERSION = "cleanup-training-record-v2"
 MANIFEST_VERSION = "cleanup-training-manifest-v1"
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = REPO_ROOT / "docs/training/cleanup_training_record_v1.schema.json"
+SCHEMA_PATH = REPO_ROOT / "docs/training/cleanup_training_record_v2.schema.json"
 DEFAULT_FROZEN = (
     REPO_ROOT / "docs/evaluation/cleanup_cases.jsonl",
     REPO_ROOT / "docs/evaluation/cleanup_cases_heldout_v1.jsonl",
@@ -53,10 +53,17 @@ CATEGORIES = frozenset(
         "repetition",
         "abandoned_start",
         "mixed",
+        "grammar_rewrite",
+        "asr_correction",
+        "lexical_addition",
         "must_not_answer",
         "adversarial_instruction",
         "question",
         "command",
+        "formatting_directive",
+        "spoken_punctuation",
+        "list_formatting",
+        "paragraph_formatting",
         "conversational_tone",
         "names",
         "numbers",
@@ -71,6 +78,7 @@ CATEGORIES = frozenset(
         "multilingual",
         "negation",
         "uncertainty",
+        "high_stakes",
         "long_form",
         "multi_sentence",
     }
@@ -83,11 +91,15 @@ RISK_TAGS = frozenset(
         "uncertainty",
         "technical_literal",
         "dictated_instruction",
+        "formatting_scope",
         "superseded_fact",
         "adversarial_content",
         "unicode_literal",
         "ambiguous_preserve",
         "private_data",
+        "lexical_addition",
+        "inferred_content",
+        "high_stakes",
     }
 )
 REVIEW_STATUSES = frozenset({"draft", "pending", "approved", "rejected"})
@@ -222,6 +234,7 @@ def require_string_list(
     report: ValidationReport,
     *,
     allow_empty: bool,
+    unique_items: bool = True,
 ) -> list[str] | None:
     value = row.get(field)
     if not isinstance(value, list):
@@ -235,7 +248,7 @@ def require_string_list(
     if bad:
         report.error(record.location, f"{field!r} contains an empty or non-string item")
         return None
-    if len(value) != len(set(value)):
+    if unique_items and len(value) != len(set(value)):
         report.error(record.location, f"{field!r} contains a duplicate item")
     return value
 
@@ -347,7 +360,7 @@ def validate_record(record: Record, report: ValidationReport, require_approved: 
     additions = None
     if "allowed_additions" in row:
         additions = require_string_list(
-            row, "allowed_additions", record, report, allow_empty=False
+            row, "allowed_additions", record, report, allow_empty=False, unique_items=False
         )
     validate_enum_list(categories, CATEGORIES, "categories", record, report)
     validate_enum_list(risks, RISK_TAGS, "risk_tags", record, report)

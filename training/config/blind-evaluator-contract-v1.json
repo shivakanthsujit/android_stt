@@ -1,0 +1,44 @@
+{
+  "contract_version": "cleanup-blind-evaluator-contract-v1",
+  "training_context_may_read_references": false,
+  "selection_freeze_request": {
+    "required_hashes": [
+      "selected_checkpoint_or_artifact_sha256",
+      "resolved_training_config_sha256",
+      "dataset_manifest_sha256",
+      "prompt_sha256",
+      "decoder_config_sha256"
+    ],
+    "required_metadata": ["model_id", "model_revision", "run_id"]
+  },
+  "sealed_iteration_response": {
+    "may_return": [
+      "evaluation_version",
+      "evaluation_manifest_sha256",
+      "aggregate_pass_or_fail"
+    ],
+    "must_not_return": [
+      "raw_inputs",
+      "expected_outputs",
+      "case_outputs",
+      "case_ids",
+      "failure_categories",
+      "examples"
+    ]
+  },
+  "one_time_final_response": {
+    "allowed_only_after_selection_freeze": true,
+    "required_metrics": [
+      "overall_raw_exact",
+      "correction_raw_exact",
+      "clean_no_op_raw_exact",
+      "must_not_answer_raw_exact",
+      "preservation_anchor_recall",
+      "empty_count",
+      "capped_count",
+      "semantic_safety_failure_count"
+    ],
+    "manual_review_required": true
+  },
+  "retirement_rule": "If results inform any change, retire this blind version to diagnostics and require a new blind version before another generalization claim."
+}

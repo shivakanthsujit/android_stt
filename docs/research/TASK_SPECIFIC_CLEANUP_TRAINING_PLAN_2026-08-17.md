@@ -12,19 +12,22 @@ task-specific sub-1B cleanup model. The current offline Moonshine path remains t
 speech input; formal STT evaluation can continue later, but it is not on the critical path for this
 experiment because cleanup can be trained and evaluated directly from text.
 
-The model is a literal transcript editor, not a general rewriter. Given a final STT transcript, it
+The model is a conservative transcript editor, not a general assistant. Given a final STT transcript, it
 may:
 
 - remove known fillers and abandoned wording;
 - collapse obvious immediate repetitions;
 - apply an explicit self-correction;
-- fix punctuation and capitalization; and
-- otherwise copy the wording exactly.
+- fix punctuation and capitalization;
+- repair clear grammar errors and contextually obvious ASR misrecognitions; and
+- otherwise preserve the speaker's wording and intended meaning.
 
-It must never answer or execute dictated content, invent information, silently correct a possibly
-wrong ASR word, change tone, or remove negation or uncertainty. When a change is ambiguous, the
-training target is the minimally edited input. This narrower policy is intentional; existing
-evaluation references remain frozen even where they use a slightly freer edit.
+It may apply only the versioned allowlist of explicit transcript-formatting directives. It must
+never answer dictated content, perform external actions, invent information, make a speculative
+repair, change tone, or remove negation or uncertainty. Names, numbers, versions, paths,
+identifiers, and high-stakes facts require exact preservation unless explicitly corrected by the
+speaker. When a change is ambiguous, the training target preserves the input. Existing evaluation
+references remain frozen even where their edit conventions differ.
 
 ## Existing evidence and contamination boundary
 
@@ -96,9 +99,11 @@ Schema rules:
 
 Before export, validate unique IDs, valid enums, NFC Unicode, nonempty input/output, every
 `must_preserve` anchor in `expected`, and every non-marker `must_remove` anchor in `raw`. Reject an
-example if `expected` introduces lexical content not present in `raw`, unless the exact addition is
-declared in a small reviewed `allowed_additions` field. The target policy should normally require
-no lexical additions at all.
+example if `expected` introduces lexical content not present in `raw`, unless every added token is
+declared with exact multiplicity in a reviewed `allowed_additions` field. Grammar and ASR-repair
+rows may contain such additions and must be labeled and human-reviewed. Formatting rows permit a
+declared numeral only when it corresponds exactly to an explicit spoken list marker; presentation
+punctuation, bullets, and whitespace are not lexical additions.
 
 ## Source and generation strategy
 
@@ -148,24 +153,28 @@ The primary transformation strata for train and dev should be approximately:
 
 | Transformation | Share | Full-train target |
 |---|---:|---:|
-| Exact/no-op or already clean | 20% | 5,000 |
-| Punctuation/capitalization only | 15% | 3,750 |
-| Explicit self-correction/false start | 25% | 6,250 |
-| Fillers/discourse markers | 10% | 2,500 |
-| Immediate word or phrase repetition | 10% | 2,500 |
-| Abandoned start without a factual replacement | 10% | 2,500 |
-| Mixed two-or-more operations | 10% | 2,500 |
+| Exact/no-op or already clean | 10% | 2,500 |
+| Punctuation/capitalization only | 8% | 2,000 |
+| Explicit self-correction/false start | 20% | 5,000 |
+| Fillers/discourse markers | 8% | 2,000 |
+| Immediate word or phrase repetition | 8% | 2,000 |
+| Abandoned start without a factual replacement | 8% | 2,000 |
+| Mixed two-or-more operations | 8% | 2,000 |
+| Explicit spoken list/paragraph/punctuation formatting | 10% | 2,500 |
+| Conservative grammar repair | 10% | 2,500 |
+| Context-supported ASR repair | 10% | 2,500 |
 
 These are exclusive primary strata, while safety/category labels overlap them. Enforce the
 following minimum cross-cutting coverage:
 
-- 20% dictated questions or commands that must not be answered;
+- 20% dictated questions or non-formatting commands that must not be answered;
 - 8% adversarial instruction-like text;
 - 25% names, numbers, dates, money, versions, paths, identifiers, or other protected literals;
 - 12% negation and/or uncertainty;
 - 10% non-ASCII names or multilingual/Unicode spans;
 - 20% technical text; and
-- 20% inputs of at least 25 words, including multi-sentence dictation.
+- 20% inputs of at least 25 words, including multi-sentence dictation; and
+- 2% medical, legal, financial, or other high-stakes text, all fully reviewed.
 
 Self-correction is deliberately overrepresented because it is the measured bottleneck: the
 deterministic baseline solved 0/7 held-out corrections exactly, and the best generic model solved
@@ -278,7 +287,13 @@ the sub-1B experiment or change its data splits.
 
 - All schema/provenance validators pass.
 - No train/dev overlap with the frozen 69 cases or blind families.
-- Dev is fully reviewed; blind is independently double-reviewed and locked by hash.
+- For the 5,000/500 base-comparison pilot, dev is fully reviewed, every selected row is approved
+  under the v1 annotation policy, the sealed blind-evaluator interface/metadata contract exists,
+  and no blind-v2 reference is created inside or exposed to the training context. This is **pilot
+  Gate A**.
+- Before full-v1 training or any generalization claim, blind is independently double-reviewed,
+  adjudicated, stored outside the training job's readable path, and locked by hash. This is
+  **full-v1 Gate A** and does not retroactively authorize pilot checkpoint selection on blind-v2.
 - Required transformation and safety quotas are met.
 
 ### Gate B: host quality on dev and old diagnostics

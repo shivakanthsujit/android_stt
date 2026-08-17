@@ -10,6 +10,7 @@ Start here when resuming Local Flow in a new session.
 | [TEST_LOG.md](TEST_LOG.md) | Physical-device and build verification evidence |
 | [SESSION_LOG.md](SESSION_LOG.md) | Append-only summary of completed work by date |
 | [Training-machine handoff](../../TRAINING_MACHINE_HANDOFF.md) | Complete RTX A6000 data/training/evaluation workflow |
+| [Direct-source experiment plan](../training/DIRECT_SOURCE_EXPERIMENT_PLAN.md) | Immediate four-adapter Sotto/Disfl-QA/Nyra experiment and evaluation handoff |
 
 Maintenance rule: update `CURRENT_STATE.md`, `NEXT_STEPS.md`, and `SESSION_LOG.md` at the end of
 every meaningful work session. Add stable decisions to `DECISIONS.md` and device evidence to

@@ -74,6 +74,43 @@ Last updated: 2026-08-17
 20. A new RTX A6000 session may build and run the documented pilot, but it must pass Gate A first,
     keep blind-v2 outside the optimization context, monitor/resume long jobs reproducibly, and keep
     datasets, weights, checkpoints, secrets, and private references out of git.
+21. Keep RTX source payloads, Hugging Face caches, run directories, adapters, optimizer state, and
+    checkpoints under `/data/rise/android_stt/`, outside the repository. Git receives only code,
+    locked configuration, sanitized manifests/reports, and project documentation. Checkpoint
+    transfer to another machine remains a separate user decision; do not commit checkpoints.
+22. Treat explicit spoken bullet-list, numbered-list, paragraph-break, and punctuation directives
+    as transcript editor controls under dataset/annotation policy v2. General commands and
+    instruction-like content remain literal text; cleanup never answers or performs external
+    actions. Keep grammar rewriting and guessed-ASR repair excluded from this safety-first pilot,
+    and require human review for every formatting row.
+23. Supersede the grammar/ASR exclusion in decision 22 after product clarification: represent all
+    relevant Sotto operation categories in the pilot, including conservative grammar repair,
+    context-supported ASR repair, mixed/crutch-word cleanup, explicit formatting, adversarial
+    content, protected literals, high-stakes text, and declared lexical additions. Keep them in
+    separate capped strata or cross-cutting audits, require row-level human approval, and reject
+    speculative, invented, meaning-changing, or ungrounded protected-literal edits. This expands
+    the editor behavior without permitting answers or external actions.
+24. Fill only measured public-source coverage gaps with a deterministic project-authored
+    supplemental candidate generator. The text-free pinned-source profile proves shortages in
+    adversarial-primary, explicit-paragraph, adversarial cross-cutting, and Unicode/multilingual
+    coverage even before unsafe rows are removed. Keep generated JSONL and review ledgers outside
+    Git; commit and hash the generator/configuration, mark every generated row pending, require
+    explicit human approval, and select deterministically against both exact primary quotas and
+    cross-cutting minima rather than lowering quotas or approving unsafe public targets.
+25. Before finishing the reviewed 5,000/500 qualification corpus, run a separate exploratory
+    direct-source experiment to obtain model evidence quickly. Train four adapters on Sotto,
+    Disfl-QA, Nyra text pairs, and their combined publisher train splits. Hold Qwen3-0.6B and a
+    one-epoch LoRA recipe fixed, run Sotto first, and compare raw output on publisher validation
+    plus the retired 69 diagnostics. These adapters may inform data/base/recipe choices but cannot
+    qualify for deployment without the later safety, review, blind-isolation, and raw semantic
+    gates. Keep the direct trainer separate from the reviewed-pilot Gate A path.
+26. Keep BF16 rank-16 LoRA for the first direct-source Qwen3-0.6B comparison. Although a full
+    sub-1B tune fits the RTX A6000, do not confound the dataset experiment with an adaptation-method
+    change. If the best source recipe learns useful behavior but plateaus, compare higher-capacity
+    LoRA and full BF16 fine-tuning in a separately named study. Use Qwen3.5-0.8B as the first
+    stronger base; retain Gemma 3 1B as the measured quality alternative and LFM2.5-350M as the
+    deployment-speed wildcard. Gemma 4 E2B is outside this experiment because its total parameter
+    footprint is about 5.1B, not sub-1B.
 
 ## Android/toolchain
 

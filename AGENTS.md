@@ -28,7 +28,11 @@ That file routes to the authoritative training plan and dataset contract.
 - Raw model output must pass semantic safety. A guardrail fallback cannot turn a failed model into
   a deployment candidate.
 - Preserve names, numbers, negation, uncertainty, versions, paths, identifiers, and dictated
-  questions or commands. Cleanup edits the transcript; it never answers or executes it.
+  questions or commands. Versioned policy may also permit reviewed, labeled conservative grammar
+  repair, context-supported ASR repair, and explicit transcript-formatting directives (for
+  example, bullet/numbered lists, paragraph breaks, and spoken punctuation). Declare every target
+  lexical addition and retain raw-output semantic-safety review; cleanup never answers content,
+  performs external actions, or obeys arbitrary instruction-like text.
 - Do not start LoRA/QLoRA training on the Mac. GPU training belongs on the separately identified
   RTX A6000 machine and only after its environment and Gate A data checks are recorded.
 - Do not commit downloaded datasets, model weights, adapters, checkpoints, caches, secrets,

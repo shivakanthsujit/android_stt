@@ -15,7 +15,7 @@ data/cleanup/
 
 Before creating any files, read `TRAINING_MACHINE_HANDOFF.md`,
 `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`, and
-`docs/training/DATASET_SCHEMA_V1.md`.
+`docs/training/DATASET_SCHEMA_V2.md`.
 
 Downloaded data, processed bulk rows, personal transcripts, and blind references stay local.
 Reviewed schemas, importer code, source pins, sanitized manifests, and aggregate reports belong in

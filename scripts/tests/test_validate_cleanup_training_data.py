@@ -134,6 +134,20 @@ class CleanupTrainingValidatorTest(unittest.TestCase):
             code, _, stderr = run_main(["--no-frozen-check", str(declared)])
             self.assertEqual(0, code, stderr)
 
+    def test_declared_lexical_additions_preserve_token_multiplicity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "declared-repeated.jsonl"
+            record = valid_record(
+                raw="send now",
+                expected="please send please now",
+                must_preserve=[],
+                must_remove=[],
+                allowed_additions=["please", "please"],
+            )
+            write_jsonl(path, record)
+            code, _, stderr = run_main(["--no-frozen-check", str(path)])
+            self.assertEqual(0, code, stderr)
+
     def test_rejects_duplicate_ids_and_normalized_pairs_across_files(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

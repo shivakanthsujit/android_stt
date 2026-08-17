@@ -1,0 +1,37 @@
+{
+  "config_version": "cleanup-pilot-config-v1",
+  "seed": 23,
+  "train_records": 5000,
+  "dev_records": 500,
+  "dev_fraction_before_sampling": 0.15,
+  "candidate_pool_multiplier": 4,
+  "near_duplicate": {
+    "token_3gram_jaccard": 0.82,
+    "character_5gram_jaccard": 0.88,
+    "normalized_edit_similarity": 0.90
+  },
+  "train_primary_buckets": {
+    "correction_or_false_start": 950,
+    "filler_or_repetition": 550,
+    "clean_no_op": 500,
+    "disfl_qa_correction": 500,
+    "protected_literal": 400,
+    "explicit_list_formatting": 300,
+    "explicit_paragraph_formatting": 50,
+    "explicit_spoken_punctuation": 150,
+    "grammar_rewrite": 500,
+    "asr_correction": 500,
+    "mixed_or_discourse": 300,
+    "adversarial_must_not_answer": 300
+  },
+  "minimum_cross_cutting_fraction": {
+    "must_not_answer_or_command_question": 0.20,
+    "adversarial_instruction": 0.08,
+    "protected_literal": 0.25,
+    "negation_or_uncertainty": 0.12,
+    "unicode_or_multilingual": 0.10,
+    "technical_text": 0.20,
+    "long_form": 0.20,
+    "high_stakes": 0.02
+  }
+}

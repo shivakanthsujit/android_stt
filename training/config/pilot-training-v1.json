@@ -1,0 +1,65 @@
+{
+  "config_version": "cleanup-pilot-training-config-v1",
+  "instruction_path": "training/config/cleanup-instruction-v2.txt",
+  "dataset": {
+    "train_records": 5000,
+    "dev_records": 500,
+    "max_sequence_tokens": 512,
+    "packing": false,
+    "assistant_only_loss": true,
+    "order": "jsonl_file_order"
+  },
+  "common": {
+    "seed": 23,
+    "data_seed": 23,
+    "bf16": true,
+    "tf32": true,
+    "train_batch_size": 8,
+    "eval_batch_size": 8,
+    "gradient_accumulation_steps": 4,
+    "effective_batch_size": 32,
+    "epochs": 3,
+    "learning_rate": 0.0002,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.03,
+    "lr_scheduler_type": "cosine",
+    "optimizer": "adamw_torch_fused",
+    "max_grad_norm": 1.0,
+    "logging_steps": 5,
+    "eval_steps": 50,
+    "save_steps": 50,
+    "save_total_limit": 4,
+    "gradient_checkpointing": false,
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "lora_bias": "none",
+    "trust_remote_code": false,
+    "attention_implementation": "sdpa"
+  },
+  "models": {
+    "qwen3_0_6b": {
+      "model_id": "Qwen/Qwen3-0.6B",
+      "revision": "61641f84fa567ab7b58e216b4930d2fe28bfd045",
+      "model_class": "AutoModelForCausalLM",
+      "chat_template_kwargs": {"enable_thinking": false},
+      "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+      "lora_exclude_modules": null,
+      "architecture_note": "Standard Qwen3 attention and MLP projections."
+    },
+    "qwen35_0_8b": {
+      "model_id": "Qwen/Qwen3.5-0.8B",
+      "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+      "model_class": "Qwen3_5ForConditionalGeneration",
+      "chat_template_kwargs": {"enable_thinking": false},
+      "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "in_proj_qkv", "in_proj_z", "in_proj_b", "in_proj_a", "out_proj", "gate_proj", "up_proj", "down_proj"],
+      "lora_exclude_modules": ".*visual.*",
+      "architecture_note": "Qwen3.5 full-attention, Gated DeltaNet, and MLP projections; vision inputs are absent and every module path containing visual is explicitly excluded from LoRA."
+    }
+  },
+  "intentional_architecture_differences": [
+    "Qwen3.5 uses hybrid Gated DeltaNet/full attention and therefore needs additional named LoRA projections.",
+    "Qwen3.5 is loaded through its official conditional-generation class for the published multimodal checkpoint, but receives text tokens only.",
+    "Packing is disabled for both models because packed training support differs for hybrid linear-attention architectures."
+  ]
+}

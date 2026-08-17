@@ -1,0 +1,159 @@
+{
+  "candidate_data_files": {
+    "disfl_qa": 1,
+    "nyra": 2,
+    "sotto": 1
+  },
+  "category_counts": {
+    "adversarial_instruction": 38,
+    "already_clean": 20234,
+    "asr_correction": 1381,
+    "capitalization": 19908,
+    "command": 3677,
+    "dates": 4429,
+    "discourse_marker": 23360,
+    "fillers": 51841,
+    "formatting_directive": 19532,
+    "grammar_rewrite": 10517,
+    "high_stakes": 6169,
+    "identifiers": 26529,
+    "lexical_addition": 45413,
+    "list_formatting": 9382,
+    "long_form": 16694,
+    "mixed": 37713,
+    "money": 556,
+    "must_not_answer": 16210,
+    "names": 17293,
+    "negation": 29179,
+    "no_op": 326,
+    "numbers": 22276,
+    "paragraph_formatting": 2,
+    "paths": 3024,
+    "punctuation": 19908,
+    "question": 12547,
+    "repetition": 8747,
+    "self_correction": 44014,
+    "spoken_punctuation": 10148,
+    "technical_text": 20166,
+    "uncertainty": 13190,
+    "unicode": 26,
+    "versions": 2121
+  },
+  "contains_example_text": false,
+  "cross_cutting_counts": {
+    "adversarial_instruction": 38,
+    "high_stakes": 6169,
+    "long_form": 16694,
+    "must_not_answer_or_command_question": 16253,
+    "negation_or_uncertainty": 37684,
+    "protected_literal": 68243,
+    "technical_text": 20166,
+    "unicode_or_multilingual": 26
+  },
+  "cross_cutting_required_train_plus_dev": {
+    "adversarial_instruction": 440,
+    "high_stakes": 110,
+    "long_form": 1100,
+    "must_not_answer_or_command_question": 1100,
+    "negation_or_uncertainty": 660,
+    "protected_literal": 1375,
+    "technical_text": 1100,
+    "unicode_or_multilingual": 550
+  },
+  "cross_cutting_shortfalls": {
+    "adversarial_instruction": 402,
+    "unicode_or_multilingual": 524
+  },
+  "held_out_data_files": {
+    "disfl_qa": 2,
+    "nyra": 2,
+    "sotto": 2
+  },
+  "importer_sha256": "d6200d4df1679f33936c45d25871687a44acf8f8e62f110535114123e3f78d28",
+  "mapped_rows": {
+    "disfl_qa": 7181,
+    "nyra": 4458,
+    "sotto": 135503
+  },
+  "outcome_counts": {
+    "candidate": 63990,
+    "quarantine": 81325,
+    "rejected": 1827
+  },
+  "pilot_config_sha256": "6e2e4d6a6113a0c058bac1705d7c048405c6cb3c7581a5544d1fb6cf786013aa",
+  "primary_bucket_counts": {
+    "adversarial_must_not_answer": 4,
+    "asr_correction": 1381,
+    "clean_no_op": 16263,
+    "correction_or_false_start": 18681,
+    "disfl_qa_correction": 7181,
+    "explicit_list_formatting": 9382,
+    "explicit_paragraph_formatting": 2,
+    "explicit_spoken_punctuation": 10148,
+    "filler_or_repetition": 26090,
+    "grammar_rewrite": 10517,
+    "mixed_or_discourse": 38716,
+    "protected_literal": 8053,
+    "unbucketed": 724
+  },
+  "primary_required_train_plus_dev": {
+    "adversarial_must_not_answer": 330,
+    "asr_correction": 550,
+    "clean_no_op": 550,
+    "correction_or_false_start": 1045,
+    "disfl_qa_correction": 550,
+    "explicit_list_formatting": 330,
+    "explicit_paragraph_formatting": 55,
+    "explicit_spoken_punctuation": 165,
+    "filler_or_repetition": 605,
+    "grammar_rewrite": 550,
+    "mixed_or_discourse": 330,
+    "protected_literal": 440
+  },
+  "primary_shortfalls": {
+    "adversarial_must_not_answer": 326,
+    "explicit_paragraph_formatting": 53
+  },
+  "profiler_sha256": "8d5081e49a6d060569bc062c886d51e17c73233263fbf46ba75a6215047ca5c0",
+  "reasons": {
+    "candidate:pending_human_review": 63990,
+    "quarantine:high_risk_requires_explicit_review": 9823,
+    "quarantine:high_stakes_domain": 3237,
+    "quarantine:lexical_addition_requires_review": 45404,
+    "quarantine:protected_anchor_changed": 14804,
+    "quarantine:review_required_category:dictation_commands": 7628,
+    "quarantine:review_required_category:grammar": 180,
+    "quarantine:review_required_category:misheard_words": 249,
+    "rejected:out_of_domain_transcription_annotation": 1153,
+    "rejected:target_introduces_lexical_content": 674
+  },
+  "report_version": "cleanup-source-profile-v1",
+  "risk_tag_counts": {
+    "adversarial_content": 38,
+    "dictated_instruction": 16210,
+    "formatting_scope": 19532,
+    "high_stakes": 6169,
+    "inferred_content": 11898,
+    "lexical_addition": 45413,
+    "name": 17293,
+    "negation": 29179,
+    "number": 26107,
+    "superseded_fact": 44014,
+    "technical_literal": 42651,
+    "uncertainty": 13190,
+    "unicode_literal": 26
+  },
+  "source_config_sha256": "d1c54a5ae5676b74c74b1db24b62cde30b262d6098ffdcdc87d996bda0864cde",
+  "source_manifest_sha256": "500a62d09fb48e8e287cd01c46aa7e708cc3a3acd6c8079651a444e850645702",
+  "source_native_holdouts_consumed": false,
+  "source_rows_visited": {
+    "disfl_qa": 7183,
+    "nyra": 4458,
+    "sotto": 135503
+  },
+  "unmapped_rows": {
+    "disfl_qa": 2,
+    "nyra": 0,
+    "sotto": 0
+  }
+}

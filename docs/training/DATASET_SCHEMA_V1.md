@@ -1,6 +1,6 @@
 # Cleanup training dataset contract v1
 
-Status: active authoring contract
+Status: superseded by `DATASET_SCHEMA_V2.md` before pilot data import
 Schema ID: `cleanup-training-record-v1`
 
 The authoritative machine-readable shape is

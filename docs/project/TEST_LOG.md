@@ -1,5 +1,20 @@
 # Test log
 
+## 2026-08-17 — RTX Phase 0 and public-data pipeline fixtures
+
+- Preflight repository commit: `2ae244cf761d91846396b6f96161955e7666e3d5`.
+- Script/unit command: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v`.
+- Latest result: 93/93 passed, including V2 formatting/grammar/ASR controls, deterministic pending
+  supplement generation, cross-cutting quota-aware selection, optimized near-duplicate grouping,
+  and a complete text-free Gate A CLI fixture using the real validator/schema/artifact hashing path.
+- Baseline command: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py' -v`.
+- Result: 10/10 passed.
+- `git diff --check`: passed.
+- The new tests use synthetic fixtures only. They do not load or reproduce either frozen cleanup
+  evaluation corpus as training data.
+- GPU training has not started: the locked CUDA environment and BF16 check pass, but Gate A human
+  review has not occurred.
+
 All tests below used a physical Google Pixel 7 unless stated otherwise. Raw transcript contents are
 not persisted here; only representative accuracy observations and timing are recorded.
 
@@ -127,3 +142,19 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   changes, and 1 followed instruction. Strict no-go; no Pixel runtime work.
 - Full report and raw/provenance artifacts:
   `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`.
+
+## 2026-08-17 — Direct-source trainer preflight
+
+- `PYTHONDONTWRITEBYTECODE=1 /data/rise/android_stt/env/bin/python -m unittest discover -s scripts/tests -p 'test_*.py' -v`
+  passed 97/97.
+- `PYTHONDONTWRITEBYTECODE=1 /data/rise/android_stt/env/bin/python -m unittest discover -s tests -p 'test_*.py' -v`
+  passed 10/10.
+- Direct loader audit verified every configured source payload against
+  `/data/rise/android_stt/manifests/source-manifest-v1.json`; exact train/validation usable counts
+  are Sotto 135,503/6,921, Disfl-QA 7,181/1,000, Nyra 4,458/250, and combined 147,142/8,171.
+- Frozen evaluation overlap check found zero exact normalized raw/target matches in every direct
+  train and publisher-validation split. The check uses frozen text only as a rejection fingerprint;
+  no evaluation text enters model input, target, prompt examples, or retrieval.
+- GPU preflight: NVIDIA RTX A6000, UUID `GPU-8d6979b1-ddb6-1476-40ce-4ab6cd4f527b`, driver
+  550.144.03, 49,140 MiB total and 31 MiB used, 32 °C, idle at observation. Locked environment:
+  PyTorch 2.6.0+cu124, CUDA 12.4, CUDA visible, BF16 supported.

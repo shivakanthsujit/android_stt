@@ -1,0 +1,157 @@
+{
+  "config_version": "cleanup-direct-source-training-config-v1",
+  "instruction_path": "training/config/cleanup-instruction-v2.txt",
+  "source_config_path": "training/config/sources-v1.json",
+  "frozen_evaluation_paths": [
+    "docs/evaluation/cleanup_cases.jsonl",
+    "docs/evaluation/cleanup_cases_heldout_v1.jsonl"
+  ],
+  "dataset": {
+    "max_sequence_tokens": 1024,
+    "packing": false,
+    "assistant_only_loss": true,
+    "order": "publisher_file_order",
+    "silent_truncation": false
+  },
+  "common": {
+    "seed": 23,
+    "data_seed": 23,
+    "bf16": true,
+    "tf32": true,
+    "train_batch_size": 8,
+    "eval_batch_size": 8,
+    "gradient_accumulation_steps": 4,
+    "effective_batch_size": 32,
+    "epochs": 1,
+    "learning_rate": 0.0002,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.03,
+    "lr_scheduler_type": "cosine",
+    "optimizer": "adamw_torch_fused",
+    "max_grad_norm": 1.0,
+    "logging_steps": 10,
+    "save_total_limit": 5,
+    "gradient_checkpointing": false,
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "lora_bias": "none",
+    "trust_remote_code": false,
+    "attention_implementation": "sdpa"
+  },
+  "model": {
+    "model_key": "qwen3_0_6b",
+    "model_id": "Qwen/Qwen3-0.6B",
+    "revision": "61641f84fa567ab7b58e216b4930d2fe28bfd045",
+    "model_class": "AutoModelForCausalLM",
+    "chat_template_kwargs": {"enable_thinking": false},
+    "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    "lora_exclude_modules": null
+  },
+  "experiments": {
+    "sotto": {
+      "sources": [
+        {
+          "source_id": "sotto",
+          "train_files": ["data/train-00000-of-00001.parquet"],
+          "validation_files": ["data/validation-00000-of-00001.parquet"],
+          "raw_field": "input",
+          "expected_field": "output",
+          "publisher_train_records": 135503,
+          "train_records": 135503,
+          "publisher_validation_records": 6921,
+          "validation_records": 6921
+        }
+      ],
+      "train_records": 135503,
+      "validation_records": 6921,
+      "expected_optimizer_steps": 4235,
+      "eval_steps": 1059,
+      "save_steps": 1059
+    },
+    "disfl_qa": {
+      "sources": [
+        {
+          "source_id": "disfl_qa",
+          "train_files": ["train.json"],
+          "validation_files": ["dev.json"],
+          "raw_field": "disfluent",
+          "expected_field": "original",
+          "publisher_train_records": 7182,
+          "train_records": 7181,
+          "publisher_validation_records": 1000,
+          "validation_records": 1000,
+          "declared_invalid_train_records": 1
+        }
+      ],
+      "train_records": 7181,
+      "validation_records": 1000,
+      "expected_optimizer_steps": 225,
+      "eval_steps": 56,
+      "save_steps": 56
+    },
+    "nyra": {
+      "sources": [
+        {
+          "source_id": "nyra",
+          "train_files": ["data/train-00000-of-00002.parquet", "data/train-00001-of-00002.parquet"],
+          "validation_files": ["data/validation-00000-of-00001.parquet"],
+          "raw_field": "verbatim_transcript",
+          "expected_field": "intended_transcript",
+          "publisher_train_records": 4458,
+          "train_records": 4458,
+          "publisher_validation_records": 250,
+          "validation_records": 250
+        }
+      ],
+      "train_records": 4458,
+      "validation_records": 250,
+      "expected_optimizer_steps": 140,
+      "eval_steps": 35,
+      "save_steps": 35
+    },
+    "combined": {
+      "sources": [
+        {
+          "source_id": "sotto",
+          "train_files": ["data/train-00000-of-00001.parquet"],
+          "validation_files": ["data/validation-00000-of-00001.parquet"],
+          "raw_field": "input",
+          "expected_field": "output",
+          "publisher_train_records": 135503,
+          "train_records": 135503,
+          "publisher_validation_records": 6921,
+          "validation_records": 6921
+        },
+        {
+          "source_id": "disfl_qa",
+          "train_files": ["train.json"],
+          "validation_files": ["dev.json"],
+          "raw_field": "disfluent",
+          "expected_field": "original",
+          "publisher_train_records": 7182,
+          "train_records": 7181,
+          "publisher_validation_records": 1000,
+          "validation_records": 1000,
+          "declared_invalid_train_records": 1
+        },
+        {
+          "source_id": "nyra",
+          "train_files": ["data/train-00000-of-00002.parquet", "data/train-00001-of-00002.parquet"],
+          "validation_files": ["data/validation-00000-of-00001.parquet"],
+          "raw_field": "verbatim_transcript",
+          "expected_field": "intended_transcript",
+          "publisher_train_records": 4458,
+          "train_records": 4458,
+          "publisher_validation_records": 250,
+          "validation_records": 250
+        }
+      ],
+      "train_records": 147142,
+      "validation_records": 8171,
+      "expected_optimizer_steps": 4599,
+      "eval_steps": 1150,
+      "save_steps": 1150
+    }
+  }
+}

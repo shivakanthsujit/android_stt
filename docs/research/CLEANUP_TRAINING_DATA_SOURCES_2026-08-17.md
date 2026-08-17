@@ -1,6 +1,6 @@
 # Cleanup training data sources
 
-Status: sources selected for audit, not yet imported or approved
+Status: pinned sources fetched/profiled and importer dry-run complete; no row approved
 
 Verified: 2026-08-17
 
@@ -31,6 +31,26 @@ License labels come from the respective publisher cards/repository. They are inp
 provenance review, not a legal guarantee about every upstream sentence. Preserve attribution and
 investigate any upstream provenance conflict before distributing a trained derivative.
 
+## Pinned payload/subset audit
+
+The pinned Sotto revision exposes a canonical Parquet train split with 135,503 rows and validation
+with 6,921 rows, plus older JSONL copies whose train count is 131,491. Both representations are
+fetched and hashed, but only `data/train-*.parquet` is a candidate input; importing both would
+duplicate overlapping pairs. The files contain only `input` and `output`, not the category labels
+advertised as aggregate percentages on the card. The importer therefore assigns only
+high-precision provisional operation labels from visible transformation evidence, and the human
+reviewer verifies those labels. Sotto validation remains untouched.
+
+Disfl-QA contributes only its 7,182-row publisher train file. Its 1,000-row dev and 3,643-row test
+files are fetched for immutable provenance but remain source-native holdouts and cannot enter the
+project train/dev split.
+
+Nyra contributes only the 4,458-row publisher train split. Import reads `id`, `speaker`, and the
+paired transcript fields without materializing embedded audio. `[UH]`/`[UM]` are deterministically
+mapped to the spoken tokens `uh`/`um`; rows retaining sound-event tags or cutoff notation remain
+out of domain and are rejected. Publisher validation/test remain untouched, and the single speaker
+is kept in one project family to prevent speaker leakage.
+
 ## Sotto transcript cleanup
 
 The publisher describes over 100,000 synthetic raw/clean transcript pairs spanning explicit
@@ -46,7 +66,7 @@ Why it is useful:
 - It contains technical and protected-literal examples at much greater scale than we can author
   manually for the pilot.
 
-Why it cannot be used wholesale:
+Why it still requires filtering rather than direct wholesale training:
 
 - It is mostly synthetic rather than transcripts from our Moonshine path.
 - Its public card reports inconsistent totals: an older 118,069/6,215 split summary coexists with
@@ -54,18 +74,20 @@ Why it cannot be used wholesale:
 - `grammar` targets intentionally rewrite wording.
 - `misheard_words` targets guess ASR corrections without an explicit spoken repair.
 - Some crutch-word targets delete stance or discourse that this project preserves when ambiguous.
-- Some list, paragraph, medical, legal, financial, mixed, and novel-token targets make edits beyond
-  the project's conservative policy.
+- List, paragraph, and spoken-punctuation targets are useful only when directive scope is explicit;
+  medical, legal, financial, mixed, and novel-token targets can still exceed project policy.
 - A publisher-reported automated validation rate does not establish semantic safety for our app.
 
-Default policy:
+Pilot policy:
 
 - Prefer `self_correction`, conservative `false_start`, `filler_removal`, immediate repetition,
   and `preserve_wording` candidates.
-- Reject `misheard_words` by default.
-- Reject grammar-only rewrites by default.
-- Quarantine crutch-word, dictation-command, list/paragraph, mixed, high-stakes-domain, and
-  lexical-addition rows for explicit policy review.
+- Retain `grammar` and `misheard_words` as separate, capped, human-reviewed pilot strata. Reject
+  speculative, meaning-changing, protected-literal, or fact-changing repairs during review.
+- Quarantine crutch-word, mixed, high-stakes-domain, and every lexical-addition row for explicit
+  policy review; exact additions and multiplicity must be declared in the record.
+- Include spoken punctuation and list/paragraph formatting in a dedicated reviewed stratum; reject
+  ambiguous scope, invented items, reordering, or additions beyond exact spoken list numerals.
 - Require correction targets to retain the final replacement and remove every superseded value or
   action.
 - Require exact preservation checks for uncertainty, negation, names, numbers, dates, money,
@@ -146,9 +168,16 @@ For every accepted record, preserve:
 - review status and reviewers; and
 - generator/importer version.
 
-Run `scripts/validate-cleanup-training-data.py` across all splits in one invocation. The future
-importer must add near-duplicate detection and generate a deterministic manifest that includes
+Run `scripts/validate-cleanup-training-data.py` across all splits in one invocation. The importer
+and pilot builder add near-duplicate detection and generate a deterministic manifest that includes
 source payload, schema, validator, importer, configuration, frozen corpora, and output hashes.
+
+The 2026-08-17 text-free pinned-source profile maps 147,142 rows. It proves that the public snapshot
+alone cannot meet the pilot's paragraph, adversarial, or Unicode/multilingual minima, even if every
+otherwise unsafe row were accepted. Use the committed deterministic supplemental generator only
+for those measured gaps, keep its 2,800 generated candidates outside Git, and require row-level
+human review before selection. Do not reinterpret the supplement as permission to weaken public
+row filtering.
 
 ## Go/no-go for source use
 
