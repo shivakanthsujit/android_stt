@@ -44,6 +44,14 @@ Last updated: 2026-08-17
    Benchmark LiteRT CPU and GPU on Pixel 7; do not assume a Tensor G2 NPU path.
 10. Benchmark deterministic cleanup and a hybrid deterministic/LLM router. Comparable open Android
     keyboards show that conservative mechanical cleanup can cover common cases without generation.
+11. Reject Granite 4.0 H 350M, Qwen3 0.6B, Gemma 3 270M, Qwen3.5 0.8B, and Gemma 3 1B for automatic
+    cleanup after the 45-case held-out host screen. Each failed the semantic safety or explicit
+    self-correction gate; guardrail fallback did not make the underlying cleanup adequate.
+12. Do not add LiteRT-LM or llama.cpp to Android merely to benchmark a failed model. Quality gates
+    runtime work. The next generative cleanup candidate should be task-specific rather than another
+    untuned small chat model.
+13. Keep the deterministic cleaner as a near-zero-latency control, not as the selected product
+    cleaner: it scored 0/7 exact on held-out self-corrections.
 
 ## Android/toolchain
 

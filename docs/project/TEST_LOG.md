@@ -75,3 +75,26 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   `fa924ce4c4f4d9bd5695219802c1189938294959236616000adde08866bfe4c9`.
 - Final build passed lint, unit tests, and assembly. Temporary screen-awake settings were removed;
   device `stay_on_while_plugged_in=0` and airplane mode was disabled.
+
+## 2026-08-17 — Cross-family host cleanup screen
+
+- Added and validated a fresh 45-case held-out corpus with 102 preservation anchors and no
+  normalized-raw overlap with the original 24 cases.
+- Host: Apple M2 MacBook Air, 16 GB; llama.cpp build 10450 (`ece963f41`).
+- Fixed run settings: temperature 0.1, seed 23, input-derived 16–96 output-token cap.
+- Screened deterministic v1, Granite 4.0 H 350M Q4_K_M, Qwen3 0.6B Q4_0 no-think, Gemma 3 270M
+  QAT Q4_0, Qwen3.5 0.8B Q4_0 no-think, and Gemma 3 1B Q4_K_M.
+- Best raw result was Gemma 1B: 32/45 exact, 96/102 anchors, 253 ms median TTFT, and 437 ms
+  median total host latency. It still produced three semantic/safety failures and is a no-go.
+- The Android-equivalent host guard selected 29/45 exact for Gemma 1B with 6/45 fallbacks after two
+  held-out regressions were added. It now rejects all three audited unsafe edits; guardrails remain
+  safety containment, not a quality substitute.
+- The revised guard accepts 41/45 held-out reference edits. Its four conservative false rejections
+  are recorded in the full report and require a new validation set before further policy tuning.
+- No candidate advanced to Pixel runtime benchmarking. Complete model-by-model results and failure
+  examples: `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`.
+- Host guardrail/runner tests: 28/28 passed; deterministic baseline tests: 10/10 passed. Both the
+  24-case seed and 45-case held-out result sets pass schema and complete-run scoring validation.
+- Final Android verification: offline `lintDebug testDebugUnitTest assembleDebug` succeeded (55
+  tasks). Debug APK: about 62 MiB, SHA-256
+  `71af1c0ef2a1967b48a4f645681d3dd82ba4435fffc6ae17035c7ba0463fae56`.

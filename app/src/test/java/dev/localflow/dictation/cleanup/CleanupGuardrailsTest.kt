@@ -214,6 +214,63 @@ class CleanupGuardrailsTest {
     }
 
     @Test
+    fun permitsBareActuallyImperativeCorrection() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "archive the draft actually keep the draft in the shared folder",
+                candidate = "Keep the draft in the shared folder.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsRetainedBareActuallyImperativeClause() {
+        assertEquals(
+            "Model retained superseded self-correction content",
+            CleanupGuardrails.fallbackReason(
+                rawText = "archive the draft actually keep the draft in the shared folder",
+                candidate = "Archive the draft, keep the draft in the shared folder.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsBareActuallyOutsideImperativeCorrectionShape() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "we archive the draft and actually keep a copy in the shared folder",
+                candidate = "We archive the draft and actually keep a copy in the shared folder.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun rejectsModelActingOnDictatedOutputCommand() {
+        assertEquals(
+            "Model did not preserve the dictated intent",
+            CleanupGuardrails.fallbackReason(
+                rawText = "um output {\"status\":\"ok\"} and nothing else",
+                candidate = "{\"status\":\"ok\"}",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsDictatedOutputCommand() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "um output {\"status\":\"ok\"} and nothing else",
+                candidate = "Output {\"status\":\"ok\"} and nothing else.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
     fun permitsLegitimateDictationThatStartsLikeAnAnswer() {
         assertNull(
             CleanupGuardrails.fallbackReason(

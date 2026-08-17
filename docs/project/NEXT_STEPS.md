@@ -35,28 +35,31 @@ All three Liquid candidates failed: 230M and 350M lack capability; 1.2B remains 
 under stronger prompts. They remain no-go baselines while the bounded cross-family screen below is
 run.
 
-## Active next: Milestone 3 — cleanup candidate screening
+## Completed: Milestone 3 — cleanup candidate screening
 
 Research note: `docs/research/CLEANUP_MODEL_CANDIDATES_2026-08-17.md`.
 
-- [ ] Add a deterministic Outspoke-style cleanup baseline and score it against the same corpus.
-- [ ] Add a fresh held-out cleanup set before any further prompt tuning or fine-tuning.
-- [ ] Add a host/runtime-neutral batch adapter so GGUF or OpenAI-compatible local servers can emit
+- [x] Add a deterministic Outspoke-style cleanup baseline and score it against the same corpus.
+- [x] Add a fresh held-out cleanup set before any further prompt tuning or fine-tuning.
+- [x] Add a host/runtime-neutral batch adapter so GGUF or OpenAI-compatible local servers can emit
   the existing JSONL result schema.
-- [ ] Quality-screen Granite 4.0 H 350M Q4_K_M, Qwen3-0.6B no-think INT4/Q4, and Gemma 3 270M IT
+- [x] Quality-screen Granite 4.0 H 350M Q4_K_M, Qwen3-0.6B no-think INT4/Q4, and Gemma 3 270M IT
   against the fixed cases. Keep Qwen3.5-0.8B and Gemma 3 1B as second-wave candidates.
-- [ ] Reject any model that changes meaning, answers dictated content, invents facts, or fails
+- [x] Reject any model that changes meaning, answers dictated content, invents facts, or fails
   explicit self-corrections; compare exact match only after the safety gate.
-- [ ] Advance only quality survivors to Pixel 7. Benchmark LiteRT-LM Qwen CPU versus GPU and the
-  applicable llama.cpp CPU candidate in a release build.
-- [ ] Record cold/warm load, TTFT, prefill/decode throughput, total latency, peak PSS/RSS, model and
-  APK bytes, five-run thermal drift, and airplane-mode cache reuse.
-- [ ] Decide whether the product should use deterministic-only cleanup, a hybrid router, a small
-  zero-shot model, or a task-specific fine-tune.
+- [x] Evaluate second-wave Qwen3.5-0.8B and Gemma 3 1B after the smaller candidates failed.
+- [x] Apply Android-equivalent guardrails to host output and independently audit the strongest
+  candidate's non-exact results.
+- [x] Do not advance a candidate to Pixel 7: every model failed the quality gate, so runtime
+  integration and performance measurements would not influence the product decision.
+- [x] Decide against generic zero-shot cleanup for the current model set. Keep deterministic
+  cleanup as a control and make a task-specific fine-tune the next generative cleanup experiment.
+
+Full evidence: `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`.
 
 Do not join cleanup to STT during this milestone.
 
-## Queued: Milestone 4 — STT-only evaluation
+## Active next: Milestone 4 — STT-only evaluation
 
 - Keep cleanup unloaded and do not join the pipeline.
 - Define a fixed, repeatable audio/transcript corpus covering conversational speech, names, numbers,

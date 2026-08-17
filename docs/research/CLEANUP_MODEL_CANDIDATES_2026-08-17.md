@@ -5,9 +5,14 @@ Verified: 2026-08-17
 ## Conclusion
 
 Do not replace Liquid LEAP in the Android app until a candidate first passes the fixed cleanup
-corpus outside the app. The best first Android experiment is Qwen3-0.6B no-think INT4 through
-LiteRT-LM. The best small, architecture-diverse quality challenger is Granite 4.0 H 350M through
-llama.cpp. Gemma 3 1B is the larger mobile-oriented fallback if both sub-1B candidates fail.
+corpus outside the app. The bounded screen proposed here is now complete: Granite 4.0 H 350M,
+Qwen3-0.6B, Gemma 3 270M, Qwen3.5-0.8B, and Gemma 3 1B all failed the semantic safety or explicit
+self-correction gate. Therefore none advances to Android runtime work.
+
+The pre-test runtime recommendation remains useful if a future model passes quality: start with
+LiteRT-LM for a supported LiteRT artifact and llama.cpp for GGUF portability. The next model search
+should prioritize a task-specific dictation-cleanup fine-tune, not another generic tiny chat model.
+Full results: `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`.
 
 The latest Qwen3.5-0.8B is eligible, but it is not automatically the strongest candidate: its
 official non-thinking instruction-following result is weaker than several older or differently

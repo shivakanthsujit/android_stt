@@ -103,10 +103,12 @@ def require_string_list(
     value = row.get(field)
     if (
         not isinstance(value, list)
+        or not value
         or any(not isinstance(item, str) or not item for item in value)
     ):
         raise InputError(
-            f"{path}:{line_number}: {field!r} must be a list of non-empty strings"
+            f"{path}:{line_number}: {field!r} must be a non-empty list of "
+            "non-empty strings"
         )
     return tuple(value)
 
@@ -116,6 +118,7 @@ def load_cases(path: Path) -> tuple[CleanupCase, ...]:
     seen: set[str] = set()
     for line_number, row in read_jsonl(path):
         case_id = require_string(row, "id", path, line_number)
+        spoken = require_string(row, "spoken", path, line_number)
         raw = require_string(row, "raw", path, line_number)
         expected = require_string(row, "expected", path, line_number)
         categories = require_string_list(row, "categories", path, line_number)
@@ -124,8 +127,27 @@ def load_cases(path: Path) -> tuple[CleanupCase, ...]:
             raise InputError(f"{path}:{line_number}: 'id' must not be empty")
         if case_id in seen:
             raise InputError(f"{path}:{line_number}: duplicate case id {case_id!r}")
+        if not spoken:
+            raise InputError(f"{path}:{line_number}: 'spoken' must not be empty")
         if not raw:
             raise InputError(f"{path}:{line_number}: 'raw' must not be empty")
+        if not expected:
+            raise InputError(f"{path}:{line_number}: 'expected' must not be empty")
+        if len(categories) != len(set(categories)):
+            raise InputError(f"{path}:{line_number}: duplicate category")
+        if len(must_preserve) != len(set(must_preserve)):
+            raise InputError(f"{path}:{line_number}: duplicate must_preserve anchor")
+        normalized_expected = normalize_text(expected)
+        missing_anchors = [
+            anchor
+            for anchor in must_preserve
+            if normalize_text(anchor) not in normalized_expected
+        ]
+        if missing_anchors:
+            raise InputError(
+                f"{path}:{line_number}: must_preserve anchor(s) absent from expected: "
+                + ", ".join(repr(anchor) for anchor in missing_anchors)
+            )
         seen.add(case_id)
         cases.append(
             CleanupCase(case_id, raw, expected, categories, must_preserve)
@@ -623,7 +645,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "results",
-        nargs="+",
+        nargs="*",
         metavar="[LABEL=]RESULT.jsonl",
         help="result JSONL file; pass multiple files to compare runs",
     )
@@ -632,6 +654,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_CASES,
         help=f"cleanup case JSONL (default: {DEFAULT_CASES})",
+    )
+    parser.add_argument(
+        "--validate-cases-only",
+        action="store_true",
+        help="validate the case JSONL schema and preservation anchors, then exit",
     )
     parser.add_argument(
         "--format",
@@ -653,9 +680,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if not args.validate_cases_only and not args.results:
+        parser.error(
+            "at least one result JSONL is required unless "
+            "--validate-cases-only is used"
+        )
     try:
         cases = load_cases(args.cases)
+        if args.validate_cases_only:
+            print(f"Valid cases: {len(cases)} from {args.cases}")
+            return 0
         runs = make_runs(args.results)
         scored_runs = []
         for run in runs:

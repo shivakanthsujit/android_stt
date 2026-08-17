@@ -40,3 +40,18 @@
 - Selected a bounded cross-family screen: Granite 4.0 H 350M, Qwen3-0.6B no-think, and Gemma 3
   270M first; Qwen3.5-0.8B and Gemma 3 1B second. Chose LiteRT-LM for the first Qwen Android run and
   llama.cpp for GGUF/Granite portability, subject to the fixed quality gate.
+- Added a 45-case held-out cleanup suite with no normalized-raw overlap with the original 24 cases,
+  plus stronger corpus validation and a runtime-neutral OpenAI-compatible streaming runner.
+- Added and tested a deterministic cleanup baseline. It reached 27/45 exact on held-out text in
+  0.061 ms median host time, but failed all seven explicit self-corrections.
+- Installed llama.cpp build 10450 and screened Granite 4.0 H 350M, Qwen3 0.6B, Gemma 3 270M,
+  Qwen3.5 0.8B, and Gemma 3 1B on the fixed held-out set. The first four were clear no-go results.
+- Gemma 3 1B reached 32/45 raw exact and 96/102 anchors, but an independent semantic audit found
+  one conflicting retained correction and two obeyed embedded instructions. Rejected it as well.
+- Ported Android's full cleanup guardrails to the host with parity tests and re-scored the captured
+  raw outputs. Guard fallback improved preservation but could not repair failed corrections and
+  initially missed two of Gemma's unsafe outputs. Added matched Kotlin/Python regressions for a
+  dictated `output` command and a narrow imperative-to-imperative bare-`actually` correction; the
+  guarded result now falls back on all three unsafe Gemma outputs.
+- Stopped before Android runtime integration because no candidate earned Pixel performance work.
+  Cleanup remains unjoined; the next active milestone is repeatable STT-only evaluation.

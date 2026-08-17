@@ -81,6 +81,12 @@ internal object CleanupGuardrails {
         correction?.let {
             val superseded = it.supersededTokenIndex?.let(rawTokens::get)
             val replacement = it.replacementTokenIndex?.let(rawTokens::get)
+            if (it.replacementMustBeRetained &&
+                replacement != null &&
+                replacement.normalized !in candidateWords
+            ) {
+                return "Model did not preserve self-correction replacement"
+            }
             if (superseded != null &&
                 replacement != null &&
                 superseded.normalized != replacement.normalized &&
@@ -108,6 +114,7 @@ internal object CleanupGuardrails {
         val markerIndices: Set<Int>,
         val supersededTokenIndex: Int?,
         val replacementTokenIndex: Int?,
+        val replacementMustBeRetained: Boolean = false,
     )
 
     private enum class ProtectedKind {
@@ -235,15 +242,63 @@ internal object CleanupGuardrails {
                 protectedKinds(tokens[before], before)
                     .intersect(protectedKinds(tokens[after], after))
                     .isNotEmpty()
-            if (!unconditionallyExplicit && !matchingProtectedKind) continue
+            val imperativeCorrection = if (!unconditionallyExplicit && !matchingProtectedKind) {
+                findBareActuallyImperativeCorrection(tokens, markerStart, markerEnd)
+            } else {
+                null
+            }
+            if (!unconditionallyExplicit && !matchingProtectedKind && imperativeCorrection == null) {
+                continue
+            }
 
             return CorrectionInfo(
                 markerIndices = (markerStart..markerEnd).toSet(),
-                supersededTokenIndex = before,
-                replacementTokenIndex = after,
+                supersededTokenIndex = imperativeCorrection?.first ?: before,
+                replacementTokenIndex = imperativeCorrection?.second ?: after,
+                replacementMustBeRetained = imperativeCorrection != null,
             )
         }
         return null
+    }
+
+    /**
+     * Recognize a narrow form of bare-"actually" correction that has no protected
+     * name or number to anchor it: both clauses must begin with known imperative
+     * verbs and must share a content word (for example, "archive the draft actually
+     * keep the draft"). The shared-object requirement avoids treating unrelated
+     * consecutive commands as a correction.
+     */
+    private fun findBareActuallyImperativeCorrection(
+        tokens: List<LexicalToken>,
+        markerStart: Int,
+        markerEnd: Int,
+    ): Pair<Int, Int>? {
+        if (markerStart != markerEnd || tokens[markerStart].normalized != "actually") return null
+
+        val ignorableClausePrefix = FILLER_WORDS + INTENT_LEADING_WORDS
+        val beforeVerb = (0 until markerStart).firstOrNull { index ->
+            tokens[index].normalized !in ignorableClausePrefix
+        } ?: return null
+        val afterVerb = (markerEnd + 1 until tokens.size).firstOrNull { index ->
+            tokens[index].normalized !in ignorableClausePrefix
+        } ?: return null
+        if (tokens[beforeVerb].normalized !in IMPERATIVE_CORRECTION_WORDS ||
+            tokens[afterVerb].normalized !in IMPERATIVE_CORRECTION_WORDS
+        ) {
+            return null
+        }
+
+        fun contentWords(indices: IntRange): Set<String> = indices.asSequence()
+            .map { tokens[it].normalized }
+            .filterNot(FILLER_WORDS::contains)
+            .filterNot(INTENT_LEADING_WORDS::contains)
+            .filterNot(ALLOWED_GRAMMAR_ADDITIONS::contains)
+            .toSet()
+
+        val beforeContent = contentWords((beforeVerb + 1) until markerStart)
+        val afterContent = contentWords((afterVerb + 1) until tokens.size)
+        if (beforeContent.intersect(afterContent).isEmpty()) return null
+        return beforeVerb to afterVerb
     }
 
     private fun intentPreservationReason(
@@ -310,7 +365,12 @@ internal object CleanupGuardrails {
         "what", "when", "where", "why", "how", "who", "which", "can", "could", "would", "will",
         "should", "do", "does", "did", "are", "is", "send", "write", "explain", "run", "set",
         "remind", "call", "install", "turn", "record", "open", "close", "create", "delete", "make",
-        "schedule", "tell", "show", "list", "draft", "email", "text",
+        "schedule", "tell", "show", "list", "draft", "email", "text", "output",
+    )
+    private val IMPERATIVE_CORRECTION_WORDS = setOf(
+        "send", "write", "explain", "run", "set", "remind", "call", "install", "turn",
+        "record", "open", "close", "create", "delete", "make", "schedule", "tell", "show",
+        "list", "draft", "email", "text", "output", "archive", "keep",
     )
     private val INTENT_LEADING_WORDS = setOf("please", "first", "next", "then")
 

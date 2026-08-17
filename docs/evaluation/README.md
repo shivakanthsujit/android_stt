@@ -50,3 +50,31 @@ For cases labeled `must_not_answer`, any answer, explanation, generated content,
 ## Benchmark use
 
 For Pixel 7 model comparisons, store the case ID alongside model load time, peak-ish process memory, cleanup time to first token, cleanup total latency, and warm end-to-end latency. Compare the no-cleanup baseline, LFM2.5-230M, LFM2.5-350M, and future candidates against the identical corpus and run settings.
+
+## OpenAI-compatible local endpoints
+
+`scripts/run-cleanup-openai.py` runs the same corpus and Android prompt/settings against a local
+OpenAI-compatible chat-completions endpoint. Streaming is enabled by default so TTFT is measurable;
+use `--no-stream` only for endpoints without streaming support. For example:
+
+```bash
+python3 scripts/run-cleanup-openai.py \
+  --base-url http://127.0.0.1:8080/v1 \
+  --model candidate-model \
+  --quantization Q4_K_M \
+  --output build/evaluation-results/candidate.jsonl
+
+python3 scripts/score-cleanup-results.py \
+  build/evaluation-results/candidate.jsonl
+```
+
+The default is the frozen `baseline_rules` prompt, temperature 0.1, seed 23, and the same
+input-derived 16–96 token cap used on Android. `--request-extra FILE` can add runtime-specific
+options such as a no-thinking chat-template setting without overriding those fixed fields. The
+runner writes and flushes each completed case immediately, preserving valid partial JSONL if a
+later endpoint request fails. Raw model output and Android-equivalent post-guardrail selection are
+recorded separately. The guardrail port is parity-tested against the Kotlin implementation.
+
+The first cross-family screen and its decision are recorded in
+`results/2026-08-17-cross-family-cleanup-screen.md`. Quality screening happens on the host before
+any candidate runtime is added to the Android app.

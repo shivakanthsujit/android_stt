@@ -5,12 +5,12 @@ Last updated: 2026-08-17
 ## Repository
 
 - Branch: `main`
-- Last verified milestone commit: `8dce7ab Evaluate local cleanup models`
+- Last verified milestone: Milestone 3 cross-family cleanup screen (see current `git log`)
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: Phase A ordinary Android benchmark app
-- Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and
-  generic-model no-go evaluation)
-- Next milestone: 3 (cross-family cleanup candidate screen; cleanup remains unjoined)
+- Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
+  no-go evaluation), 3 (cross-family generic-model quality screen)
+- Next milestone: 4 (STT-only evaluation); task-specific cleanup research remains independent
 
 ## Working functionality
 
@@ -29,6 +29,12 @@ Last updated: 2026-08-17
   deterministic host-side scoring without involving the microphone or Moonshine.
 - LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` were exercised on-device; their raw static-corpus
   results and summaries are preserved under `docs/evaluation/`. All three are cleanup no-go results.
+- A deterministic baseline plus Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B, and Gemma 1B
+  were screened on a fresh 45-case held-out set through llama.cpp on the host. None passed the
+  semantic safety/self-correction gate, so no new runtime or model was added to the Android app.
+- The runtime-neutral runner now applies a parity-tested port of the Android lexical/intent
+  guardrails and emits scorer-compatible JSONL with raw output, guarded selection, TTFT, and total
+  latency.
 
 ## Physical device
 
@@ -54,6 +60,10 @@ Last updated: 2026-08-17
   dropped technical details, and failed all self-corrections. It is rejected for automatic cleanup.
 - The cleanup harness now has stricter lexical/intent fallback checks, but a safety fallback cannot
   compensate for inadequate cleanup quality. Do not feed cleanup output into STT automatically.
+- Gemma 3 1B was the closest generic candidate at 32/45 raw exact and 94.1% anchor preservation,
+  but it retained a superseded command and obeyed two embedded instructions. It is rejected.
+- Current host timings are Apple M2 screening measurements, not Pixel 7 results. Pixel integration
+  was intentionally skipped because no candidate passed quality first.
 
 ## Toolchain
 
@@ -71,5 +81,5 @@ Last updated: 2026-08-17
 2. Run `git status --short` and preserve any uncommitted work.
 3. Run `./scripts/check-toolchain.sh` with the Pixel attached.
 4. Run `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Start the bounded cleanup candidate screen in `NEXT_STEPS.md`. Keep cleanup independent and
-   unjoined.
+5. Start the STT-only fixed-audio evaluation in `NEXT_STEPS.md`. Keep cleanup independent and
+   unjoined; a task-specific cleanup fine-tune may be screened in parallel later.
