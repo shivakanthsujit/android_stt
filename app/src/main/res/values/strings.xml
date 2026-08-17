@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Local Flow</string>
+    <string name="benchmark_title">Local dictation benchmark</string>
+    <string name="benchmark_subtitle">Moonshine Small Streaming · on-device</string>
+    <string name="load_model">Load model</string>
+    <string name="start_dictation">Start dictation</string>
+    <string name="stop_dictation">Stop dictation</string>
+    <string name="raw_transcript">Raw transcript</string>
+    <string name="latency_metrics">Latency metrics</string>
+    <string name="status_model_not_loaded">Model not loaded. The first load requires internet.</string>
+    <string name="status_preparing_model">Preparing Moonshine Small Streaming…</string>
+    <string name="status_model_ready">Ready. Model is cached for future offline use.</string>
+    <string name="status_opening_microphone">Opening microphone…</string>
+    <string name="status_requesting_microphone_permission">Microphone permission is required to dictate.</string>
+    <string name="status_microphone_permission_denied">Microphone permission denied. Enable it in Android settings to dictate.</string>
+    <string name="status_listening">Listening locally… Tap Stop when finished.</string>
+    <string name="status_finalizing">Finalizing local transcript…</string>
+    <string name="status_finished">Finished locally. Ready for another dictation.</string>
+    <string name="status_downloading_model">Downloading speech model: %1$d%%</string>
+    <string name="status_downloading_model_file">Downloading speech model: %1$d%% · %2$s</string>
+    <string name="status_error">Error: %1$s</string>
+    <string name="retry_model_load">Retry model load</string>
+    <string name="transcript_placeholder">Your local transcript will appear here.</string>
+    <string name="transcript_listening">Listening…</string>
+    <string name="transcript_no_speech">No speech detected.</string>
+    <string name="metrics_placeholder">No measurements yet.</string>
+    <string name="metrics_model_ready">Model ready.</string>
+    <string name="metric_model_load">Model load: %1$d ms</string>
+    <string name="metric_recording">Recording: %1$d ms</string>
+    <string name="metric_stt_tail">STT tail: %1$d ms</string>
+</resources>

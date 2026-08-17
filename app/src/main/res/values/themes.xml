@@ -1,0 +1,11 @@
+<resources>
+    <style name="Theme.LocalFlow" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/local_flow_primary</item>
+        <item name="android:navigationBarColor">@color/local_flow_background</item>
+        <item name="android:statusBarColor">@color/local_flow_background</item>
+        <item name="android:windowBackground">@color/local_flow_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>

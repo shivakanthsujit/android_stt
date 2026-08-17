@@ -1,0 +1,7 @@
+<resources>
+    <color name="local_flow_primary">#3658D4</color>
+    <color name="local_flow_background">#F7F7FC</color>
+    <color name="local_flow_surface">#FFFFFF</color>
+    <color name="local_flow_text">#1B1B1F</color>
+    <color name="local_flow_muted">#5F616B</color>
+</resources>
