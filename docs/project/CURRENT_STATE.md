@@ -75,8 +75,10 @@ Last updated: 2026-08-18
 - The runtime-neutral runner now applies a parity-tested port of the Android lexical/intent
   guardrails and emits scorer-compatible JSONL with raw output, guarded selection, TTFT, and total
   latency.
-- Cleanup is still the product bottleneck. Public Sotto is an integration-only placeholder while
-  correction-repair training proceeds; the joined build is not a deployment qualification claim.
+- Cleanup is still the product bottleneck. Correction-repair training and the personal-v3
+  checkpoint matrix are complete; public Sotto remains the integration-only placeholder because
+  every fine-tuned checkpoint regresses on the revised workload. The joined build is not a
+  deployment qualification claim.
 
 ## Physical device
 
@@ -344,7 +346,7 @@ Last updated: 2026-08-18
   Sotto/Disfl-QA/DISCO-English/Nyra mixture, then—after complete evaluation—run a clean three-epoch
   `3e-5` full-SFT reproduction from pinned `LFM2.5-350M-Base` using the same mixture and the
   publisher's disclosed batch/schedule/packing settings.
-- Training-code and data preflight for that campaign is in progress on the RTX A6000 host. Sotto
+- Training-code and data preflight for that campaign completed on the RTX A6000 host. Sotto
   and Nyra now resolve offline from the global Hugging Face hub cache, pinned DISCO English is
   preserved separately under `/data`, and the interrupted duplicate staging tree was removed.
   The prepared 149,922/8,519 train/dev streams use generated-and-recorded seed
@@ -356,7 +358,33 @@ Last updated: 2026-08-18
   assistant-only labels, EOS termination, no truncation, ordered greedy 4,096-token packing, and
   microbatch one. Packed examples reset both `position_ids` (attention isolation) and `seq_idx`
   (LFM convolution-state isolation); a real BF16 A6000 forward pass accepted those tensors.
-
+- Format, overfit, longest-example, interruption/resume, and saved-model inference gates all pass.
+  Heavy smoke checkpoints were deleted after verification, reclaiming 6.0 GB while keeping compact
+  evidence. Two-epoch Experiment A completed in 25m43s with dev loss 0.15292→0.14940. Both epochs
+  score 47/69 retired exact versus 42/69 at start and emit identical retired text. Full source-dev
+  exact improves 2,736→4,636→4,670/8,519 from start through epochs 1/2, with epoch 2 net-positive
+  on every source. The separately named four-epoch learning curve completed in 51m18s and reached
+  4,709→4,868→4,883→4,889/8,519 source exact with dev loss 0.14752→0.13859→0.13755→0.13746.
+  Epoch 4 is selected for research comparison, but is not deployment-qualified because two
+  source-dev cases repeat through the 900-token cap; epoch 5 is not justified. The predeclared
+  three-epoch clean-base Experiment B completed in 39m19s. Its source exact curve is
+  5,477→5,731→5,796/8,519, while retired exact is 51→47→46/69 and protected anchors are
+  155→149→149/163. Select epoch 1 (`checkpoint-271`, SHA-256
+  `e9d552f472374b51f8d59fe67623e0ae737ca9393a4b28d87341e9f5fab5de65`) as the safety-weighted
+  research checkpoint, not epoch 3's aggregate leader. It still has one capped source repetition
+  loop plus substantive raw-output safety failures, so no LFM checkpoint is deployment-qualified.
+  The sanitized comparison is in
+  `docs/evaluation/results/2026-08-18-sotto-lfm-ab-comparison.json`. The post-merge script suite
+  passes 159/159 tests.
+- The fixed personal-v3 BF16 matrix covers public start, all four A epochs, and all three B epochs.
+  Public start leads at 11/20 exact, 53/61 literal anchors, and 15/20 all-anchor cases. Best
+  fine-tuned is B epoch 2 at 8/20, 50/61, and 12/20; prior campaign-selected B epoch 1 reaches
+  7/20, 46/61, and 10/20. All models are only 1/4 exact on long-form cleanup and no run hits the
+  output cap. Raw review finds an unsupported currency-unit substitution in every A epoch, while
+  public/B retain important explicit corrections and formatting directives. Guardrails miss the A
+  currency change and one public retained correction, and falsely reject A's valid numbered-list
+  formatting. No fine-tuned checkpoint should replace the public placeholder. See
+  `docs/evaluation/results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`.
 ## Toolchain
 
 - Android Studio Quail 3 / 2026.1.3 Patch 1
@@ -381,8 +409,6 @@ Last updated: 2026-08-18
    `./scripts/stage-integration-models.sh`, then load staged Parakeet and Sotto in the Activity. The
    ignored `.cache` artifacts must match the hard-coded hashes; see the root README and integration
    evidence manifest.
-6. Continue active Milestone 4 with
-   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. Preserve all completed Qwen source
-   experiments, but the next evidence-bearing work is the two-stage LFM correction-repair study.
-   Preserve the reviewed-pilot Gate A path, never use blind-v2 for iteration, and do not compare
-   the LFM sequential-Transformers results directly with the older Qwen vLLM profile.
+6. Preserve the completed LFM campaign and personal-v3 evidence. Do not train on v3 errors or
+   replace the public placeholder. Any next model run or guardrail repair needs a separately
+   reviewed plan and a fresh evaluation version; never use blind-v2 for iteration.

@@ -1,6 +1,7 @@
 # Sotto LFM2.5-350M correction-repair experiment
 
-Status: data/trainer implementation complete; GPU smoke sequence and runs pending
+Status: campaign complete; clean-base epoch 1 selected for research, no checkpoint qualified for
+deployment. See `docs/evaluation/results/2026-08-18-sotto-lfm-ab-comparison.json`.
 
 ## Objective
 
@@ -154,7 +155,8 @@ Before either full run:
 3. Run a 32-row overfit, a two-step longest-row memory smoke, checkpoint resume, and direct
    inference from the saved checkpoint.
 4. Record exact optimizer-step expectations from the prepared sampled stream.
-5. Commit and push code/config/manifests before launch.
+5. Record the current commit, dirty paths, and hashes of the exact trainer/config/data/mixture
+   inputs. A dirty or unpushed repository is allowed and is not a launch gate.
 6. Use an immutable run directory, persistent supervisor, telemetry, resumable checkpoints,
    terminal status, and the repository's normal failure-reporting rules.
 

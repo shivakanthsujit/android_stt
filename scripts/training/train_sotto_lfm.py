@@ -22,7 +22,6 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 
 from cleanup_data_common import sha256_file  # noqa: E402
 from train_cleanup_adapter import JsonlMetricsCallback, Telemetry, git_report  # noqa: E402
-from train_direct_source_adapter import verify_tracked_repository_and_inputs  # noqa: E402
 
 
 RUN_PURPOSES = ("format_audit", "overfit32", "longest_smoke", "resume_smoke", "full")
@@ -243,16 +242,14 @@ def main() -> int:
             raise RuntimeError("resume seed differs from the original run")
         seed = prior_seed
     else:
-        seed = args.seed if args.seed is not None else secrets.randbits(63)
+        seed = args.seed if args.seed is not None else secrets.randbelow(2**32)
+    if not 0 <= seed < 2**32:
+        raise RuntimeError("training seed must fit NumPy's unsigned 32-bit seed range")
     config = json.loads(args.config.read_text(encoding="utf-8"))
     if config.get("config_version") != "sotto-lfm-full-sft-v1":
         raise RuntimeError("unexpected Sotto LFM training configuration version")
     data_config_path = REPO_ROOT / config["data_config_path"]
     repository = git_report()
-    verify_tracked_repository_and_inputs(
-        repository,
-        (args.config, data_config_path, REPO_ROOT / "scripts/training/train_sotto_lfm.py"),
-    )
     mixture_manifest_path = args.mixture_dir / "mixture-manifest.json"
     mixture_manifest = json.loads(mixture_manifest_path.read_text(encoding="utf-8"))
     train_path, dev_path = verify_mixture(args.mixture_dir, mixture_manifest, data_config_path)
@@ -290,6 +287,7 @@ def main() -> int:
         "input_hashes": {
             "training_config_sha256": sha256_file(args.config),
             "data_config_sha256": sha256_file(data_config_path),
+            "trainer_sha256": sha256_file(REPO_ROOT / "scripts/training/train_sotto_lfm.py"),
             "mixture_manifest_sha256": sha256_file(mixture_manifest_path),
             "train_sha256": sha256_file(train_path), "dev_sha256": sha256_file(dev_path),
         },
@@ -419,6 +417,12 @@ def main() -> int:
 
         full = args.run_purpose == "full"
         smoke = not full
+        if full:
+            save_strategy, save_steps = "epoch", 500
+        elif args.run_purpose == "resume_smoke":
+            save_strategy, save_steps = "steps", 1
+        else:
+            save_strategy, save_steps = "no", 500
         training_args = TrainingArguments(
             output_dir=str(args.run_dir), num_train_epochs=arm["epochs"],
             max_steps=effective_max_steps,
@@ -432,7 +436,7 @@ def main() -> int:
             max_grad_norm=common["max_grad_norm"], logging_strategy="steps",
             logging_steps=1 if smoke else common["logging_steps"], logging_first_step=True,
             eval_strategy="epoch" if full else "no",
-            save_strategy="epoch" if full else "steps", save_steps=1 if smoke else 500,
+            save_strategy=save_strategy, save_steps=save_steps,
             save_total_limit=arm["save_total_limit"], bf16=common["bf16"], tf32=common["tf32"],
             gradient_checkpointing=common["gradient_checkpointing"], seed=seed,
             data_seed=seed, report_to=[], remove_unused_columns=False,
@@ -448,6 +452,10 @@ def main() -> int:
         )
         telemetry = Telemetry(args.run_dir)
         telemetry.start()
+        initial_overfit_metrics = (
+            trainer.evaluate(metric_key_prefix="initial_overfit")
+            if args.run_purpose == "overfit32" else None
+        )
         result = trainer.train(resume_from_checkpoint=str(args.resume_from) if args.resume_from else None)
         if stop_after_step is not None and trainer.state.global_step < effective_max_steps:
             checkpoint = args.run_dir / f"checkpoint-{trainer.state.global_step}"
@@ -469,6 +477,15 @@ def main() -> int:
         )
         if trainer.state.global_step != expected_steps:
             raise RuntimeError(f"completed at optimizer step {trainer.state.global_step}, expected {expected_steps}")
+        final_overfit_metrics = (
+            trainer.evaluate(metric_key_prefix="final_overfit")
+            if args.run_purpose == "overfit32" else None
+        )
+        if initial_overfit_metrics is not None and final_overfit_metrics is not None:
+            initial_loss = initial_overfit_metrics["initial_overfit_loss"]
+            final_loss = final_overfit_metrics["final_overfit_loss"]
+            if not final_loss < initial_loss:
+                raise RuntimeError(f"32-row overfit loss did not decrease: {initial_loss} -> {final_loss}")
         final_model = args.run_dir / "final-model"
         trainer.save_model(str(final_model))
         tokenizer.save_pretrained(final_model)
@@ -476,6 +493,8 @@ def main() -> int:
         (args.run_dir / "status.json").write_text(json.dumps({
             "status": "complete", "finished_at": datetime.now(timezone.utc).isoformat(),
             "global_step": trainer.state.global_step, "train_metrics": result.metrics,
+            "initial_overfit_metrics": initial_overfit_metrics,
+            "final_overfit_metrics": final_overfit_metrics,
         }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return 0
     except BaseException as exc:

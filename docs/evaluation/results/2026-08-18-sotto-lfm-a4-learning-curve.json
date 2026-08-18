@@ -1,0 +1,112 @@
+{
+  "schema_version": "sotto-lfm-a4-learning-curve-v1",
+  "date": "2026-08-18",
+  "decision": {
+    "selected_research_checkpoint": "checkpoint-1084",
+    "selected_epoch": 4,
+    "deployment_status": "not_qualified",
+    "extend_public_refinement_further": false,
+    "rationale": "Epoch 4 has the best dev loss, overall source exactness, and source-macro exactness, but gains only six source exact matches over epoch 3. Two user-relevant retired failures remain, and two Sotto dev rows enter capped repetition loops. Preserve epoch 4 for comparison; do not train epoch 5."
+  },
+  "user_calibration": {
+    "target_failures_at_start": 10,
+    "target_failures_remaining": 2,
+    "target_cases_acceptable_after_training": 8,
+    "probably_deletion_is_go_no_go_gate": false,
+    "remaining_failures": [
+      {
+        "case_id": "cleanup-004",
+        "failure": "question intent changed into an imperative"
+      },
+      {
+        "case_id": "cleanup-021",
+        "failure": "the rationale 'works better' was deleted"
+      }
+    ]
+  },
+  "training": {
+    "run_dir": "/data/rise/android_stt/runs/sotto-lfm-a4-full-20260818T071437Z-dirty",
+    "status": "complete",
+    "optimizer_steps": 1084,
+    "epochs": 4,
+    "runtime_seconds": 3078.2661,
+    "train_loss": 0.14543661117773654,
+    "seed": 3258248073,
+    "all_parameters_trainable": true,
+    "resolved_config_sha256": "46d50129dffa93cb0542ca4bf85fe0e37963a6ecc26119dc38ddaadf5bf2f974",
+    "status_sha256": "0d6dfdbaa3f9c8e3c92779f65d1bfa5897f8853d64684af415a1d146d31dc2d7",
+    "training_config_sha256": "adf8fca0b0bb8a116acfc0e281959990e46bc242237733e3463e5ecb92ed9874",
+    "mixture_manifest_sha256": "5a08a5692d82bff9b3f7556ca4933fd4554fef724257c4dd7a4ae25d36126080",
+    "train_sha256": "f0644575caa9b63d94a211561d752f480d4f07b435bdcae31b4ebb63fa2bbbb4",
+    "dev_sha256": "66bbf0d818b46c8500dd1eced6e3525a94a643aabec7cca73f876b3d642c9fe3"
+  },
+  "evaluation": {
+    "backend": "transformers-batched-bf16",
+    "max_batch_size": 64,
+    "max_padded_prompt_tokens": 32768,
+    "batch_validation": "zero model-text differences versus sequential Transformers on all 69 retired cases",
+    "runner_sha256": "8408cdee44cca770574a50bfd690073f9077be56c0b4fa61f04864d17c8f5e75",
+    "source_scorer_sha256": "e15255fdde6dc09b368561b370685a7fc158dbd332e1573a63cfca5fb58e2dcf",
+    "blind_v2_used": false,
+    "raw_output_selected_for_scoring": true
+  },
+  "start_source_dev": {
+    "records": 8519,
+    "exact": 2736,
+    "sotto_exact": 2483,
+    "disfl_qa_exact": 34,
+    "disco_exact": 175,
+    "nyra_exact": 44
+  },
+  "epochs": [
+    {
+      "epoch": 1,
+      "step": 271,
+      "dev_loss": 0.14751659333705902,
+      "model_sha256": "af088344ef756bd535273f060326c2d5adea00cfde4c89f520f549199ff99c42",
+      "source_dev": {"exact": 4709, "records": 8519, "macro_exact_rate": 0.42567216965856036, "sotto": 4123, "disfl_qa": 338, "disco": 198, "nyra": 50, "cap_hits": 2},
+      "retired": {"exact": 47, "records": 69, "anchors_preserved": 144, "anchors_total": 163, "guardrail_flags": 20},
+      "source_score_sha256": "ad8381e1920d2c99649cf4d10855ac17ca5bea01b08a4c3a51cb1e0befc221f0"
+    },
+    {
+      "epoch": 2,
+      "step": 542,
+      "dev_loss": 0.1385938823223114,
+      "model_sha256": "63b53a7e516e9e7bcf72019a6b9427fe4ebc8ed9fe87daba6cc72aa67c10cfed",
+      "source_dev": {"exact": 4868, "records": 8519, "macro_exact_rate": 0.4503266582465161, "sotto": 4219, "disfl_qa": 393, "disco": 200, "nyra": 56, "cap_hits": 2},
+      "retired": {"exact": 46, "records": 69, "anchors_preserved": 144, "anchors_total": 163, "guardrail_flags": 19},
+      "source_score_sha256": "469bc7baf19bcbd6c3beb0767d466e7a1db2220141c87897763f19217e45f1fb"
+    },
+    {
+      "epoch": 3,
+      "step": 813,
+      "dev_loss": 0.13754969835281372,
+      "model_sha256": "918ef3ebd5557fa2f61488106744fc659d1801b4b9df3d09b5b6474570e9db57",
+      "source_dev": {"exact": 4883, "records": 8519, "macro_exact_rate": 0.4513233400096658, "sotto": 4231, "disfl_qa": 397, "disco": 198, "nyra": 57, "cap_hits": 2},
+      "retired": {"exact": 46, "records": 69, "anchors_preserved": 144, "anchors_total": 163, "guardrail_flags": 19},
+      "source_score_sha256": "c04c4c6af939e38661de23232df73a72b15b250078c7e4b9529bb4725c2ec470"
+    },
+    {
+      "epoch": 4,
+      "step": 1084,
+      "dev_loss": 0.13745850324630737,
+      "model_sha256": "3aee516270f5bcda44bb648dc3a939394fc1b67af20ecde76541f38b160dc822",
+      "source_dev": {"exact": 4889, "records": 8519, "macro_exact_rate": 0.4534785124234588, "sotto": 4231, "disfl_qa": 401, "disco": 201, "nyra": 56, "cap_hits": 2},
+      "retired": {"exact": 46, "records": 69, "anchors_preserved": 144, "anchors_total": 163, "guardrail_flags": 19},
+      "source_score_sha256": "74d51650272f0591e2049a9e42718777d91c21b1c25f8a083af18d87d2dfecf9"
+    }
+  ],
+  "raw_safety_review": {
+    "dictated_questions_and_commands_answered": 0,
+    "publisher_dev_empty_outputs": 0,
+    "publisher_dev_cap_hits": 2,
+    "cap_hit_note": "Two short Sotto dev inputs enter 900-token repetition loops; raw outputs fail closed and remain outside Git.",
+    "status": "fails_deployment_gate",
+    "note": "Guardrail fallback is not used to qualify the checkpoint. The two remaining user-relevant retired failures and the publisher loop evidence prevent deployment qualification."
+  },
+  "artifact_policy": {
+    "contains_example_text": false,
+    "raw_outputs_and_model_artifacts_outside_git": true,
+    "epoch_checkpoints_retained_pending_clean_base_comparison": true
+  }
+}

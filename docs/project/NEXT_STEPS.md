@@ -158,18 +158,35 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   repetitions, and one statement changed into a question. It is now converted and integrated only
   as the user's temporary pipeline placeholder, not as a reversal of the no-go deployment
   decision.
-- [ ] Run the approved Sotto LFM correction-repair experiment in
+- [x] Complete the approved Sotto LFM correction-repair experiment in
   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. First continue the pinned public checkpoint
   with full SFT for two epochs at `2e-6` on the shuffled natural correction mixture;
   evaluate both epochs before starting the clean-base arm. Then full-SFT a pinned
   `LFM2.5-350M-Base` for three epochs at `3e-5` with the same ordered mixture and disclosed
   publisher settings. Save/evaluate every epoch, target only the ten relevant failures, and never
   use either committed diagnostic corpus as training data.
-  Data preparation is complete under `/data`: every eligible source row is used once per epoch,
-  canonical HF snapshots are used, DISCO is pinned, its test partition is excluded, and two
-  frozen-diagnostic overlaps were removed. Next complete
-  the repository test/commit checkpoint, formatting audit, 32-row overfit, longest-row memory
-  smoke, checkpoint-resume smoke, and saved-checkpoint inference before launching Experiment A.
+  Data preparation and all launch gates are complete under `/data`: every eligible source row is
+  used once per epoch, canonical HF snapshots are used, DISCO is pinned, its test partition is
+  excluded, and two frozen-diagnostic overlaps were removed. Formatting, overfit, longest-row,
+  interruption/resume, and saved-checkpoint inference checks passed. The two-epoch Experiment A
+  completed and both checkpoints were evaluated on all 69 retired cases plus all 8,519 source-dev
+  rows. The separately named four-epoch learning curve also completed. Epoch 4 is the selected
+  research checkpoint at 4,889/8,519 source exact, but it is not deployment-qualified because two
+  dev prompts produce repetition loops through the 900-token cap; the final epoch adds only six
+  exact matches over epoch 3. Experiment B then completed all three clean-base epochs and all
+  checkpoint evaluations. Select epoch 1 as the safety-weighted research checkpoint: it reaches
+  5,477/8,519 source exact, 51/69 retired exact, and 155/163 protected anchors, versus 4,889,
+  46/69, and 144/163 for selected Experiment A. Do not select source-exact leader epoch 3 because
+  its retired result regresses to 46/69 and 149/163. No LFM checkpoint is deployment-qualified:
+  selected epoch 1 still has one source repetition loop and substantive intent, command,
+  identifier, and name-preservation failures. Preserve the evidence; any next local-model run must
+  be a separately reviewed targeted repair experiment rather than an automatic extra epoch.
+- [x] Evaluate the public start and every retained A/B epoch on fixed personal v3. Public start is
+  best at 11/20 exact and 53/61 literal anchors. B epoch 2 is best fine-tuned at 8/20 and 50/61;
+  campaign-selected B epoch 1 reaches 7/20 and 46/61. Raw review keeps every fine-tuned checkpoint
+  out of Android: A changes a currency unit, while B retains required corrections and formatting
+  directives. Record the guardrail false negatives and false rejection separately; do not repair
+  policy against v3 and then rescore the same version as fresh evidence.
 
 Prepare all data and training inputs portably in this repository, but run training only on the
 separate training machine when it is available. Do not start training on this Mac.
@@ -189,10 +206,11 @@ separate training machine when it is available. Do not start training on this Ma
 - [ ] Prepare the blind evaluator contract early. After training templates stabilize, have an
   independent context author/double-review and seal blind v2 outside the training job's readable
   path; do not use it for checkpoint or prompt selection.
-- [ ] Complete the approved LFM2.5-350M correction-repair and clean-base comparison before
+- [x] Complete the approved LFM2.5-350M correction-repair and clean-base comparison before
   returning to the deferred Qwen3.5-0.8B alternative.
-- [ ] Quantize the best checkpoint and re-run seed, regression, and blind-v2 quality gates with the
-  same short output bound and non-thinking behavior.
+- [ ] Do not quantize a fine-tuned checkpoint from this campaign. First decide whether to design an
+  independently sourced repair experiment or retain deterministic/public-placeholder cleanup;
+  create a new evaluation version for later policy changes.
 
 Training-machine checkpoint (2026-08-17): fetch/import/filter/source-holdout/family-split/quota,
 Gate A, training/resume, inference/scoring, and read-only monitoring code is implemented and fixture

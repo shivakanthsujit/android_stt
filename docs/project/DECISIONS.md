@@ -266,6 +266,47 @@ Last updated: 2026-08-18
     latency. V3 is evaluation-only and may inform checkpoint comparison as a declared regression,
     but its text, targets, outputs, errors, and phrasings must never enter training, prompting,
     retrieval, preference construction, or repair generation. Create v4 for future product changes.
+44. Do not require a clean, committed, or pushed repository before training. Record the current Git
+    commit and dirty paths plus SHA-256 hashes of the exact trainer, training config, data config,
+    mixture manifest, and train/dev streams used by each run. These byte identities, immutable
+    artifact directories, logs, and checkpoints are the reproducibility boundary; Git credentials
+    and repository cleanliness are operationally unrelated to whether a GPU run may launch.
+45. Delete heavyweight checkpoints and final-model copies produced only by completed mechanical
+    smoke tests after saved-checkpoint reload/inference is proven. Retain their compact status,
+    metrics, telemetry, manifests, hashes, and failure evidence. Track disk use before and after;
+    preserve evidence-bearing full-run epoch checkpoints until evaluation and selection finish.
+46. Keep uncertainty-word deletion visible in strict preservation metrics and review evidence, but
+    per user calibration do not make the Experiment A `heldout-036` removal of “probably” a product
+    go/no-go failure. This does not weaken the general requirement to record raw output faithfully.
+47. Run a separately named four-epoch public-checkpoint refinement learning curve after the
+    two-epoch run remained net-positive on every publisher source. Start again from the pinned
+    public checkpoint with the same natural mixture and all existing `2e-6` optimizer/packing
+    settings, but span one cosine schedule across four epochs and retain all four checkpoints.
+    Do not mislabel this as a resume of the completed two-epoch schedule, which already reached
+    zero learning rate.
+48. Select epoch 4 of the four-epoch public-checkpoint learning curve as the research comparison
+    checkpoint, not as a deployment candidate. It has the best source-dev exact result
+    (4,889/8,519) and lowest dev loss (0.13746), but two source-dev examples repeat through the
+    900-token generation cap. Do not run epoch 5 because epoch 4 adds only six exact matches over
+    epoch 3 while loss is effectively flat. Proceed to the predeclared clean-base Experiment B.
+49. Select clean-base Experiment B epoch 1 (`checkpoint-271`) as the final Sotto LFM campaign
+    research checkpoint, but do not qualify it for deployment. It reaches 5,477/8,519 source exact,
+    51/69 retired exact, and 155/163 protected anchors, outperforming selected Experiment A epoch 4
+    by 588 source matches, five retired matches, eleven anchors, and one fewer cap hit. Do not select
+    clean-base epoch 3 solely for its 5,796 source exact matches: it regresses to 46/69 retired exact,
+    149/163 anchors, and three additional guardrail flags versus epoch 1. Epoch 1 still has a capped
+    repetition loop and substantive raw-output intent, command, identifier, name, and structured
+    payload failures. Further work requires a separately reviewed targeted repair experiment, not
+    automatic extra epochs or guardrail-based qualification.
+50. Do not replace the public Android Sotto placeholder after the personal-v3 checkpoint matrix.
+    Public start leads the revised ordinary-dictation workload at 11/20 exact and 53/61 literal
+    anchors; the best fine-tuned checkpoint on v3 is B epoch 2 at 8/20 and 50/61, while the prior
+    campaign-selected B epoch 1 reaches 7/20 and 46/61. Keep B epoch 1's earlier designation scoped
+    to the pre-v3 campaign criteria rather than pretending the rankings agree. All A epochs make an
+    unsupported currency-unit substitution; B avoids that substitution but retains required
+    corrections and formatting directives. Treat the observed guardrail misses and false rejection
+    as defects to repair against new regression coverage, not permission to tune on v3 and rescore
+    it as unseen evidence.
 
 ## Android/toolchain
 

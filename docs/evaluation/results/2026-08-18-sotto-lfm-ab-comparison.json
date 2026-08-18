@@ -1,0 +1,265 @@
+{
+  "schema_version": "sotto-lfm-ab-comparison-v1",
+  "date": "2026-08-18",
+  "contains_example_text": false,
+  "decision": {
+    "selected_research_arm": "clean_base",
+    "selected_research_checkpoint": "checkpoint-271",
+    "selected_epoch": 1,
+    "deployment_status": "not_qualified",
+    "source_exact_leader": "checkpoint-813",
+    "source_exact_leader_selected": false,
+    "rationale": "Clean-base epoch 1 is the best safety-weighted checkpoint. It substantially exceeds the public-refinement arm on every publisher source, retired exactness, and protected-anchor preservation while reducing publisher cap hits from two to one. Epochs 2 and 3 gain aggregate source exactness but regress retired exactness, protected anchors, guardrail flags, and user-prioritized behavior. Epoch 1 still has one capped source repetition loop and substantive intent, command, identifier, and name-preservation failures, so it is research evidence rather than a deployment candidate."
+  },
+  "selection_policy": {
+    "aggregate_exact_match_alone_is_sufficient": false,
+    "raw_model_output_used_for_safety": true,
+    "guardrail_fallback_can_qualify_checkpoint": false,
+    "blind_v2_used": false,
+    "probably_deletion_is_go_no_go_gate": false
+  },
+  "public_task_tuned_start": {
+    "model_id": "juanquivilla/sotto-cleanup-lfm25-350m",
+    "revision": "6df6f019170b8b55333c047b901886a51750a965",
+    "model_weight_sha256": "6e96eeffdcdd60f881e13eb2019b339b39d1a74951446f062e7e641a82f6422e",
+    "source_dev": {
+      "records": 8519,
+      "exact": 2736,
+      "sotto": 2483,
+      "disfl_qa": 34,
+      "disco": 175,
+      "nyra": 44
+    },
+    "retired": {
+      "records": 69,
+      "exact": 42,
+      "anchors_preserved": 147,
+      "anchors_total": 163
+    }
+  },
+  "experiment_a_selected": {
+    "arm": "repair_public",
+    "run_dir": "/data/rise/android_stt/runs/sotto-lfm-a4-full-20260818T071437Z-dirty",
+    "checkpoint": "checkpoint-1084",
+    "epoch": 4,
+    "model_sha256": "3aee516270f5bcda44bb648dc3a939394fc1b67af20ecde76541f38b160dc822",
+    "dev_loss": 0.13745850324630737,
+    "source_dev": {
+      "records": 8519,
+      "exact": 4889,
+      "macro_exact_rate": 0.4534785124234588,
+      "sotto": 4231,
+      "disfl_qa": 401,
+      "disco": 201,
+      "nyra": 56,
+      "cap_hits": 2
+    },
+    "retired": {
+      "records": 69,
+      "exact": 46,
+      "anchors_preserved": 144,
+      "anchors_total": 163,
+      "guardrail_flags": 19
+    },
+    "deployment_status": "not_qualified"
+  },
+  "experiment_b_training": {
+    "arm": "clean_base",
+    "run_dir": "/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty",
+    "status": "complete",
+    "optimizer_steps": 813,
+    "epochs": 3,
+    "runtime_seconds": 2358.5961,
+    "train_loss": 0.08375703623154067,
+    "seed": 3084480448,
+    "all_parameters_trainable": true,
+    "base_model_id": "LiquidAI/LFM2.5-350M-Base",
+    "base_revision": "9960764e30892e01f29a6dc23df2533fcd8bd5ae",
+    "base_model_weight_sha256": "af70818c41a5cdb3f9587f91de12ff5f7847b8b0a2ba734534205ccea1d98aba",
+    "resolved_config_sha256": "98c86bf72b358d065e5de37dad9a11e5456773dd44b2348dc3b20b470ff00e21",
+    "status_sha256": "6ac31cf00022fc331fbce2057793872c62710fdd9a943aeb772eca187ff73834",
+    "trainer_state_sha256": "58d59849f1ba6de66856c0cbe73e0f636da42ee15dd7e6e91884084f30b1be31",
+    "tokenization_audit_sha256": "1c32f0260aff54f0474f3504cbeac3e59bfebdf63f59cc46b4f6cd07cdd7941c",
+    "training_config_sha256": "78976a24139426e3506b91b53735feb6ae2b71f6bade0a2b4d5fac80098bc3b8",
+    "mixture_manifest_sha256": "5a08a5692d82bff9b3f7556ca4933fd4554fef724257c4dd7a4ae25d36126080",
+    "train_sha256": "f0644575caa9b63d94a211561d752f480d4f07b435bdcae31b4ebb63fa2bbbb4",
+    "dev_sha256": "66bbf0d818b46c8500dd1eced6e3525a94a643aabec7cca73f876b3d642c9fe3"
+  },
+  "evaluation": {
+    "source_backend": "transformers-batched-bf16",
+    "retired_backend": "transformers-sequential-bf16",
+    "max_batch_size": 64,
+    "max_padded_prompt_tokens": 32768,
+    "batch_validation": "zero model-text differences versus sequential Transformers on all 69 retired cases",
+    "batched_runner_sha256": "8408cdee44cca770574a50bfd690073f9077be56c0b4fa61f04864d17c8f5e75",
+    "sequential_runner_sha256": "92665e703df8c6c8015317ab7fc3a7355d53008e47983e0b43772ad08eee3e4a",
+    "source_scorer_sha256": "e15255fdde6dc09b368561b370685a7fc158dbd332e1573a63cfca5fb58e2dcf",
+    "raw_output_selected_for_scoring": true
+  },
+  "experiment_b_epochs": [
+    {
+      "epoch": 1,
+      "step": 271,
+      "dev_loss": 0.10190233588218689,
+      "model_sha256": "e9d552f472374b51f8d59fe67623e0ae737ca9393a4b28d87341e9f5fab5de65",
+      "source_dev": {
+        "records": 8519,
+        "exact": 5477,
+        "macro_exact_rate": 0.6694954548625125,
+        "sotto": 4336,
+        "disfl_qa": 735,
+        "disco": 273,
+        "nyra": 133,
+        "cap_hits": 1,
+        "empty": 0
+      },
+      "retired": {
+        "records": 69,
+        "exact": 51,
+        "anchors_preserved": 155,
+        "anchors_total": 163,
+        "guardrail_flags": 12,
+        "cap_hits": 0,
+        "empty": 0
+      },
+      "source_score_sha256": "c9792cf1cbfab112cec6fe10cef6559e9be3418245ace96768d3b1bdfc0356ec",
+      "retired_seed_score_sha256": "07ef8b8a4eeffc3821a3ade56f5aaf92a60bbbe9d4c68b32bb722a9818d811b7",
+      "retired_heldout_score_sha256": "a0f17cc3d02e682fe94dd081149ea9b3c79d7f3afb76f33ec0d5d25b1299cf14"
+    },
+    {
+      "epoch": 2,
+      "step": 542,
+      "dev_loss": 0.09617459028959274,
+      "model_sha256": "5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6",
+      "source_dev": {
+        "records": 8519,
+        "exact": 5731,
+        "macro_exact_rate": 0.6785862666846031,
+        "sotto": 4593,
+        "disfl_qa": 726,
+        "disco": 287,
+        "nyra": 125,
+        "cap_hits": 1,
+        "empty": 0
+      },
+      "retired": {
+        "records": 69,
+        "exact": 47,
+        "anchors_preserved": 149,
+        "anchors_total": 163,
+        "guardrail_flags": 13,
+        "cap_hits": 0,
+        "empty": 0
+      },
+      "source_score_sha256": "a15cf7198a3ba4c5abdc4fbd1bc95a95f52684cf7bbbf59ef55cf6779e7e682a",
+      "retired_seed_score_sha256": "ce43d08dde20028ec38431a522a3e394522dc0b3ce407495105bed42bdcd8807",
+      "retired_heldout_score_sha256": "c186d7847063801ed3d9f6af6e83c59fd659f43d3a250e26815b42b0e8431922"
+    },
+    {
+      "epoch": 3,
+      "step": 813,
+      "dev_loss": 0.10111620277166367,
+      "model_sha256": "7e817690331e4d8f5e067ff8df1e499de1013567f70c8dbb976ce52820db6ffb",
+      "source_dev": {
+        "records": 8519,
+        "exact": 5796,
+        "macro_exact_rate": 0.6939978762785924,
+        "sotto": 4639,
+        "disfl_qa": 733,
+        "disco": 287,
+        "nyra": 137,
+        "cap_hits": 1,
+        "empty": 0
+      },
+      "retired": {
+        "records": 69,
+        "exact": 46,
+        "anchors_preserved": 149,
+        "anchors_total": 163,
+        "guardrail_flags": 15,
+        "cap_hits": 0,
+        "empty": 0
+      },
+      "source_score_sha256": "ae65f965b20ffea3175c32fc622dcf9daf7ffff3be52667f9022f9fded720aeb",
+      "retired_seed_score_sha256": "4e8a63d85df6122790f154415be665e312c03882da1836bf20272c33af1069bc",
+      "retired_heldout_score_sha256": "6593674ff8d9d02567b5ea758c0a8cabb67aa8a4c2c02d89efb65e4cacec6a08"
+    }
+  ],
+  "selected_checkpoint_comparison": {
+    "versus_public_task_tuned_start": {
+      "source_exact_delta": 2741,
+      "retired_exact_delta": 9,
+      "retired_anchor_delta": 8
+    },
+    "versus_experiment_a_selected": {
+      "source_exact_delta": 588,
+      "source_macro_exact_rate_delta": 0.21601694243905373,
+      "retired_exact_delta": 5,
+      "retired_anchor_delta": 11,
+      "publisher_cap_hit_delta": -1
+    },
+    "versus_experiment_b_source_leader": {
+      "source_exact_delta": -319,
+      "retired_exact_delta": 5,
+      "retired_anchor_delta": 6,
+      "retired_guardrail_flag_delta": -3
+    }
+  },
+  "user_calibration": {
+    "target_cases": 10,
+    "selected_epoch_acceptable": 9,
+    "selected_epoch_remaining_failures": [
+      {
+        "case_id": "cleanup-004",
+        "failure": "question intent changed into an imperative"
+      }
+    ],
+    "note": "The selected epoch preserves the cleanup-021 rationale; its punctuation differs but its content is retained. Dropping probably remains logged rather than a go/no-go gate."
+  },
+  "raw_safety_review": {
+    "dictated_questions_and_commands_reviewed_per_epoch": 17,
+    "dictated_questions_and_commands_answered": 0,
+    "selected_epoch_publisher_dev_empty_outputs": 0,
+    "selected_epoch_publisher_dev_cap_hits": 1,
+    "selected_epoch_cap_hit_case_ids": [
+      "sotto-lfm-dev-005709"
+    ],
+    "selected_epoch_cap_hit_note": "A short repetitive Sotto input enters a 900-token repetition loop. The raw output fails closed and remains outside Git.",
+    "selected_epoch_substantive_failure_classes": [
+      "question intent changed into an imperative",
+      "command and CLI separator corruption",
+      "dictated command intent changed into a statement",
+      "literal role-marker deletion",
+      "name and script transliteration",
+      "structured JSON payload rewriting",
+      "undeclared currency-format rewriting"
+    ],
+    "status": "fails_deployment_gate",
+    "note": "Strict guardrail counts include known anchor-policy false positives on exact target outputs. Manual raw-output review nevertheless found independent substantive failures, so guardrail fallback is neither needed nor allowed to rescue qualification."
+  },
+  "launcher_lifecycle": {
+    "authoritative_run_completed": true,
+    "authoritative_run_pid_visibility_note": "Sandboxed process listings briefly hid the still-running host process. Host-level inspection and advancing metrics corrected the record; the trainer later wrote complete status at step 813.",
+    "accidental_duplicate_runs": [
+      {
+        "run_dir": "/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084514Z-dirty",
+        "last_recorded_step": 1,
+        "checkpoint_available": false,
+        "intentionally_stopped": true
+      },
+      {
+        "run_dir": "/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084930Z-dirty",
+        "last_recorded_step": 1,
+        "checkpoint_available": false,
+        "intentionally_stopped": true
+      }
+    ]
+  },
+  "artifact_policy": {
+    "contains_example_text": false,
+    "raw_outputs_and_model_artifacts_outside_git": true,
+    "all_three_experiment_b_epoch_checkpoints_retained": true,
+    "test_only_weight_copies_deleted": true,
+    "artifact_volume_free_space_bytes_at_audit": 10392080932864
+  }
+}

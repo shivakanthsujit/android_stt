@@ -37,9 +37,9 @@
       "model_id": "juanquivilla/sotto-cleanup-lfm25-350m",
       "revision": "6df6f019170b8b55333c047b901886a51750a965",
       "expected_model_weight_sha256": "6e96eeffdcdd60f881e13eb2019b339b39d1a74951446f062e7e641a82f6422e",
-      "epochs": 2,
+      "epochs": 4,
       "learning_rate": 0.000002,
-      "save_total_limit": 2
+      "save_total_limit": 4
     },
     "clean_base": {
       "model_id": "LiquidAI/LFM2.5-350M-Base",

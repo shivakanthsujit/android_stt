@@ -411,8 +411,8 @@
   and frozen-corpus screening removed two Sotto train rows. Manifest SHA-256 is
   `5a08a5692d82bff9b3f7556ca4933fd4554fef724257c4dd7a4ae25d36126080`.
 - Added preparation, canonical-cache, full-SFT, packed-boundary, resume, and generalized LFM
-  inference code plus focused unit tests. GPU smoke tests and Experiment A remain pending until the
-  repository checkpoint is fully tested and committed.
+  inference code plus focused unit tests.
+
 ## 2026-08-18 — File-fed Pixel Parakeet and power evaluation
 
 - Added a debug-only ADB-driven STT benchmark Activity that never opens the microphone. It verifies
@@ -582,3 +582,111 @@
 - V3 is evaluation-only. Its examples, expected output, results, errors, and phrasings remain
   forbidden from training, prompt demonstrations, retrieval, preference data, and repair
   generation.
+## 2026-08-18 — Sotto LFM full-SFT campaign completion
+
+- GPU smoke tests and Experiment A ran only after the exact inputs were tested and hash-recorded.
+  Per subsequent user direction, dirty or unpushed Git state is explicitly allowed and is not a
+  launch gate.
+- The first 32-row overfit invocation stopped before training because a generated 63-bit seed was
+  outside NumPy's accepted unsigned 32-bit range. Preserved the failed run and traceback, changed
+  generated training seeds to the NumPy-compatible range, and retained the wider preparation seed
+  because it is used only by Python's shuffle implementation.
+- Re-ran the corrected full-parameter gates successfully. The 60-step 32-row overfit reduced loss
+  from 0.75067 to 0.23514; the longest-example smoke completed with no truncation; the deliberate
+  step-2 interruption resumed through step 4; and a reloaded saved checkpoint generated an exact,
+  guardrail-clean result for the first retired diagnostic. All 126 script tests pass.
+- Deleted the five inspected heavyweight smoke `checkpoint-*`/`final-model` directories after the
+  reload gate, reclaiming 6.0 GB while retaining status, telemetry, manifests, hashes, logs, and
+  the one-case inference evidence.
+- Launched two-epoch full-SFT Experiment A on the RTX A6000 at
+  `/data/rise/android_stt/runs/sotto-lfm-a-full-20260818T061643Z-dirty`. The run records the dirty
+  Git paths plus exact code/config/data/model hashes, and has a live metrics monitor attached.
+- Experiment A completed all 542 steps in 1,542.8 seconds. Dev loss improved from 0.15292 at epoch
+  1 to 0.14940 at epoch 2; both 2.0 GB resumable checkpoints and the byte-identical epoch-2 final
+  model are retained. Peak sampled GPU allocation was 13.3/49.1 GB and the artifact volume remained
+  at 14% use.
+- Fixed sequential retired evaluation gives 47/69 exact at both epochs versus 42/69 for the public
+  start checkpoint. Epochs 1 and 2 produce identical text on all 69 cases. The run fixes most of
+  the ten user-relevant failures, but `cleanup-004` changes a question into an imperative and
+  `cleanup-021` deletes “works better.” Per user calibration, dropping “probably” on
+  `heldout-036` remains logged but is not a product go/no-go gate.
+- Added a token-budgeted batched Transformers evaluator and proved it exactly reproduced all 69
+  sequential outputs at max batch 64 / 32,768 padded prompt tokens before using it on publisher
+  dev. Start/epoch-1/epoch-2 overall exact counts were 2,736/4,636/4,670 of 8,519. Epoch 2 remained
+  net-positive on every source: Sotto 4,101/6,921, Disfl-QA 320/1,000, DISCO 199/348, and Nyra
+  50/250. Raw outputs remain outside Git.
+- Because epoch 2 still changed 348 source-dev outputs and gained 34 net exact matches, launched a
+  separately named four-epoch learning curve from the same public checkpoint at
+  `/data/rise/android_stt/runs/sotto-lfm-a4-full-20260818T071437Z-dirty`. It changes only the epoch
+  horizon and checkpoint retention, uses one new four-epoch cosine schedule rather than silently
+  restarting the completed schedule, and has live monitoring attached.
+- The four-epoch learning curve completed all 1,084 steps in 3,078.3 seconds. Dev loss by epoch was
+  0.14752, 0.13859, 0.13755, and 0.13746. Source-dev exact rose from 2,736/8,519 at the public start
+  to 4,709, 4,868, 4,883, and 4,889. Epoch 4 remained net-positive on every source: Sotto
+  4,231/6,921, Disfl-QA 401/1,000, DISCO 201/348, and Nyra 56/250.
+- Retired exact was 47/69 at epoch 1 and 46/69 thereafter. The epoch-4 model fixes or acceptably
+  handles eight of the ten user-prioritized cases, but still converts `cleanup-004` from a question
+  to an imperative and deletes “works better” from `cleanup-021`. It also reaches the 900-token cap
+  with repetition loops on two source-dev rows. Selected epoch 4 as the best research checkpoint,
+  but marked it not deployment-qualified; the flat epoch-3-to-4 gain does not justify epoch 5.
+- Wrote the sanitized learning-curve result to
+  `docs/evaluation/results/2026-08-18-sotto-lfm-a4-learning-curve.json`. Raw source outputs remain
+  outside Git. All four resumable checkpoints remain retained for comparison with the predeclared
+  clean-base Experiment B; artifact storage still has more than 9 TB free.
+
+- Downloaded pinned `LiquidAI/LFM2.5-350M-Base` revision
+  `9960764e30892e01f29a6dc23df2533fcd8bd5ae` into the machine-wide Hugging Face cache and pinned
+  its weight SHA-256 as `af70818c41a5cdb3f9587f91de12ff5f7847b8b0a2ba734534205ccea1d98aba`.
+  Its tokenizer produces byte-for-byte-equivalent tokenization and packing statistics to the
+  public task-tuned checkpoint. Clean-base format and BF16 full-parameter overfit gates passed;
+  the 32-row loss fell from 0.88651 to 0.0000153. Reload inference succeeded, then the 681 MB
+  smoke final-model copy was deleted while retaining compact evidence.
+- Completed clean-base Experiment B at
+  `/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty`: 813 steps over three epochs
+  in 2,358.6 seconds with generated seed `3084480448`. Dev loss was 0.10190, 0.09617, and 0.10112.
+  All three 2.13 GB resumable checkpoints are retained, with weight SHA-256 values
+  `e9d552f472374b51f8d59fe67623e0ae737ca9393a4b28d87341e9f5fab5de65`,
+  `5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6`, and
+  `7e817690331e4d8f5e067ff8df1e499de1013567f70c8dbb976ce52820db6ffb`.
+- Evaluated every Experiment B checkpoint on all 8,519 source-dev rows and all 69 retired
+  diagnostics. Source exact rose 5,477→5,731→5,796, but retired exact regressed 51→47→46 and
+  anchors regressed 155→149→149 of 163. Epoch 1 handles nine of ten user-prioritized cases and
+  retains the `cleanup-021` rationale; `cleanup-004` still changes a question into an imperative.
+  It also has one source repetition loop plus independent command, identifier, name, and structured
+  payload failures. Selected epoch 1 as the safety-weighted research checkpoint, but marked the
+  entire campaign not deployment-qualified. Raw outputs remain outside Git.
+- During monitoring, sandboxed process visibility briefly hid the still-running authoritative
+  trainer and prompted two redundant launches. Host-level inspection corrected the record; both
+  duplicates were intentionally stopped at step 1 without checkpoints, while the original run
+  continued to completion. Preserved correction notes and recorded the lifecycle in the sanitized
+  A/B report rather than erasing the audit trail.
+- Wrote `docs/evaluation/results/2026-08-18-sotto-lfm-ab-comparison.json`. It selects clean-base
+  epoch 1 over public-refinement epoch 4 by +588 source exact, +5 retired exact, +11 protected
+  anchors, and one fewer cap hit. The later clean-base source leader is not selected because its
+  safety diagnostics regress. Test-only heavy weight copies remain deleted; artifact storage has
+  over 9 TB free.
+
+## 2026-08-18 — Remote evaluation integration and personal-v3 checkpoint matrix
+
+- Fetched remote `main` and inspected its eight dependent commits. Integrated them at merge
+  `ab85a54`; the two newest are `b0ed579` (personal voice regression and fast joined runner) and
+  `cd77e76` (personal-v3 long-form checkpoint evaluation). Preserved the existing dirty campaign
+  work in its original unstaged form and retained a named safety stash.
+- Confirmed why the active evaluation changed: ordinary personal messages/journals/lists now
+  replace technical stress prompts, the phone-number case is removed, four 3–5 sentence cases add
+  long-form coverage, and bounded correction/number/formatting equivalence is represented without
+  weakening name, value, negation, uncertainty, invention, or answering checks.
+- Verified the v3 corpus, runner, and all eight model-weight hashes. The focused runner/batched/
+  guardrail unit suite passed 34/34. Ran public start, A epochs 1–4, and B epochs 1–3 sequentially
+  in BF16 on all 20 cases; every run completed without a token-cap hit.
+- Public start leads at 11/20 exact, 53/61 literal anchors, and 15/20 all-anchor cases. A epochs are
+  all 8/20 and 50/61. B epochs are 7/20 and 46/61, 8/20 and 50/61, then 8/20 and 47/61. B epoch 2
+  is therefore best fine-tuned on v3, but public start remains the strongest product checkpoint.
+- Reviewed every non-exact and safety-sensitive raw output. All A epochs change a currency unit;
+  public and B avoid unsupported substitutions in this suite but retain required corrections and
+  formatting directives. The guard misses the A substitution and a public numeric-surface
+  correction retention, while falsely rejecting valid A numbered-list formatting. No fine-tuned
+  model advances to Android.
+- Raw/provenance JSONL remains outside Git under
+  `/data/rise/android_stt/evaluations/personal-v3-20260818/`; sanitized evidence is
+  `docs/evaluation/results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`.

@@ -30,6 +30,26 @@ class TrainSottoLfmTests(unittest.TestCase):
         self.assertTrue(config["dataset"]["pass_seq_idx_for_hybrid_state_reset"])
         self.assertNotIn("lora", json.dumps(config).casefold())
 
+    def test_four_epoch_followup_changes_only_epoch_horizon_and_retention(self) -> None:
+        original = json.loads((ROOT / "training/config/sotto-lfm-training-v1.json").read_text())
+        followup = json.loads((ROOT / "training/config/sotto-lfm-training-4epoch-v1.json").read_text())
+        original_arm = original["arms"]["repair_public"]
+        followup_arm = followup["arms"]["repair_public"]
+        self.assertEqual(followup_arm["epochs"], 4)
+        self.assertEqual(followup_arm["save_total_limit"], 4)
+        self.assertEqual(
+            {key: value for key, value in original_arm.items() if key not in {"epochs", "save_total_limit"}},
+            {key: value for key, value in followup_arm.items() if key not in {"epochs", "save_total_limit"}},
+        )
+        self.assertEqual(original["dataset"], followup["dataset"])
+        self.assertEqual(original["common"], followup["common"])
+        self.assertNotIn("seed", followup["common"])
+
+    def test_trainer_records_bytes_without_requiring_clean_git(self) -> None:
+        source = MODULE_PATH.read_text()
+        self.assertNotIn("verify_tracked_repository_and_inputs", source)
+        self.assertIn('"trainer_sha256"', source)
+
     def test_data_config_uses_expected_fields_and_isolates_holdouts(self) -> None:
         config = json.loads((ROOT / "training/config/sotto-lfm-data-v1.json").read_text())
         self.assertNotIn("seed", config)
@@ -76,6 +96,16 @@ class TrainSottoLfmTests(unittest.TestCase):
         self.assertEqual(MODULE.validate_controls("longest_smoke", -1, None, None), 2)
         with self.assertRaises(RuntimeError):
             MODULE.validate_controls("full", 2, None, None)
+
+    def test_overfit_requires_positive_bounded_run(self) -> None:
+        self.assertEqual(MODULE.validate_controls("overfit32", 60, None, None), 60)
+        with self.assertRaises(RuntimeError):
+            MODULE.validate_controls("overfit32", -1, None, None)
+
+    def test_training_seed_contract_is_numpy_compatible(self) -> None:
+        source = MODULE_PATH.read_text()
+        self.assertIn("secrets.randbelow(2**32)", source)
+        self.assertIn("0 <= seed < 2**32", source)
 
 
 if __name__ == "__main__":

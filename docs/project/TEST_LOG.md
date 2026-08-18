@@ -1,5 +1,26 @@
 # Test log
 
+## 2026-08-18 — Sotto LFM personal-v3 checkpoint matrix
+
+- Integrated remote commits `b0ed579` and `cd77e76` through local merge `ab85a54`, preserving the
+  existing dirty campaign worktree and retaining a named safety stash.
+- `python -m unittest` for the sequential/batched Sotto inference and cleanup-guardrail modules
+  passed 34/34 tests.
+- Verified the 20-case v3 corpus SHA-256 as
+  `667715109afdf2e0e907d25c875ec7a8645f518c8ae690924128bc58a7482ac0`, the runner as
+  `9d5839fed0680f54715ab038b0505907d5f893dabf78a54811b3f1d1ab31fe9f`, and all eight checkpoint
+  weight hashes before inference.
+- Public start plus A epochs 1–4 and B epochs 1–3 each completed 20/20 sequential BF16 cases with
+  no token-cap hit. Public start leads at 11/20 exact and 53/61 anchors. Best fine-tuned is B epoch
+  2 at 8/20 and 50/61; prior selected B epoch 1 reaches 7/20 and 46/61.
+- Manually reviewed every non-exact and safety-sensitive raw output. A has a repeated unsupported
+  currency-unit substitution. Public and all B checkpoints avoid unsupported substitutions here
+  but fail required corrections/formatting. Guardrail review found two false-negative classes and
+  one false-rejection class; passing parity tests do not cover these semantic gaps.
+- The complete `scripts/tests` discovery suite passed 159/159 after the merge and report updates.
+- Complete sanitized evidence:
+  `docs/evaluation/results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`.
+
 ## 2026-08-18 — Personal-v3 long-form and checkpoint-eval contract
 
 - TTS/checkpoint case files contain 20 matching IDs. Phone/callback-number text is absent. Four

@@ -26,6 +26,8 @@ Use `scripts/run-joined-file-eval.sh` to feed the suite—or one WAV/MP3—throu
 Parakeet → Sotto → guardrail path without opening the microphone. The first result and the
 guardrail false-rejection review are recorded in
 [`results/2026-08-18-personal-v3-long-form-file-fed-integration.md`](results/2026-08-18-personal-v3-long-form-file-fed-integration.md).
+The BF16 public/A/B checkpoint matrix and raw-output audit are recorded in
+[`results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`](results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md).
 
 ## Dictation cleanup evaluation
 

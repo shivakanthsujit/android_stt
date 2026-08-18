@@ -1,6 +1,6 @@
 # Cleanup training-machine handoff
 
-Status: Sotto LFM correction-repair experiment is the approved immediate next work
+Status: Sotto LFM correction-repair campaign complete; no checkpoint is deployment-qualified
 
 This is the entry point for continuing Local Flow cleanup work on the separate training machine.
 It contains the authority, constraints, source pins, execution order, deliverables, and recovery
@@ -20,11 +20,12 @@ Build a conservative, task-specific, sub-1B transcript cleanup model that:
 - applies only the versioned allowlist of explicit transcript-formatting directives; and
 - never answers, performs external actions, summarizes, refuses, or elaborates on dictated content.
 
-The completed Qwen3-0.6B direct-source experiments are preserved research evidence. The immediate
-next experiment is the two-stage Sotto LFM2.5-350M correction-repair study in
-`docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`: targeted continuation of the public checkpoint,
-then a clean full-SFT reproduction from `LFM2.5-350M-Base`. The reviewed 5,000/500 pilot and
-Qwen3.5 comparison remain valid later paths; do not run them ahead of this newly selected study.
+The completed Qwen3-0.6B direct-source experiments and two-stage Sotto LFM2.5-350M campaign are
+preserved research evidence. The safety-weighted Sotto selection is clean-base epoch 1, but it
+still has a capped repetition loop and substantive raw-output safety failures. Do not quantize or
+integrate it. See `docs/evaluation/results/2026-08-18-sotto-lfm-ab-comparison.json`. A next training
+arm requires a separately reviewed targeted-repair decision; the reviewed 5,000/500 pilot and
+Qwen3.5 comparison remain valid alternatives.
 
 The RTX A6000 has ample capacity for this pilot, but do not assume CUDA, driver, Python, disk, or
 thermal state. Inspect and record the actual machine before selecting package versions or batch
@@ -118,25 +119,27 @@ Implemented in the current Phase 0 checkpoint:
 - pinned DISCO English plus a seeded grouped holdout, canonical Hugging Face snapshots, and a
   frozen-overlap-filtered natural single-pass correction-repair mixture under `/data`; and
 - an audited LFM full-parameter SFT path with native completion masking and explicit packed
-  attention/convolution-state boundaries; and
+  attention/convolution-state boundaries;
 - the evaluation-only 20-case personal-conversation v3 suite, scorer-compatible checkpoint cases,
-  fast file-fed Pixel joined runner, and documented 10/20 public-Sotto intended-cleanup result.
+  fast file-fed Pixel joined runner, and documented 10/20 public-Sotto intended-cleanup result;
+- pinned `LFM2.5-350M-Base`, complete format/overfit/longest/resume/saved-inference gates, and
+  deletion of test-only heavyweight checkpoints after reload verification; and
+- completed public-refinement and clean-base LFM full-SFT learning curves, evaluation of every
+  epoch checkpoint, and a sanitized A/B selection report. Clean-base epoch 1 is the research
+  selection; no checkpoint passes deployment safety.
 
 Not implemented yet:
 
 - accepted train/dev rows or blind-v2 rows;
 - completed human decisions, attestations, or a passing Gate A report;
-- an immutable local `LFM2.5-350M-Base` snapshot and weight hash;
-- completed LFM formatting/overfit/longest/resume/saved-inference GPU smokes;
-- either approved LFM training arm or its checkpoint-selection report;
-- an LFM merge and Q4/export path; or
+- a quality-passing LFM merge and Q4/export path; or
 - Android conversion/integration for a trained model.
 
-The new session is authorized to implement the LFM full-SFT/mixing path, pin and audit the added
-DISCO source, run both approved experiment arms in their documented order, monitor/resume them,
-and evaluate every epoch. It is not authorized to feed evaluation references into training,
-publish artifacts, improvise an undocumented GRPO stage, or integrate a model into Android before
-qualification.
+The public start and all saved LFM full-SFT epochs have now been evaluated on fixed personal v3.
+Public start leads, B epoch 2 is the best fine-tuned v3 checkpoint, and no checkpoint qualifies for
+deployment. The session is not authorized to add epochs, feed evaluation references into training,
+publish artifacts, improvise an undocumented GRPO stage, tune guardrails against v3 and call the
+rescore fresh, or integrate a fine-tuned model into Android before qualification.
 
 ## Phase 0: machine and repository preflight
 
@@ -376,8 +379,9 @@ checkpoints, unexpected data counts, missing logs, loss divergence, disk exhaust
 learning. Resume only from a verified checkpoint with the identical resolved config. A changed
 config starts a new run ID.
 
-Commit and push code/config/manifest changes before a long run. Do not commit run directories or
-weights.
+Record the current commit, dirty paths, and exact hashes of code/config/manifest inputs before a
+long run. A dirty or unpushed repository is allowed and is not a launch gate. Do not commit run
+directories or weights.
 
 ## Phase 6: evaluate and select
 
@@ -472,7 +476,8 @@ After cloning, the user can give the new session this instruction:
 > Build the reproducible data and training pipeline in the documented phases. Pin and audit the
 > public datasets, pass Gate A, smoke-test checkpoint/resume/evaluation, then run matching
 > Qwen3-0.6B and Qwen3.5-0.8B pilot adapters. Monitor long jobs, preserve manifests and raw-output
-> evals, commit and push durable checkpoints, and never expose or optimize on blind-v2. Stop and
+> evals, preserve durable checkpoints and exact input hashes, and never expose or optimize on
+> blind-v2. Stop and
 > report any contamination, licensing, safety-review, or reproducibility blocker.
 
 This prompt authorizes implementation and training on the identified A6000 machine; it does not
