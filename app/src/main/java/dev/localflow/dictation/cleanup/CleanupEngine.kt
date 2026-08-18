@@ -37,6 +37,7 @@ enum class CleanupPromptVariant(val id: String) {
     COMMAND_ENVELOPE("command_envelope"),
     STRICT_MINIMAL_EDIT("strict_minimal_edit"),
     FEW_SHOT_CORRECTIONS("few_shot_corrections"),
+    SOTTO_NATIVE("sotto_native"),
 }
 
 enum class CleanupModel(
@@ -46,6 +47,7 @@ enum class CleanupModel(
     LFM_230M("LFM2.5-230M", "Q4_K_M"),
     LFM_350M("LFM2.5-350M", "Q4_K_M"),
     LFM_1_2B_INSTRUCT("LFM2.5-1.2B-Instruct", "Q4_K_M"),
+    SOTTO_LFM_350M("Sotto LFM2.5-350M", "Q4_K_M"),
 }
 
 data class CleanupLoadProgress(

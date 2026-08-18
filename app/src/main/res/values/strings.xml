@@ -1,16 +1,17 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Local Flow</string>
-    <string name="benchmark_title">Local dictation benchmark</string>
-    <string name="benchmark_subtitle" tools:ignore="TypographyDashes">Moonshine Small Streaming + LFM2.5-1.2B-Instruct · on-device</string>
-    <string name="load_model">Load model</string>
+    <string name="benchmark_title">Joined pipeline test</string>
+    <string name="benchmark_subtitle" tools:ignore="TypographyDashes">Parakeet 110M Q4_K → Sotto LFM2.5-350M Q4_K_M · local integration candidate</string>
+    <string name="integration_warning">Integration testing only: the public Sotto checkpoint has known correction/safety failures. Guardrail fallback remains visible and does not qualify the model.</string>
+    <string name="load_model">Load staged Parakeet</string>
     <string name="start_dictation">Start dictation</string>
     <string name="stop_dictation">Stop dictation</string>
     <string name="raw_transcript">Raw transcript</string>
-    <string name="cleanup_benchmark">Manual cleanup smoke test</string>
-    <string name="load_cleanup_model">Load cleanup model</string>
+    <string name="cleanup_benchmark">Sotto cleanup and joined output</string>
+    <string name="load_cleanup_model">Load staged Sotto</string>
     <string name="retry_cleanup_model_load">Retry cleanup model load</string>
     <string name="clean_text">Clean text</string>
-    <string name="run_cleanup_evaluation">Run 24-case prompt D/E</string>
+    <string name="run_cleanup_evaluation">Run 24-case Sotto-native check</string>
     <string name="status_evaluation_idle">Direct-text evaluation uses no microphone.</string>
     <string name="status_evaluation_starting">Starting direct-text cleanup evaluation…</string>
     <string name="status_evaluation_progress">Run %1$d/%2$d · %3$s · %4$s</string>
@@ -21,9 +22,9 @@
     <string name="cleaned_transcript">Cleaned transcript</string>
     <string name="cleaned_transcript_placeholder">Cleaned local text will appear here.</string>
     <string name="latency_metrics">Latency metrics</string>
-    <string name="status_model_not_loaded">Model not loaded. The first load requires internet.</string>
-    <string name="status_preparing_model">Preparing Moonshine Small Streaming…</string>
-    <string name="status_model_ready">Ready. Model is cached for future offline use.</string>
+    <string name="status_model_not_loaded">Parakeet is not loaded. Stage the verified Q4_K GGUF, then load it.</string>
+    <string name="status_preparing_model">Verifying and loading Parakeet 110M Q4_K…</string>
+    <string name="status_model_ready">Parakeet ready. Audio stays local; transcription finalizes after Stop.</string>
     <string name="status_opening_microphone">Opening microphone…</string>
     <string name="status_requesting_microphone_permission">Microphone permission is required to dictate.</string>
     <string name="status_microphone_permission_denied">Microphone permission denied. Enable it in Android settings to dictate.</string>
@@ -33,10 +34,11 @@
     <string name="status_downloading_model">Downloading speech model: %1$d%%</string>
     <string name="status_downloading_model_file">Downloading speech model: %1$d%% · %2$s</string>
     <string name="status_error">Error: %1$s</string>
-    <string name="status_cleanup_model_not_loaded">Cleanup model not loaded. The first load requires internet.</string>
-    <string name="status_cleanup_loading" tools:ignore="TypographyDashes">Preparing LFM2.5-1.2B-Instruct Q4_K_M…</string>
-    <string name="status_cleanup_downloading">Downloading cleanup model: %1$d%%</string>
-    <string name="status_cleanup_ready">Cleanup model ready and cached for offline use.</string>
+    <string name="status_cleanup_model_not_loaded">Sotto is not loaded. Stage the verified Q4_K_M GGUF, then load it.</string>
+    <string name="status_cleanup_loading" tools:ignore="TypographyDashes">Verifying and loading Sotto LFM2.5-350M Q4_K_M…</string>
+    <string name="status_cleanup_downloading">Verifying staged cleanup model: %1$d%%</string>
+    <string name="status_cleanup_ready">Sotto ready. A completed dictation will clean automatically.</string>
+    <string name="status_cleanup_load_for_pipeline">Raw Parakeet text is ready. Load Sotto to run the joined cleanup stage.</string>
     <string name="status_cleanup_generating">Cleaning text locally…</string>
     <string name="status_cleanup_finished">Cleanup finished locally.</string>
     <string name="status_cleanup_fallback">Cleanup rejected (%1$s); showing raw text.</string>
@@ -50,6 +52,7 @@
     <string name="metric_model_load">Model load: %1$d ms</string>
     <string name="metric_recording">Recording: %1$d ms</string>
     <string name="metric_stt_tail">STT tail: %1$d ms</string>
+    <string name="metric_pipeline_tail">End-to-end tail: %1$d ms</string>
     <string name="metric_cleanup_load">Cleanup load: %1$d ms</string>
     <string name="metric_cleanup_ttft">Cleanup TTFT: %1$d ms</string>
     <string name="metric_cleanup_total">Cleanup total: %1$d ms</string>

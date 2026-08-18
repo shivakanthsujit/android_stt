@@ -1,5 +1,26 @@
 # Test log
 
+## 2026-08-18 — Joined Parakeet/Sotto Pixel integration
+
+- Full Android gate passed:
+  `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
+  Shell syntax and `git diff --check` also passed.
+- Installed the 88,043,862-byte ARM64 debug APK on Pixel 7; SHA-256
+  `33a2b85b8d6c003631ac63ad5100002bdcd81032e066d7efc970d59f206d3327`.
+- Reverified the staged device artifacts: Parakeet Q4_K
+  `2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf` and Sotto Q4_K_M
+  `05385da14474f3e488c7611edbb1e7065b3ccb07862e3c93ec1ccbd267b2e570`.
+- Both Android runtimes loaded: Parakeet in 270 ms and Sotto in 904 ms. A benign typed cleanup
+  smoke completed without fallback at 141 ms TTFT and 285 ms total.
+- A real microphone → Parakeet → Sotto run completed. The 22.091-second capture finalized in
+  1,568 ms after Stop; cleanup completed in 456 ms and total Stop-to-cleanup tail was 2,029 ms.
+  Sotto's raw output deleted protected negation, the lexical guardrail detected it, and the final
+  output fell back to raw STT. No raw microphone transcript is persisted in this log.
+- This proves the joined lifecycle and fallback visibility, not model qualification. Public Sotto
+  remains a no-go placeholder and Parakeet remains batch-on-Stop rather than streaming. Full
+  identities and sanitized evidence are in
+  `docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json`.
+
 ## 2026-08-18 — vLLM sharded evaluation
 
 - Locked environment verification passed with Python 3.10.19, vLLM 0.8.5, Torch 2.6.0+cu124,

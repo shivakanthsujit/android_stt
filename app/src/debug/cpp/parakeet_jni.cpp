@@ -25,13 +25,13 @@ void throw_runtime_exception(JNIEnv* env, const std::string& message) {
 }  // namespace
 
 extern "C" JNIEXPORT jint JNICALL
-Java_dev_localflow_dictation_stt_benchmark_ParakeetSttEngine_nativeAbiVersion(
+Java_dev_localflow_dictation_stt_ParakeetNative_nativeAbiVersion(
     JNIEnv*, jobject) {
     return parakeet_capi_abi_version();
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_dev_localflow_dictation_stt_benchmark_ParakeetSttEngine_nativeLoad(
+Java_dev_localflow_dictation_stt_ParakeetNative_nativeLoad(
     JNIEnv* env, jobject, jstring model_path) {
     if (model_path == nullptr) {
         throw_runtime_exception(env, "Parakeet model path is null");
@@ -51,7 +51,7 @@ Java_dev_localflow_dictation_stt_benchmark_ParakeetSttEngine_nativeLoad(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_dev_localflow_dictation_stt_benchmark_ParakeetSttEngine_nativeTranscribePcm(
+Java_dev_localflow_dictation_stt_ParakeetNative_nativeTranscribePcm(
     JNIEnv* env,
     jobject,
     jlong handle,
@@ -88,7 +88,7 @@ Java_dev_localflow_dictation_stt_benchmark_ParakeetSttEngine_nativeTranscribePcm
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_dev_localflow_dictation_stt_benchmark_ParakeetSttEngine_nativeFree(
+Java_dev_localflow_dictation_stt_ParakeetNative_nativeFree(
     JNIEnv*, jobject, jlong handle) {
     parakeet_capi_free(from_handle(handle));
 }

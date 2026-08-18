@@ -423,3 +423,27 @@
   reference; live streaming and dictation-focused protected-token qualification remain unbuilt.
 - Added the STT benchmark and result report to the project and evaluation indexes so the new
   workflow and evidence are discoverable from both documentation entry points.
+
+## 2026-08-18 — Joined Parakeet/Sotto integration build
+
+- Replaced the ordinary Activity's Moonshine/Liquid execution with a swappable joined path using
+  the selected Parakeet TDT/CTC 110M Q4_K artifact and the pinned public Sotto LFM2.5-350M model.
+  Parakeet owns a 16 kHz mono `AudioRecord`, stops it synchronously at Stop, and runs one final
+  offline inference without fabricated partials. Every non-empty final transcript flows to Sotto.
+- Added a sideloaded LEAP Sotto engine with its native completion prompt, greedy decoder, delimiter
+  parser, complete raw-output retention, and the existing semantic guardrail/fallback layer.
+- Pinned and converted the public BF16 checkpoint to F16 GGUF and a 229,310,304-byte Q4_K_M GGUF.
+  Added a source-hash-verifying exporter, scoped LFM2.5 tensor mapping patch, and ADB staging script;
+  all model outputs and conversion checkouts remain ignored outside Git.
+- Added immutable runtime hashes and model-file verification, shared Parakeet JNI loading, joined UI
+  states, automatic cleanup, and end-to-end tail reporting. The Activity labels the public Sotto
+  model as integration-only and keeps raw STT, raw model output, and guarded output visible.
+- Lint, unit tests, assembly, shell syntax, and diff checks pass. Installed and staged both models
+  on Pixel 7. Both loaded, direct cleanup ran, and a real microphone → Parakeet → Sotto smoke
+  completed with a 1,568 ms STT tail and 2,029 ms end-to-end tail. The smoke also reproduced a
+  meaning-affecting Sotto deletion that guardrails rejected, reinforcing that integration success
+  does not qualify this placeholder model.
+- Added the sanitized, hash-addressed evidence manifest at
+  `docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json`. No evaluation corpus,
+  blind reference, raw personal transcript, model weight, or checkpoint was used as training data
+  or added to Git.

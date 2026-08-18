@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "report_id": "2026-08-18-parakeet-sotto-integration-build",
+  "purpose": "integration_only_not_deployment_qualification",
+  "device": {
+    "model": "Google Pixel 7",
+    "codename": "panther",
+    "abi": "arm64-v8a",
+    "adb_serial": "33040DLH20004E"
+  },
+  "stt": {
+    "runtime": "parakeet.cpp 0.5.0",
+    "runtime_commit": "1bfbebfaaf493866f49597cd3b7901959d395c60",
+    "ggml_commit": "e705c5fed490514458bdd2eaddc43bd098fcce9b",
+    "c_api_abi": 6,
+    "model": "TDT/CTC 110M Q4_K",
+    "file_name": "tdt_ctc-110m-q4_k.gguf",
+    "bytes": 131387520,
+    "sha256": "2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf",
+    "mode": "16_khz_mono_pcm16_capture_then_offline_final_inference_after_stop",
+    "partial_transcripts": false
+  },
+  "cleanup": {
+    "runtime": "Liquid LEAP 0.10.9 sideloaded GGUF",
+    "hugging_face_model": "juanquivilla/sotto-cleanup-lfm25-350m",
+    "hugging_face_revision": "6df6f019170b8b55333c047b901886a51750a965",
+    "source_bf16_weights_sha256": "6e96eeffdcdd60f881e13eb2019b339b39d1a74951446f062e7e641a82f6422e",
+    "export_tool_commit": "ee010f850a6f9e810aebbbc8e5d072675fcaece7",
+    "llama_cpp_homebrew_version": "10450",
+    "export_script_sha256": "a4d2fcc507551969fe0310b0c8dda699d557e6f8c4ce26c7e710e8bb10f8a7be",
+    "mapping_patch_sha256": "e787c3352dbed2eeff3f2cf31827643df2b42acf64f8357eafe2abc103217345",
+    "f16_gguf": {
+      "bytes": 711483232,
+      "sha256": "277dc6fd933b189f2d264ea13ba94c16993c48410271667e0e0b1510358dec78"
+    },
+    "deployment_gguf": {
+      "quantization": "Q4_K_M",
+      "file_name": "sotto-cleanup-lfm25-350m-q4_k_m.gguf",
+      "bytes": 229310304,
+      "sha256": "05385da14474f3e488c7611edbb1e7065b3ccb07862e3c93ec1ccbd267b2e570"
+    },
+    "decoder": {
+      "prompt": "native_sotto_completion_template",
+      "temperature": 0.0,
+      "repetition_penalty": 1.05,
+      "seed": 23,
+      "max_output_tokens": 900
+    },
+    "qualification": {
+      "deployment_candidate": false,
+      "frozen_screen_strict_exact": "42/69",
+      "user_acceptable": "59/69",
+      "known_relevant_failures": 10
+    }
+  },
+  "android_build": {
+    "apk_bytes": 88043862,
+    "apk_sha256": "33a2b85b8d6c003631ac63ad5100002bdcd81032e066d7efc970d59f206d3327",
+    "staging_script_sha256": "d13706b8aafe43225de03cbf8472cd87eb397abb9bada5b0af200c85ca3534ce",
+    "native_libraries": {
+      "libparakeet.so": "7a90cf869e52d5bb79494710350b3fa1acaba21deb56e24ca8d2cd193dc42ca4",
+      "liblocalflow_parakeet_jni.so": "e5cba0d5996fa9b5f89861e3c320407efda31361586f9a6da65ffd1ed3dabc61",
+      "libomp.so": "7998fffd575ef7c17aecafe456e41d84abc4bbf09437dee1755d8963fe36e6ae"
+    },
+    "verification": {
+      "command": ". ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug",
+      "result": "pass",
+      "shell_syntax": "pass",
+      "git_diff_check": "pass"
+    }
+  },
+  "host_smoke": {
+    "f16_and_q4_same_simple_cleanup": true,
+    "q4_generation_completed": true
+  },
+  "pixel_smoke": {
+    "staged_hashes_reverified_on_device": true,
+    "parakeet_load_ms": 270,
+    "sotto_load_ms": 904,
+    "manual_cleanup": {
+      "completed": true,
+      "ttft_ms": 141,
+      "total_ms": 285,
+      "guardrail_fallback": false
+    },
+    "joined_microphone_pipeline": {
+      "completed": true,
+      "recording_ms": 22091,
+      "stop_to_stt_final_ms": 1568,
+      "cleanup_ttft_ms": 291,
+      "cleanup_total_ms": 456,
+      "stop_to_cleanup_complete_ms": 2029,
+      "guardrail_fallback": true,
+      "sanitized_observation": "The raw cleanup deleted protected negation; the final visible output correctly fell back to the raw STT transcript."
+    }
+  },
+  "limitations": [
+    "The public Sotto checkpoint fails the raw semantic-safety deployment gate.",
+    "Guardrail fallback is diagnostic defense in depth and does not qualify the model.",
+    "Parakeet currently finalizes a complete capture after Stop and provides no streaming partials.",
+    "The existing read-speech probe is not a dictation-focused product qualification corpus.",
+    "Model weights, GGUFs, native binaries, caches, and raw transcripts are excluded from Git."
+  ]
+}

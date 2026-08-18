@@ -16,6 +16,7 @@ training/runs/
 training/checkpoints/
 training/models/
 .cache/huggingface/
+.cache/integration/
 .cache/stt-eval/
 app/src/debug/jniLibs/arm64-v8a/*.so
 wandb/

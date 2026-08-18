@@ -10,12 +10,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import dev.localflow.dictation.cleanup.CleanupBatchRunner
-import dev.localflow.dictation.cleanup.CleanupModel
 import dev.localflow.dictation.cleanup.CleanupPromptVariant
 import dev.localflow.dictation.cleanup.CleanupResult
 import dev.localflow.dictation.cleanup.CleanupState
-import dev.localflow.dictation.cleanup.LiquidCleanupEngine
-import dev.localflow.dictation.stt.MoonshineSttEngine
+import dev.localflow.dictation.cleanup.SottoCleanupEngine
+import dev.localflow.dictation.stt.ParakeetLiveSttEngine
 import dev.localflow.dictation.stt.SpeechToTextEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +39,7 @@ class MainActivity : Activity() {
     private var modelLoadDurationMs: Long? = null
     private var recordingDurationMs: Long? = null
     private var sttTailMs: Long? = null
+    private var pipelineTailMs: Long? = null
     private var cleanupLoadDurationMs: Long? = null
     private var lastCleanupResult: CleanupResult? = null
     private var cleanupBatchRunning = false
@@ -48,15 +48,19 @@ class MainActivity : Activity() {
     private val uiScope = CoroutineScope(uiJob + Dispatchers.Main.immediate)
 
     private val engine by lazy {
-        MoonshineSttEngine(
+        ParakeetLiveSttEngine(
             context = applicationContext,
-            onProgress = ::showDownloadProgress,
+            modelFile = IntegrationModels.parakeetFile(applicationContext),
+            expectedModelSha256 = IntegrationModels.PARAKEET_SHA256,
             onStateChanged = ::renderState,
-            onError = ::showError,
         )
     }
     private val cleanupEngineLazy = lazy {
-        LiquidCleanupEngine(applicationContext, CleanupModel.LFM_1_2B_INSTRUCT)
+        SottoCleanupEngine(
+            context = applicationContext,
+            modelFile = IntegrationModels.sottoFile(applicationContext),
+            expectedModelSha256 = IntegrationModels.SOTTO_SHA256,
+        )
     }
     private val cleanupEngine by cleanupEngineLazy
 
@@ -162,6 +166,7 @@ class MainActivity : Activity() {
         modelOutputText.setText(R.string.model_output_placeholder)
         recordingDurationMs = null
         sttTailMs = null
+        pipelineTailMs = null
         lastCleanupResult = null
         renderMetrics()
         statusText.setText(R.string.status_opening_microphone)
@@ -198,17 +203,15 @@ class MainActivity : Activity() {
                 renderMetrics()
                 renderCleanupState(currentCleanupState())
                 statusText.setText(R.string.status_finished)
+                if (
+                    sttResult.text.isNotBlank() &&
+                    currentCleanupState() == CleanupState.READY
+                ) {
+                    cleanText(sttResult.text, sttResult.stopPressedAtNs)
+                } else if (sttResult.text.isNotBlank()) {
+                    cleanupStatusText.setText(R.string.status_cleanup_load_for_pipeline)
+                }
             }.onFailure(::showError)
-        }
-    }
-
-    private fun showDownloadProgress(fraction: Float, file: String) {
-        val percent = (fraction.coerceIn(0f, 1f) * 100f).toInt()
-        val displayFile = file.substringAfterLast('/').takeIf(String::isNotBlank)
-        statusText.text = if (displayFile == null) {
-            getString(R.string.status_downloading_model, percent)
-        } else {
-            getString(R.string.status_downloading_model_file, percent, displayFile)
         }
     }
 
@@ -237,6 +240,10 @@ class MainActivity : Activity() {
 
     private fun cleanRawText() {
         val rawText = transcriptText.text.toString().trim()
+        cleanText(rawText, pipelineStopPressedAtNs = null)
+    }
+
+    private fun cleanText(rawText: String, pipelineStopPressedAtNs: Long?) {
         if (rawText.isEmpty()) {
             cleanupStatusText.setText(R.string.status_cleanup_empty_input)
             return
@@ -247,9 +254,14 @@ class MainActivity : Activity() {
         cleanedText.text = ""
         renderCleanupState(CleanupState.GENERATING)
         uiScope.launch {
-            runCatching { cleanupEngine.clean(rawText) }
+            runCatching {
+                cleanupEngine.clean(rawText, CleanupPromptVariant.SOTTO_NATIVE)
+            }
                 .onSuccess { result ->
                     lastCleanupResult = result
+                    pipelineTailMs = pipelineStopPressedAtNs?.let { stoppedAtNs ->
+                        (result.completedAtNs - stoppedAtNs).coerceAtLeast(0L) / 1_000_000L
+                    }
                     modelOutputText.text = result.modelText.ifBlank {
                         getString(R.string.model_output_empty)
                     }
@@ -275,10 +287,7 @@ class MainActivity : Activity() {
         uiScope.launch {
             runCatching {
                 CleanupBatchRunner(applicationContext, cleanupEngine).run(
-                    promptVariants = listOf(
-                        CleanupPromptVariant.STRICT_MINIMAL_EDIT,
-                        CleanupPromptVariant.FEW_SHOT_CORRECTIONS,
-                    ),
+                    promptVariants = listOf(CleanupPromptVariant.SOTTO_NATIVE),
                 ) { progress ->
                     uiScope.launch {
                         evaluationStatusText.text = getString(
@@ -362,6 +371,7 @@ class MainActivity : Activity() {
             modelLoadDurationMs?.let { add(getString(R.string.metric_model_load, it)) }
             recordingDurationMs?.let { add(getString(R.string.metric_recording, it)) }
             sttTailMs?.let { add(getString(R.string.metric_stt_tail, it)) }
+            pipelineTailMs?.let { add(getString(R.string.metric_pipeline_tail, it)) }
             cleanupLoadDurationMs?.let { add(getString(R.string.metric_cleanup_load, it)) }
             lastCleanupResult?.let { result ->
                 result.timeToFirstTokenMs?.let {

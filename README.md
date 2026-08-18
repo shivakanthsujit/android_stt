@@ -1,10 +1,11 @@
 # Local Flow for Android
 
-Local Flow is a Pixel-first, fully local dictation project. The ordinary Android benchmark app can
-record microphone speech and transcribe it with **Moonshine Small Streaming English**. The active
-milestone qualifies or trains a task-specific cleanup model against fixed direct-text corpora
-before joining speech recognition and cleanup. The working offline STT path is provisionally
-adequate for prototyping; cleanup is the current blocker.
+Local Flow is a Pixel-first, fully local dictation project. The ordinary Android testing app now
+captures microphone speech for the selected **Parakeet TDT/CTC 110M Q4_K** model and automatically
+passes its final transcript to the public **Sotto LFM2.5-350M Q4_K_M** cleanup fine-tune. This is an
+integration build: Sotto has known semantic failures and is not a deployment-qualified cleanup
+model. The raw transcript, complete model output, guarded result, and stage timings stay visible so
+the pipeline can be exercised while a better cleanup checkpoint is trained.
 
 Keeping these stages independently measurable in a normal Activity makes model quality, latency,
 offline behavior, and microphone lifecycle observable before Android keyboard work is introduced.
@@ -14,9 +15,8 @@ offline behavior, and microphone lifecycle observable before Android keyboard wo
 Implemented:
 
 - Android 12+ (`minSdk 31`) Kotlin app, packaged for `arm64-v8a`
-- explicit Moonshine Small Streaming selection (not Moonshine's Medium default)
-- first-run model download with progress
-- cached, on-device transcription on later offline runs
+- retained Moonshine Small and generic Liquid benchmark engines with their original model download,
+  progress, cache, and offline-reuse paths
 - tap Start / tap Stop microphone flow; the microphone exists only during active dictation
 - provisional and final raw transcript display
 - monotonic recording-duration and STT-tail metrics
@@ -38,15 +38,21 @@ Implemented:
 - clean Pixel comparison of Moonshine Small and `parakeet.cpp` 110M F16/Q4_K; Q4_K is the
   provisional STT candidate at 1.85% probe WER, 0.72 s untraced median, and 235 J measured compute
   energy across the 72-call workload
+- live microphone capture for Parakeet Q4_K with project-owned Start/Stop lifecycle and offline
+  final inference after Stop; the selected model does not provide fabricated partial text
+- reproducible BF16-to-GGUF/Q4_K_M export of the pinned public Sotto checkpoint and hash-checked
+  staging into app-scoped device storage
+- joined Parakeet → Sotto integration flow with automatic cleanup, raw/guarded output, STT tail,
+  cleanup TTFT/total, and Stop-to-cleanup end-to-end tail
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
 
 - a cleanup model that has passed the fixed quality/safety bar
-- live microphone/streaming integration of the provisional Parakeet Q4_K candidate
 - a dictation-focused STT qualification corpus; the current 24-clip read-speech probe is not a
   final product WER claim
-- joined STT → cleanup pipeline
+- cache-aware Parakeet partial/streaming inference; the current joined build transcribes the
+  complete captured utterance after Stop
 - Android `InputMethodService`
 
 See [ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md](ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md) for the
@@ -63,14 +69,14 @@ separate RTX A6000 training machine must start at
 Audio and transcripts are processed on the phone. They are not uploaded and the app contains no
 analytics or cloud transcription fallback.
 
-The app has network permission only because the first load of each selected Moonshine or Liquid
-model downloads its assets. Moonshine Small Streaming English 0.1.2 is currently about 158 MiB.
-Downloaded models are kept in app-private persistent storage, reused by later offline runs, and
-removed by clearing app data or uninstalling the app.
+The app retains network permission for the older Moonshine/Liquid benchmark paths, but the joined
+Parakeet/Sotto build does not download a model at runtime. Both verified GGUFs are staged over ADB
+into app-scoped external storage and all inference is local. Clearing app data or uninstalling the
+app removes the staged files.
 
-After each model has loaded successfully once, its normal benchmark path should work in airplane
-mode. The smaller cleanup matrices completed fully offline, and 1.2B passed a cached airplane-mode
-load in 1.93 seconds.
+The joined path works in airplane mode as soon as both staged artifacts pass their local hash
+checks. The older downloaded benchmark models also retain their previously verified offline cache
+behavior.
 
 ## Pinned toolchain and dependencies
 
@@ -86,11 +92,12 @@ load in 1.93 seconds.
 | minSdk | 31 |
 | ABI | arm64-v8a |
 | Moonshine Voice | `ai.moonshine:moonshine-voice:0.1.2` |
-| Live STT model | Moonshine English Small Streaming, architecture 4 (provisional) |
-| File-fed STT candidate | `parakeet.cpp` 0.5.0 TDT/CTC 110M Q4_K; F16 retained as quality reference |
+| Joined-build STT | `parakeet.cpp` 0.5.0 TDT/CTC 110M Q4_K; final inference after Stop |
+| STT quality reference | Parakeet TDT/CTC 110M F16; Moonshine Small retained as an evaluated baseline |
 | Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
 | Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
-| Active cleanup candidate | Sotto LFM2.5-350M correction-repair experiment; public checkpoint not yet deployable |
+| Joined-build cleanup | Public Sotto LFM2.5-350M, pinned HF revision, locally converted Q4_K_M; integration-only |
+| Active cleanup training | Sotto LFM2.5-350M correction-repair experiment on the separate RTX A6000 machine |
 
 AGP 8.13.2 and target API 36 are kept intentionally because they match the current Moonshine sample
 and Liquid LEAP 0.10.9 Android requirements.
@@ -171,22 +178,61 @@ Filtered diagnostic logs:
 
 The app deliberately does not write transcript text to logs.
 
-## First-run speech benchmark flow
+## Joined Parakeet → Sotto integration flow
 
-1. Make sure the Pixel has internet access.
-2. Open Local Flow and tap **Load model**.
-3. Keep the app open while the roughly 158 MiB model downloads and loads.
-4. Tap **Start dictation** and grant microphone permission when Android asks.
-5. Speak, then tap **Stop dictation**.
-6. Inspect the raw transcript and metrics.
+The model files are deliberately excluded from Git and the APK. The staging script expects the
+selected Parakeet artifact at `.cache/stt-eval/models/tdt_ctc-110m-q4_k.gguf` and the converted
+Sotto artifact at
+`.cache/integration/models/sotto-gguf-mapped/sotto-cleanup-lfm25-350m-q4_k_m.gguf`. It rejects
+anything except the pinned SHA-256 identities.
 
-The loaded speech model stays in memory between dictations for low restart latency. The microphone
-does not: the app creates and starts Android's `AudioRecord` only after **Start dictation**, then
-stops it immediately when **Stop dictation** is tapped. Final transcription drains only audio that
-was already captured; it does not keep the microphone open while finalizing.
+From a clean checkout, prepare the Parakeet source/model as described in the
+[STT benchmark guide](docs/evaluation/STT_BENCHMARK.md), then package the pinned Android ARM64
+runtime and shared JNI bridge:
 
-`STT tail` is measured from the Stop tap (the V1 proxy for speech end) until Moonshine supplies the
-final flushed transcript. All timing uses `SystemClock.elapsedRealtimeNanos()`.
+```bash
+./scripts/build-parakeet-android.sh
+```
+
+The Sotto export is reproducible from Hugging Face revision
+`6df6f019170b8b55333c047b901886a51750a965`. Put that revision's model/config/tokenizer files under
+`.cache/integration/models/sotto-hf`, check out Liquid's `leap-finetune` commit
+`ee010f850a6f9e810aebbbc8e5d072675fcaece7` under `.cache/integration/leap-finetune`, install the
+pinned `llama.cpp` 10450 and `uv` tools, then run:
+
+```bash
+./scripts/export-sotto-integration-gguf.sh
+```
+
+The exporter verifies every source file, applies the committed LFM2.5 tensor-name mapping, writes
+a 711,483,232-byte F16 reference, and quantizes the 229,310,304-byte deployment GGUF. It refuses to
+overwrite an existing export.
+
+Build and install the APK before staging its app-scoped model directory:
+
+```bash
+./scripts/install-debug.sh
+./scripts/stage-integration-models.sh
+adb shell am start -n dev.localflow.dictation/.MainActivity
+```
+
+In the app:
+
+1. Tap **Load staged Parakeet** and **Load staged Sotto**.
+2. Tap **Start dictation**, grant microphone permission, speak, and tap **Stop dictation**.
+3. Parakeet transcribes the completed local capture, then Sotto cleanup runs automatically.
+4. Inspect the raw transcript, complete unguarded Sotto output, guarded output, and stage metrics.
+
+The models remain warm between utterances. The microphone does not: the app creates and starts
+`AudioRecord` only after **Start dictation** and stops it synchronously at the Stop tap. The current
+Parakeet model processes the already captured utterance as one offline batch and therefore exposes
+no partial transcript. `STT tail` measures Stop-to-final transcript; `End-to-end tail` measures
+Stop-to-cleanup completion. All timing uses `SystemClock.elapsedRealtimeNanos()`.
+
+This flow is for integration testing, not model qualification. Public Sotto scored 42/69 strict
+exact and 59/69 user-acceptable in its frozen screen, with ten relevant failures. Guardrail
+fallback is visible defense in depth and cannot turn that checkpoint into a deployment candidate.
+See the [integration build evidence](docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json).
 
 ## Cleanup-only evaluation status
 
@@ -222,9 +268,11 @@ experiment repairs those behaviors with a correction-weighted LFM training mixtu
 Android conversion or integration.
 See [the full screen](docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md).
 
-Cleanup is therefore not joined to STT. The active phase prepares a leakage-isolated 0.6B/0.8B
-task-specific cleanup experiment for the separate training machine. This Mac is used only for data
-tooling, model inference, and evaluation; no training job is run here.
+Public Sotto is therefore joined only as a replaceable integration placeholder. The deployment
+quality gate is unchanged: raw model output still must pass semantic safety before a checkpoint can
+ship. The active correction-repair experiment runs on the separate training machine. This Mac is
+used only for data tooling, model conversion, inference, and evaluation; no training job is run
+here.
 
 ## File-fed STT probe status
 
@@ -241,8 +289,9 @@ qualification.
   memory in matched power runs. GPU rail use was negligible because the current build is CPU-only.
 
 Q4_K is therefore the provisional deployment candidate; F16 remains the non-quantized quality
-reference. The live app still uses Moonshine until Parakeet's streaming path and protected-token
-dictation quality pass. Full methodology, hashes, caveats, and power results are in
+reference. The integration app now uses Q4_K in offline-on-Stop microphone mode, but streaming and
+protected-token dictation quality still must pass before the final product choice. Full
+methodology, hashes, caveats, and power results are in
 [the Pixel Parakeet report](docs/evaluation/results/2026-08-18-pixel-parakeet-stt-probe.md), with
 reproduction instructions in [the STT benchmark guide](docs/evaluation/STT_BENCHMARK.md).
 
@@ -269,17 +318,17 @@ results; do not compare its score directly with sequential Transformers inferenc
 
 ## Airplane-mode acceptance check
 
-Do this separately for each benchmark model, only after its first load has completed while online:
+The joined models are ADB-staged and need no network. After staging both artifacts:
 
 1. Force-stop Local Flow.
 2. Enable airplane mode and leave Wi-Fi disabled.
 3. Reopen Local Flow.
-4. Load the selected model. It should load from local app storage without a download failure.
-5. Run the relevant speech or direct-text benchmark and confirm a result appears.
+4. Load staged Parakeet and Sotto. Both should pass their local hash checks without a network.
+5. Run one dictation and confirm the raw transcript and cleanup diagnostics appear.
 6. Force-stop and reopen the app once more while still offline, then repeat the benchmark.
 
-Clearing Local Flow's storage or uninstalling it removes the model and makes an online first load
-necessary again.
+Clearing Local Flow's storage or uninstalling it removes both models; rerun the ADB staging script
+after reinstalling.
 
 ## Tests
 
@@ -302,3 +351,8 @@ airplane-mode operation require the physical Pixel 7; they cannot be established
 - Android command-line builds: <https://developer.android.com/build/building-cmdline>
 - Liquid LEAP Android quick start:
   <https://docs.liquid.ai/deployment/on-device/sdk/quick-start>
+- Liquid LEAP sideloaded model loading:
+  <https://docs.liquid.ai/deployment/on-device/sdk/model-loading>
+- Pinned public Sotto checkpoint:
+  <https://huggingface.co/juanquivilla/sotto-cleanup-lfm25-350m/tree/6df6f019170b8b55333c047b901886a51750a965>
+- `parakeet.cpp` runtime: <https://github.com/mudler/parakeet.cpp>

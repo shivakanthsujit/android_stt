@@ -6,6 +6,7 @@ import android.os.Process
 import android.os.SystemClock
 import dev.localflow.dictation.stt.FileSttBenchmarkEngine
 import dev.localflow.dictation.stt.FileSttBenchmarkResult
+import dev.localflow.dictation.stt.ParakeetNative
 import dev.localflow.dictation.stt.SpeechToTextEngine
 import java.io.File
 import java.util.concurrent.ExecutorService
@@ -41,11 +42,11 @@ internal class ParakeetSttEngine(
         worker.execute {
             runCatching {
                 require(modelFile.isFile) { "Missing Parakeet model: ${modelFile.name}" }
-                val abiVersion = nativeAbiVersion()
+                val abiVersion = ParakeetNative.nativeAbiVersion()
                 require(abiVersion == EXPECTED_C_API_ABI) {
                     "Expected Parakeet C API ABI $EXPECTED_C_API_ABI, found $abiVersion"
                 }
-                nativeLoad(modelFile.absolutePath).also { handle ->
+                ParakeetNative.nativeLoad(modelFile.absolutePath).also { handle ->
                     require(handle != 0L) { "Parakeet returned a null model context" }
                     nativeContext = handle
                 }
@@ -72,7 +73,12 @@ internal class ParakeetSttEngine(
             runCatching {
                 val cpuStartedAtMs = Process.getElapsedCpuTime()
                 val startedAtNs = SystemClock.elapsedRealtimeNanos()
-                val text = nativeTranscribePcm(nativeContext, samples, sampleRate, decoder)
+                val text = ParakeetNative.nativeTranscribePcm(
+                    nativeContext,
+                    samples,
+                    sampleRate,
+                    decoder,
+                )
                 val finishedAtNs = SystemClock.elapsedRealtimeNanos()
                 val cpuFinishedAtMs = Process.getElapsedCpuTime()
                 FileSttBenchmarkResult(
@@ -103,27 +109,13 @@ internal class ParakeetSttEngine(
         val handle = nativeContext
         nativeContext = 0L
         if (handle != 0L) {
-            worker.execute { nativeFree(handle) }
+            worker.execute { ParakeetNative.nativeFree(handle) }
         }
         worker.shutdown()
     }
 
-    private external fun nativeAbiVersion(): Int
-    private external fun nativeLoad(modelPath: String): Long
-    private external fun nativeTranscribePcm(
-        handle: Long,
-        samples: FloatArray,
-        sampleRate: Int,
-        decoder: Int,
-    ): String
-    private external fun nativeFree(handle: Long)
-
     private companion object {
         const val EXPECTED_C_API_ABI = 6
         const val DECODER_DEFAULT = 0
-
-        init {
-            System.loadLibrary("localflow_parakeet_jni")
-        }
     }
 }

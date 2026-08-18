@@ -62,7 +62,9 @@ Do not join cleanup to STT during this milestone.
 ## Active: Milestone 4 — task-specific cleanup
 
 Cleanup is the blocking stage. The current offline STT path is provisionally good enough to supply
-raw transcripts while cleanup quality is solved. Keep the stages unjoined until cleanup passes.
+raw transcripts while cleanup quality is solved. A clearly labeled diagnostic join now exercises
+the Android boundary with public Sotto; keep it separate from checkpoint qualification and never
+treat guardrail fallback as a passing raw model result.
 
 Working references:
 
@@ -153,8 +155,9 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   more training. Native-prompt BF16 inference reached 42/69 strict exact, preserved 147/163
   anchors, and did not answer any dictated question/command. User review accepts 59/69 for ordinary
   conversation; the ten relevant failures are seven retained superseded corrections, two retained
-  repetitions, and one statement changed into a question. Do not spend Android conversion or
-  Pixel-integration effort on this revision.
+  repetitions, and one statement changed into a question. It is now converted and integrated only
+  as the user's temporary pipeline placeholder, not as a reversal of the no-go deployment
+  decision.
 - [ ] Run the approved Sotto LFM correction-repair experiment in
   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. First continue the pinned public checkpoint
   with full SFT for two epochs at `2e-6` on the deterministic source-balanced correction mixture;
@@ -209,7 +212,7 @@ deterministic cleanup while generative corrections remain disabled.
 
 ## Partially complete: Milestone 5 — STT-only evaluation
 
-- [x] Keep cleanup unloaded and do not join the pipeline.
+- [x] Keep cleanup unloaded during the controlled file-fed STT comparison.
 - [x] Add file-fed audio evaluation so identical recordings can be tested without repeated
   speaking.
 - [x] Prepare a deterministic 24-clip/12-speaker LibriSpeech `test-clean` probe with per-audio and
@@ -220,6 +223,8 @@ deterministic cleanup while generative corrections remain disabled.
 - [x] Choose Q4_K as the provisional deployment candidate: one additional word error versus F16,
   but 23.8% less process CPU time, 23.3% less compute energy, 25.5% less PSS, and about half the
   model bytes. Keep F16 as the non-quantized quality reference.
+- [x] Integrate project-owned 16 kHz microphone capture with the selected Parakeet Q4_K model and
+  run final offline inference after Stop. Record the lack of partial/streaming output explicitly.
 - [ ] Define a fixed, repeatable dictation corpus covering conversational speech, protected names,
   numbers, corrections, technical terms, paths/versions, pauses, commands/questions, and longer
   utterances. Score protected-token preservation and numeric equivalence separately from WER.
@@ -233,14 +238,20 @@ deterministic cleanup while generative corrections remain disabled.
 
 This remains required before final product selection, but it is not the current bottleneck.
 
-## Later: joined pipeline
+## Diagnostic joined pipeline
 
-- Begin only after both an STT engine and a cleanup model pass their independent fixed evaluations.
-- Feed the completed Moonshine transcript into the cleanup engine.
-- Display raw and cleaned text simultaneously.
-- Report STT tail, cleanup TTFT, cleanup total, and end-to-end tail.
-- Keep both models warm between utterances.
-- Run the go/no-go cleanup evaluation set on the physical Pixel.
+- [x] Feed the completed Parakeet transcript into a swappable cleanup engine automatically.
+- [x] Convert and sideload the pinned public Sotto LFM2.5-350M checkpoint as Q4_K_M without
+  committing model artifacts.
+- [x] Display raw STT, complete unguarded model output, and guarded cleanup simultaneously.
+- [x] Report STT tail, cleanup TTFT, cleanup total, and end-to-end tail.
+- [x] Keep both models warm between utterances while releasing the microphone at Stop.
+- [x] Run one real Pixel microphone → Parakeet → Sotto smoke test and preserve sanitized timing and
+  fallback evidence.
+- [ ] Replace the public Sotto model identity with the best correction-repair checkpoint only after
+  its raw output passes the independent quality/safety gates.
+- [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized
+  checkpoint before calling the joined pipeline deployable.
 
 ## After the joined pipeline
 

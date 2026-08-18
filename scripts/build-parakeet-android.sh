@@ -11,7 +11,9 @@ ggml_commit="e705c5fed490514458bdd2eaddc43bd098fcce9b"
 ndk_version="28.0.13004108"
 cmake_version="3.31.6"
 source_dir="${PARAKEET_SOURCE_DIR:-$repo_dir/.cache/stt-eval/parakeet-src-v$parakeet_version}"
-build_root="$repo_dir/.cache/stt-eval/parakeet-android-v$parakeet_version"
+# Keep this project-owned build tree distinct from older ad-hoc probe builds whose CMake cache may
+# reference a temporary source checkout at a different absolute path.
+build_root="$repo_dir/.cache/stt-eval/parakeet-android-v$parakeet_version-localflow"
 parakeet_build="$build_root/parakeet"
 jni_build="$build_root/jni"
 package_dir="$repo_dir/app/src/debug/jniLibs/arm64-v8a"

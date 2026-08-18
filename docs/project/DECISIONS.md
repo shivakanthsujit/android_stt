@@ -190,7 +190,7 @@ Last updated: 2026-08-18
     balancing, then run a separately named Qwen3.5-0.8B rank-16 LoRA one/two-epoch comparison.
     Guardrails cannot qualify any failed raw checkpoint, and blind-v2 remains sealed.
 36. Reject the public Sotto LFM2.5-350M production checkpoint at revision
-    `6df6f019170b8b55333c047b901886a51750a965` for direct Android conversion. Its native-prompt BF16
+    `6df6f019170b8b55333c047b901886a51750a965` for deployment conversion. Its native-prompt BF16
     screen is promising on basic cleanup and never answers dictated content. Keep 42/69 strict
     exact for immutable comparison, but use the user's ordinary-conversation calibration of 59/69
     acceptable for product iteration. The ten relevant failures are seven retained superseded
@@ -205,6 +205,13 @@ Last updated: 2026-08-18
     weight decay 0.01, BF16+TF32, packed 4,096 context, seed 42, and native prompt where applicable.
     Do not claim exact reproduction of the unpublished GRPO/refinement/soup lineage, and never use
     the committed diagnostics or blind-v2 as training or checkpoint-selection data.
+38. Permit a diagnostic joined Android build before cleanup qualification, at the user's explicit
+    request, so integration can progress while the correction-repair model trains. Use the selected
+    Parakeet 110M Q4_K artifact for project-owned microphone capture and offline final inference
+    after Stop. Use a reproducibly converted, hash-pinned public Sotto LFM2.5-350M Q4_K_M only as a
+    replaceable cleanup placeholder. Preserve raw STT, complete raw model output, guarded output,
+    and per-stage/end-to-end timing. This exception does not reverse Sotto's no-go result, weaken
+    the raw semantic-safety gate, or make a guardrail fallback a passing deployment result.
 
 ## Android/toolchain
 

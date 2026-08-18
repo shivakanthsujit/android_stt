@@ -6,37 +6,46 @@ Last updated: 2026-08-18
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: Milestone 3 cross-family cleanup screen (see current `git log`)
+- Last verified milestone: joined Parakeet/Sotto integration test build (see integration evidence)
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: Phase A ordinary Android benchmark app
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
   no-go evaluation), 3 (cross-family generic-model quality screen)
 - Active milestone: 4 (task-specific cleanup model qualification/training)
-- Partially completed milestone: 5 (standard-corpus STT probe; dictation/streaming qualification
-  remains)
+- Partially completed milestone: 5 (standard-corpus STT probe plus batch-on-Stop microphone
+  integration; dictation/streaming qualification remains)
+- Diagnostic milestone: joined integration path is implemented for testing, without relaxing the
+  independent STT or cleanup deployment gates
 
 ## Working functionality
 
-- Kotlin/View-based Android benchmark Activity on a physical Pixel 7.
+- Kotlin/View-based joined integration Activity on a physical Pixel 7.
 - Moonshine Voice `0.1.2`, English Small Streaming architecture `4`.
 - Model download, persistent no-backup cache, progress display, and offline cache reuse.
 - Raw provisional/final transcript display and monotonic latency metrics.
 - Debug-only, microphone-free STT benchmark Activity that accepts checksum-verified 16 kHz PCM16
   WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
   native heap, and thermal status.
-- Pinned Android ARM64 `parakeet.cpp` 0.5.0 JNI/C API integration for file-fed TDT/CTC 110M GGUF
-  inference. Its ggml dependency is statically isolated from Moonshine/LEAP's packaged ggml.
+- Pinned Android ARM64 `parakeet.cpp` 0.5.0 JNI/C API integration for file-fed and live-captured
+  TDT/CTC 110M Q4_K GGUF inference. Its ggml dependency is statically isolated from
+  Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only debug APK; current cleanup-harness APK is about 61 MiB.
+- ARM64-only joined debug APK; current verified APK is 88,043,862 bytes.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
 - **Stop Dictation** synchronously stops active microphone capture before final processing.
+- The selected offline Parakeet model transcribes the complete capture after Stop; it does not
+  expose partial/streaming hypotheses.
 - Liquid LEAP `0.10.9` cleanup-only benchmark with model download progress, persistent cache reuse,
   load/unload, conservative guardrails, and monotonic TTFT/total-generation metrics.
 - Editable direct-text cleanup UI plus a 24-case, multi-prompt batch runner that exports JSONL for
   deterministic host-side scoring without involving the microphone or Moonshine.
+- Sideloaded LEAP runtime for the pinned public Sotto LFM2.5-350M checkpoint, reproducibly converted
+  to a 229,310,304-byte Q4_K_M GGUF. The native Sotto prompt/parser and decoder settings are fixed.
+- Joined Parakeet → Sotto execution after every non-empty final transcript. The UI preserves raw
+  STT, complete raw model output, guarded output, STT tail, cleanup timing, and end-to-end tail.
 - LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` were exercised on-device; their raw static-corpus
   results and summaries are preserved under `docs/evaluation/`. All three are cleanup no-go results.
 - A deterministic baseline plus Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B, and Gemma 1B
@@ -45,9 +54,8 @@ Last updated: 2026-08-18
 - The runtime-neutral runner now applies a parity-tested port of the Android lexical/intent
   guardrails and emits scorer-compatible JSONL with raw output, guarded selection, TTFT, and total
   latency.
-- Cleanup is the current product bottleneck. The working offline Moonshine capture/transcription
-  path is the provisional speech input while task-specific cleanup is pursued. This is a priority
-  decision, not a claim that formal STT comparison is complete.
+- Cleanup is still the product bottleneck. Public Sotto is an integration-only placeholder while
+  correction-repair training proceeds; the joined build is not a deployment qualification claim.
 
 ## Physical device
 
@@ -55,6 +63,13 @@ Last updated: 2026-08-18
 - Cached Moonshine model remains installed on the device.
 - F16 and Q4_K Parakeet GGUFs plus the generated LibriSpeech probe remain in ignored local/device
   evaluation storage; they are not committed app assets.
+- The selected Parakeet Q4_K and converted Sotto Q4_K_M artifacts are staged in app-scoped external
+  storage with their exact hashes verified on the device. Both load successfully in the installed
+  integration APK.
+- On-device joined smoke: Parakeet model load 270 ms; 22.091-second microphone capture; 1,568 ms
+  Stop-to-STT final; Sotto total 456 ms; 2,029 ms Stop-to-cleanup. Sotto deleted protected negation,
+  and the guardrail correctly returned the raw STT text. This is useful integration evidence and a
+  direct reminder that the placeholder cleanup model remains unqualified.
 - Pixel `stay_on_while_plugged_in` was restored to its original `0`; airplane mode is disabled.
 - The cleanup harness and all three Liquid evaluations are committed in `8dce7ab`.
 
@@ -70,13 +85,13 @@ Last updated: 2026-08-18
   compute power, and 25.5% less peak PSS. Q4_K is the provisional deployment candidate; F16 is the
   quality reference.
 - The current Parakeet build is CPU-only. GPU rail energy was below 0.1% of compute energy. Live
-  microphone/streaming integration and a protected-token dictation corpus remain required before
-  replacing Moonshine.
+  microphone capture is integrated, but it is batch-on-Stop rather than streaming; a protected-
+  token dictation corpus and streaming responsiveness remain required for product qualification.
 - An initial F16 latency run was contaminated by active phone use and excluded. Clean runs start
   with no competing app and thermal status 0. Perfetto affects wall timing, so untraced runs select
   latency while traced runs supply CPU/energy evidence.
-- Completed Moonshine lines are currently displayed on separate lines. This makes segmentation
-  more visually prominent; the future cleanup stage should receive the whole transcript.
+- The older Moonshine path displayed completed lines separately. The joined Parakeet path supplies
+  its whole final transcript to cleanup automatically.
 - Automatic end-of-speech is deliberately not implemented. V1 uses explicit Start/Stop.
 - Android's built-in on-device `SpeechRecognizer` is a planned A/B branch after the joined pipeline.
 - Liquid LEAP is governed by its own Terms of Use; its model weights have separate LFM licensing.
@@ -86,12 +101,14 @@ Last updated: 2026-08-18
   and is rejected.
 - LFM2.5-1.2B-Instruct reached 13/24 exact at best but still changed meaning, answered content,
   dropped technical details, and failed all self-corrections. It is rejected for automatic cleanup.
-- The cleanup harness now has stricter lexical/intent fallback checks, but a safety fallback cannot
-  compensate for inadequate cleanup quality. Do not feed cleanup output into STT automatically.
+- The cleanup harness has stricter lexical/intent fallback checks, but a safety fallback cannot
+  compensate for inadequate raw cleanup quality. The joined UI shows fallback selection for
+  diagnosis; no failed model is qualified by that behavior.
 - Gemma 3 1B was the closest generic candidate at 32/45 raw exact and 94.1% anchor preservation,
   but it retained a superseded command and obeyed two embedded instructions. It is rejected.
-- Current host timings are Apple M2 screening measurements, not Pixel 7 results. Pixel integration
-  was intentionally skipped because no candidate passed quality first.
+- Historical host screens remain Apple M2 measurements. Public Sotto now also has Pixel 7 runtime
+  smoke evidence solely to unblock integration work; this does not supersede its failed quality
+  decision.
 - The original 24 cases are a development/regression set. The 45-case held-out set has now informed
   guardrail fixes, so it is also a regression set rather than a future blind test. Training work
   must create leakage-isolated train/dev data and a new untouched blind v2 evaluation set.
@@ -269,8 +286,8 @@ Last updated: 2026-08-18
   and 2/10 exact self-corrections; all 17 dictated questions/commands remained text rather than
   being answered. User review calibrated 59/69 outputs as acceptable for ordinary conversation.
   The ten relevant failures are seven retained superseded corrections, two retained direct
-  repetitions, and one statement changed into a question. It is not ready for direct Android
-  conversion; see
+  repetitions, and one statement changed into a question. It has been converted only as a
+  replaceable Android integration placeholder and is not deployment-ready; see
   `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`.
 - The user-calibrated everyday-conversation screen does not gate on disposable lead-ins,
   punctuation/contractions, word-to-digit time conversion, inferred list formatting, redundant
@@ -302,7 +319,11 @@ Last updated: 2026-08-18
    preflight. Do not run the Mac/Pixel steps below.
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Continue active Milestone 4 with
+5. To resume integration testing, install the debug APK, run
+   `./scripts/stage-integration-models.sh`, then load staged Parakeet and Sotto in the Activity. The
+   ignored `.cache` artifacts must match the hard-coded hashes; see the root README and integration
+   evidence manifest.
+6. Continue active Milestone 4 with
    `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. Preserve all completed Qwen source
    experiments, but the next evidence-bearing work is the two-stage LFM correction-repair study.
    Preserve the reviewed-pilot Gate A path, never use blind-v2 for iteration, and do not compare
