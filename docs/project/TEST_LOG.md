@@ -468,3 +468,17 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Full `scripts/tests` discovery runs 164 tests: 163 pass and the same unrelated macOS
   `/var/folders` versus `/private/var/folders` path-alias assertion fails. No cleanup benchmark,
   API runner, projection, scorer, or Android behavior fails.
+
+## 2026-08-19 — Sotto B ordinary-default host gate
+
+- `. scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`
+  succeeded: 55 tasks, 25 executed and 30 up-to-date.
+- `bash -n scripts/stage-integration-models.sh` passed.
+- Added an Android unit assertion for the ordinary cleanup filename
+  `sotto-b-epoch2-lfm25-350m-q4_k_m.gguf` and SHA-256
+  `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`.
+- Debug APK: 88,045,661 bytes, SHA-256
+  `2b40bd16238df4285cfcf48b5d826238a6175e7d8638a3ab1d2694439e7edf92`.
+- Device verification is pending. `./scripts/install-debug.sh` reached ADB after a successful build
+  but reported `no devices/emulators found`; an escalated `adb devices -l` also returned an empty
+  device list. No install, stage, or no-override inference claim is made for this APK.

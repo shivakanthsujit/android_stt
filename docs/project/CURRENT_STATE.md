@@ -1,21 +1,23 @@
 # Current state
 
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 
 ## Repository
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: joined Parakeet/Sotto integration test build (see integration evidence)
+- Last verified milestone: joined Parakeet/Sotto integration pipeline with Sotto B epoch 2 selected
+  as the provisional local default (device-default smoke pending reconnection)
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
-- Current phase: Phase A ordinary Android benchmark app
+- Current phase: transition from the ordinary Android integration app to the minimal voice IME
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
   no-go evaluation), 3 (cross-family generic-model quality screen)
-- Active milestone: 4 (task-specific cleanup model qualification/training)
+- Active product milestone: minimal voice-only `InputMethodService`
+- Parallel model milestone: 4 (task-specific cleanup qualification/training remains open)
 - Partially completed milestone: 5 (standard-corpus STT probe plus batch-on-Stop microphone
   integration; dictation/streaming qualification remains)
-- Diagnostic milestone: joined integration path is implemented for testing, without relaxing the
-  independent STT or cleanup deployment gates
+- Completed integration milestone: the joined path has a pinned, swappable default and is ready to
+  supply the IME, without relaxing the independent STT or cleanup deployment gates
 
 ## Working functionality
 
@@ -37,8 +39,8 @@ Last updated: 2026-08-18
   Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined debug APK; current verified APK is 88,045,558 bytes with SHA-256
-  `7d5ab0ef6ebc0c4ece8b8885b2a0aca19730ae05a619f727a762ee22fada2bc4`.
+- ARM64-only joined debug APK; current host-verified APK is 88,045,661 bytes with SHA-256
+  `2b40bd16238df4285cfcf48b5d826238a6175e7d8638a3ab1d2694439e7edf92`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -49,8 +51,11 @@ Last updated: 2026-08-18
   load/unload, conservative guardrails, and monotonic TTFT/total-generation metrics.
 - Editable direct-text cleanup UI plus a 24-case, multi-prompt batch runner that exports JSONL for
   deterministic host-side scoring without involving the microphone or Moonshine.
-- Sideloaded LEAP runtime for the pinned public Sotto LFM2.5-350M checkpoint, reproducibly converted
-  to a 229,310,304-byte Q4_K_M GGUF. The native Sotto prompt/parser and decoder settings are fixed.
+- Sideloaded LEAP runtime defaults to the selected Sotto B epoch-2 LFM2.5-350M checkpoint,
+  reproducibly converted to a 229,310,336-byte Q4_K_M GGUF with SHA-256
+  `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`. The native Sotto
+  prompt/parser and decoder settings are fixed, while the cleanup interface and debug artifact
+  override remain swappable.
 - Joined Parakeet → Sotto execution after every non-empty final transcript. The UI preserves raw
   STT, complete raw model output, guarded output, STT tail, cleanup timing, and end-to-end tail.
 - The active synthetic product regression is now the 20-case personal-conversation v3 suite:
@@ -78,8 +83,9 @@ Last updated: 2026-08-18
 - Cleanup is still the product bottleneck. Correction-repair training and the personal-v3
   checkpoint matrix are complete. Under the default relaxed semantic calibration, clean-base B
   leads the local family at 15/20 acceptable versus 14/20 for public Sotto and A, but it still
-  misses required corrections/formatting and fails broader safety. Public Sotto therefore remains
-  the integration-only placeholder; the joined build is not a deployment qualification claim.
+  misses required corrections/formatting and fails broader safety. At explicit user direction,
+  B epoch 2 is the provisional local integration default so product work can continue. This is not
+  a deployment qualification claim.
 
 ## Physical device
 
@@ -90,6 +96,9 @@ Last updated: 2026-08-18
 - The selected Parakeet Q4_K and converted Sotto Q4_K_M artifacts are staged in app-scoped external
   storage with their exact hashes verified on the device. Both load successfully in the installed
   integration APK.
+- Sotto B epoch 2 has already completed direct and Parakeet-fed Pixel benchmarking. The new
+  no-override app identity and staging defaults pass host build/tests; final reinstall and
+  default-path smoke are pending because no ADB device was attached on 2026-08-19.
 - On-device joined smoke: Parakeet model load 270 ms; 22.091-second microphone capture; 1,568 ms
   Stop-to-STT final; Sotto total 456 ms; 2,029 ms Stop-to-cleanup. Sotto deleted protected negation,
   and the guardrail correctly returned the raw STT text. This is useful integration evidence and a
@@ -382,9 +391,9 @@ Last updated: 2026-08-18
   product calibration instead puts every B epoch at 15/20 acceptable, ahead of public/A at 14/20;
   B epoch 2 is the strict/anchor tie-breaker within B. Public fails three corrections and three
   formatting directives; B fixes one correction but still fails two corrections and all three
-  directives. A also changes a euro value to dollars and changes past to present tense. No
-  fine-tuned checkpoint should replace the public placeholder because its broader safety failures
-  remain. See
+  directives. A also changes a euro value to dollars and changes past to present tense. B epoch 2
+  now replaces the public artifact only as the explicit provisional integration default; its
+  broader safety failures still prohibit deployment qualification. See
   `docs/evaluation/results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`.
 - A separate hosted-API campaign now compares `gpt-5.4-mini-2026-03-17` and
   `gpt-5.4-2026-03-05` for the owner's optional personal-use path. It is isolated from local-model
@@ -464,6 +473,7 @@ Last updated: 2026-08-18
    `./scripts/stage-integration-models.sh`, then load staged Parakeet and Sotto in the Activity. The
    ignored `.cache` artifacts must match the hard-coded hashes; see the root README and integration
    evidence manifest.
-6. Preserve the completed LFM campaign and personal-v3 evidence. Do not train on v3 errors or
-   replace the public placeholder. Any next model run or guardrail repair needs a separately
-   reviewed plan and a fresh evaluation version; never use blind-v2 for iteration.
+6. Preserve the completed LFM campaign and personal-v3 evidence. Keep B epoch 2 as the provisional
+   app baseline until an explicitly selected replacement has fresh evidence. Do not train on v3
+   errors. Any next model run or guardrail repair needs a separately reviewed plan and a fresh
+   evaluation version; never use blind-v2 for iteration.

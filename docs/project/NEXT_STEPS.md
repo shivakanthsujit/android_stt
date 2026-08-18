@@ -1,6 +1,6 @@
 # Next steps
 
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 
 ## Completed: Milestone 2 — Liquid cleanup model evaluation
 
@@ -59,12 +59,13 @@ Full evidence: `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.m
 
 Do not join cleanup to STT during this milestone.
 
-## Active: Milestone 4 — task-specific cleanup
+## Parallel: Milestone 4 — task-specific cleanup
 
-Cleanup is the blocking stage. The current offline STT path is provisionally good enough to supply
-raw transcripts while cleanup quality is solved. A clearly labeled diagnostic join now exercises
-the Android boundary with public Sotto; keep it separate from checkpoint qualification and never
-treat guardrail fallback as a passing raw model result.
+Cleanup remains the model-quality bottleneck, but it no longer blocks product integration work.
+The current offline STT path is provisionally good enough to supply raw transcripts, and the joined
+Android boundary now defaults to Sotto B epoch 2 as the explicit provisional local baseline. Keep
+that engineering choice separate from checkpoint qualification and never treat guardrail fallback
+as a passing raw model result.
 
 Working references:
 
@@ -302,7 +303,7 @@ Keep its data handling, evidence, pricing, and product decision separate.
 
 This remains required before final product selection, but it is not the current bottleneck.
 
-## Diagnostic joined pipeline
+## Completed: joined integration app baseline
 
 - [x] Feed the completed Parakeet transcript into a swappable cleanup engine automatically.
 - [x] Convert and sideload the pinned public Sotto LFM2.5-350M checkpoint as Q4_K_M without
@@ -341,12 +342,55 @@ This remains required before final product selection, but it is not the current 
   remains closed. Keep Luna as the leading optional hosted candidate, add human/multi-speaker
   dictation before another qualification claim, and do not manufacture cloud energy from Pixel
   rails.
-- [ ] Replace the public Sotto model identity with the best correction-repair checkpoint only after
-  its raw output passes the independent quality/safety gates.
+- [x] At explicit user direction, promote B epoch 2 from a benchmark override to the ordinary app's
+  provisional local default. Pin its filename and SHA-256 in app code and staging, keep the
+  `CleanupEngine` boundary and debug override swappable, and preserve raw output, fallback reason,
+  and the integration-only warning. This supersedes the public placeholder identity, not the raw
+  quality/safety no-go result.
+- [x] Build, lint, and unit-test the no-override app configuration on the host.
+- [ ] Reconnect the Pixel, install the current APK, run the default staging script, and complete one
+  no-override Parakeet → B file-fed smoke. Verify the recorded cleanup filename and SHA-256 before
+  closing device integration verification.
+- [ ] Replace Sotto B only after an explicitly selected later checkpoint has fresh, independent
+  quality/safety and device evidence.
 - [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized
   checkpoint before calling the joined pipeline deployable.
 
-## After the joined pipeline
+## Active next: minimal voice-only IME
 
-1. Implement the minimal voice-only `InputMethodService`.
-2. Add daily-driver lifecycle, cancel/undo, interruptions, sensitive fields, and polish.
+Goal: make the already joined local pipeline usable from ordinary text fields without duplicating
+model ownership or weakening microphone, privacy, and fallback behavior.
+
+- [ ] Add a voice-only `InputMethodService` and the manifest/settings metadata needed to enable it.
+- [ ] Add a small setup surface that explains how to enable and select Local Flow as a keyboard.
+- [ ] Reuse Parakeet and `CleanupEngine` through an application-scoped coordinator; do not create a
+  second independent model stack in the IME.
+- [ ] Keep explicit tap-to-start/tap-to-stop. Create `AudioRecord` only on Start, stop it before
+  inference, and never activate the microphone merely because an editor gains focus.
+- [ ] Commit the guarded cleanup result through `InputConnection`, while keeping the original raw
+  transcript available for review, cancel, or one-step undo.
+- [ ] Detect password and other sensitive editor types. Disable dictation there by default, never
+  log transcript content, and do not introduce a hosted fallback.
+- [ ] Handle editor changes, app switching, focus loss, interruption, cancellation, and service
+  teardown without leaking microphone or model resources.
+- [ ] Instrument cold/warm model load, Stop-to-STT, cleanup, Stop-to-commit, PSS, thermal state, and
+  power with transcript-free diagnostics.
+- [ ] Verify enable/select, dictation, cancellation, guarded fallback, and teardown on the Pixel in
+  several target apps before calling the IME baseline complete.
+
+## Then: daily-driver and qualification work
+
+- [ ] Add clearer listening/processing/error states, cancel/undo polish, retry behavior, and model
+  warm/unload policy based on measured memory and battery cost.
+- [ ] Build a consented, evaluation-only human dictation set with multiple speakers, rooms, pace,
+  accents, corrections, names, numbers, uncertainty, long-form speech, and interruptions. Keep all
+  personal audio/transcripts ignored and publish only sanitized aggregates and hashes.
+- [ ] Qualify Parakeet on that dictation workload; investigate cache-aware streaming and end-of-
+  utterance only after the explicit Start/Stop baseline is stable.
+- [ ] Continue cleanup research with fresh train/dev data and a new evaluation version. Keep
+  blind-v2 sealed until a candidate and policy are frozen; raw semantic safety remains mandatory.
+- [ ] Swap the cleanup artifact through the existing boundary when a later local model earns it.
+  Keep Luna as optional research only unless a separate privacy-aware hosted product decision is
+  made and a real Pixel network client is measured.
+- [ ] Run sustained daily-driver sessions across messaging, notes, browser, and long-form editors;
+  measure reliability, Stop-to-commit latency, memory pressure, thermal behavior, and battery use.

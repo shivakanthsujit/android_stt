@@ -1,14 +1,14 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Local Flow</string>
     <string name="benchmark_title">Joined pipeline test</string>
-    <string name="benchmark_subtitle" tools:ignore="TypographyDashes">Parakeet 110M Q4_K → Sotto LFM2.5-350M Q4_K_M · local integration candidate</string>
-    <string name="integration_warning">Integration testing only: the public Sotto checkpoint has known correction/safety failures. Guardrail fallback remains visible and does not qualify the model.</string>
+    <string name="benchmark_subtitle" tools:ignore="TypographyDashes">Parakeet 110M Q4_K → Sotto B epoch 2 Q4_K_M · provisional local baseline</string>
+    <string name="integration_warning">Provisional integration baseline: Sotto B epoch 2 has known correction, formatting, and safety failures. Raw output and guardrail fallback remain visible; this choice does not qualify the model for deployment.</string>
     <string name="load_model">Load staged Parakeet</string>
     <string name="start_dictation">Start dictation</string>
     <string name="stop_dictation">Stop dictation</string>
     <string name="raw_transcript">Raw transcript</string>
     <string name="cleanup_benchmark">Sotto cleanup and joined output</string>
-    <string name="load_cleanup_model">Load staged Sotto</string>
+    <string name="load_cleanup_model">Load staged Sotto B</string>
     <string name="retry_cleanup_model_load">Retry cleanup model load</string>
     <string name="clean_text">Clean text</string>
     <string name="run_cleanup_evaluation">Run 24-case Sotto-native check</string>
@@ -40,9 +40,9 @@
     <string name="status_downloading_model_file">Downloading speech model: %1$d%% · %2$s</string>
     <string name="status_error">Error: %1$s</string>
     <string name="status_cleanup_model_not_loaded">Sotto is not loaded. Stage the verified Q4_K_M GGUF, then load it.</string>
-    <string name="status_cleanup_loading" tools:ignore="TypographyDashes">Verifying and loading Sotto LFM2.5-350M Q4_K_M…</string>
+    <string name="status_cleanup_loading" tools:ignore="TypographyDashes">Verifying and loading Sotto B epoch 2 Q4_K_M…</string>
     <string name="status_cleanup_downloading">Verifying staged cleanup model: %1$d%%</string>
-    <string name="status_cleanup_ready">Sotto ready. A completed dictation will clean automatically.</string>
+    <string name="status_cleanup_ready">Sotto B ready. A completed dictation will clean automatically.</string>
     <string name="status_cleanup_load_for_pipeline">Raw Parakeet text is ready. Load Sotto to run the joined cleanup stage.</string>
     <string name="status_cleanup_generating">Cleaning text locally…</string>
     <string name="status_cleanup_finished">Cleanup finished locally.</string>

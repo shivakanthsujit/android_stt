@@ -10,10 +10,10 @@ object IntegrationModels {
     const val PARAKEET_SHA256 =
         "2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf"
 
-    const val SOTTO_FILE_NAME = "sotto-cleanup-lfm25-350m-q4_k_m.gguf"
+    const val SOTTO_FILE_NAME = "sotto-b-epoch2-lfm25-350m-q4_k_m.gguf"
 
     const val SOTTO_SHA256 =
-        "05385da14474f3e488c7611edbb1e7065b3ccb07862e3c93ec1ccbd267b2e570"
+        "02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0"
 
     fun modelDirectory(context: Context): File {
         val appStorage = context.getExternalFilesDir(null) ?: context.filesDir

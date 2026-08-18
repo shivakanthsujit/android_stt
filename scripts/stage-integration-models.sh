@@ -5,11 +5,11 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "$repo_dir/scripts/android-env.sh"
 
 parakeet_model="${1:-$repo_dir/.cache/stt-eval/models/tdt_ctc-110m-q4_k.gguf}"
-sotto_model="${2:-$repo_dir/.cache/integration/models/sotto-gguf-mapped/sotto-cleanup-lfm25-350m-q4_k_m.gguf}"
+sotto_model="${2:-$repo_dir/.cache/integration/models/sotto-b-epoch2-gguf/sotto-b-epoch2-lfm25-350m-q4_k_m.gguf}"
 package_name="dev.localflow.dictation"
 device_dir="/sdcard/Android/data/$package_name/files/models"
 expected_parakeet_sha="2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf"
-expected_sotto_sha="05385da14474f3e488c7611edbb1e7065b3ccb07862e3c93ec1ccbd267b2e570"
+expected_sotto_sha="02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0"
 
 require_hash() {
     local expected="$1"
@@ -32,6 +32,6 @@ require_hash "$expected_sotto_sha" "$sotto_model"
 adb get-state >/dev/null
 adb shell mkdir -p "$device_dir"
 adb push "$parakeet_model" "$device_dir/tdt_ctc-110m-q4_k.gguf"
-adb push "$sotto_model" "$device_dir/sotto-cleanup-lfm25-350m-q4_k_m.gguf"
+adb push "$sotto_model" "$device_dir/sotto-b-epoch2-lfm25-350m-q4_k_m.gguf"
 
 echo "Staged verified integration models under $device_dir"

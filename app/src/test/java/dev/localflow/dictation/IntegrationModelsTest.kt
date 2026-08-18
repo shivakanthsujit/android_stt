@@ -2,10 +2,23 @@ package dev.localflow.dictation
 
 import java.io.File
 import java.nio.file.Files
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class IntegrationModelsTest {
+    @Test
+    fun integrationCleanupIdentityIsPinnedToSottoBEpoch2() {
+        assertEquals(
+            "sotto-b-epoch2-lfm25-350m-q4_k_m.gguf",
+            IntegrationModels.SOTTO_FILE_NAME,
+        )
+        assertEquals(
+            "02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0",
+            IntegrationModels.SOTTO_SHA256,
+        )
+    }
+
     @Test
     fun verifiedArtifactAcceptsExactHash() {
         val file = Files.createTempFile("local-flow-model", ".gguf").toFile()

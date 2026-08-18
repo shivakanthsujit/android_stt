@@ -836,3 +836,23 @@
 - Replaced the interim report with
   `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md`. Luna is the leading optional
   hosted candidate, while both Luna and Sotto remain raw-gate no-go results.
+
+## 2026-08-19 — Sotto B default integration and product roadmap
+
+- At explicit user direction, promoted Sotto B epoch 2 from a debug benchmark override to the
+  ordinary app's provisional fully local cleanup default. Pinned the existing 229,310,336-byte
+  Q4_K_M filename and SHA-256 in `IntegrationModels`, changed the default staging source and device
+  destination, and added a unit test locking the identity.
+- Updated the Activity copy to identify B epoch 2 and state its known correction, formatting, and
+  semantic-safety failures. The UI continues to expose raw model output, guarded output, and
+  fallback behavior; `CleanupEngine` and the debug artifact override remain swappable. This is an
+  integration choice, not deployment qualification.
+- Reworked the handoff and ordered roadmap. The joined Activity baseline is complete at the host
+  boundary; the active product step is a minimal voice-only `InputMethodService`, followed by
+  daily-driver lifecycle/polish, consented human and multi-speaker dictation evaluation, Parakeet
+  streaming/qualification, fresh cleanup research, and a later evidence-backed model swap.
+- Offline Android lint, unit tests, and debug assembly pass. The generated APK is 88,045,661 bytes
+  with SHA-256 `2b40bd16238df4285cfcf48b5d826238a6175e7d8638a3ab1d2694439e7edf92`.
+- Tried both the install/staging workflow and a direct ADB check, but no device was attached. The
+  final no-override Pixel reinstall/stage/file-fed smoke remains explicitly open rather than being
+  inferred from the earlier B benchmark runs.

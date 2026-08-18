@@ -2,10 +2,11 @@
 
 Local Flow is a Pixel-first, fully local dictation project. The ordinary Android testing app now
 captures microphone speech for the selected **Parakeet TDT/CTC 110M Q4_K** model and automatically
-passes its final transcript to the public **Sotto LFM2.5-350M Q4_K_M** cleanup fine-tune. This is an
-integration build: Sotto has known semantic failures and is not a deployment-qualified cleanup
-model. The raw transcript, complete model output, guarded result, and stage timings stay visible so
-the pipeline can be exercised while a better cleanup checkpoint is trained.
+passes its final transcript to **Sotto B epoch 2 LFM2.5-350M Q4_K_M**. This is the user-selected,
+provisional local integration baseline, not a deployment-qualified cleanup model: it has known
+correction, formatting, and semantic-safety failures. The raw transcript, complete model output,
+guarded result, and stage timings stay visible so the product pipeline can advance while a better
+cleanup checkpoint is developed.
 
 Keeping these stages independently measurable in a normal Activity makes model quality, latency,
 offline behavior, and microphone lifecycle observable before Android keyboard work is introduced.
@@ -40,8 +41,8 @@ Implemented:
   energy across the 72-call workload
 - live microphone capture for Parakeet Q4_K with project-owned Start/Stop lifecycle and offline
   final inference after Stop; the selected model does not provide fabricated partial text
-- reproducible BF16-to-GGUF/Q4_K_M export of the pinned public Sotto checkpoint and hash-checked
-  staging into app-scoped device storage
+- reproducible BF16-to-GGUF/Q4_K_M exports of the pinned public Sotto checkpoint and selected
+  Sotto B epoch-2 checkpoint, with hash-checked staging into app-scoped device storage
 - joined Parakeet → Sotto integration flow with automatic cleanup, raw/guarded output, STT tail,
   cleanup TTFT/total, and Stop-to-cleanup end-to-end tail
 - a debug-only joined file runner that accepts a WAV/MP3 or generated corpus, loads both staged
@@ -63,6 +64,9 @@ run, so neither candidate passes the deployment gate. See the
 [Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md)
 and the earlier
 [personal-v3 cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md).
+At explicit user direction, B epoch 2 is now the ordinary app's fully local default so Android
+integration and IME work can continue. That product-engineering choice does not reverse its raw
+quality no-go result, and the cleanup interface and debug model override remain swappable.
 
 Not implemented yet:
 
@@ -114,8 +118,8 @@ behavior.
 | STT quality reference | Parakeet TDT/CTC 110M F16; Moonshine Small retained as an evaluated baseline |
 | Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
 | Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
-| Joined-build cleanup | Public Sotto LFM2.5-350M, pinned HF revision, locally converted Q4_K_M; integration-only |
-| Active cleanup training | Sotto LFM2.5-350M correction-repair experiment on the separate RTX A6000 machine |
+| Joined-build cleanup | Sotto B epoch 2 LFM2.5-350M Q4_K_M, locally converted and hash pinned; provisional integration baseline only |
+| Cleanup research | Completed Sotto LFM2.5-350M correction-repair campaign; next experiment requires fresh, reviewed data and runs only on the RTX A6000 machine |
 
 AGP 8.13.2 and target API 36 are kept intentionally because they match the current Moonshine sample
 and Liquid LEAP 0.10.9 Android requirements.
@@ -201,8 +205,9 @@ The app deliberately does not write transcript text to logs.
 The model files are deliberately excluded from Git and the APK. The staging script expects the
 selected Parakeet artifact at `.cache/stt-eval/models/tdt_ctc-110m-q4_k.gguf` and the converted
 Sotto artifact at
-`.cache/integration/models/sotto-gguf-mapped/sotto-cleanup-lfm25-350m-q4_k_m.gguf`. It rejects
-anything except the pinned SHA-256 identities.
+`.cache/integration/models/sotto-b-epoch2-gguf/sotto-b-epoch2-lfm25-350m-q4_k_m.gguf`. It rejects
+anything except the pinned SHA-256 identities. The selected Sotto artifact is 229,310,336 bytes
+with SHA-256 `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`.
 
 From a clean checkout, prepare the Parakeet source/model as described in the
 [STT benchmark guide](docs/evaluation/STT_BENCHMARK.md), then package the pinned Android ARM64
@@ -212,19 +217,22 @@ runtime and shared JNI bridge:
 ./scripts/build-parakeet-android.sh
 ```
 
-The Sotto export is reproducible from Hugging Face revision
-`6df6f019170b8b55333c047b901886a51750a965`. Put that revision's model/config/tokenizer files under
-`.cache/integration/models/sotto-hf`, check out Liquid's `leap-finetune` commit
-`ee010f850a6f9e810aebbbc8e5d072675fcaece7` under `.cache/integration/leap-finetune`, install the
-pinned `llama.cpp` 10450 and `uv` tools, then run:
+The default Sotto export starts from the B epoch-2 inference checkpoint copied from
+`dante:/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542` into
+`.cache/integration/models/sotto-b-epoch2-hf`. Its 708,984,464-byte source weight has SHA-256
+`5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6`. Put the tokenizer from the
+pinned public-family snapshot under `.cache/integration/models/sotto-hf`, check out Liquid's
+`leap-finetune` commit `ee010f850a6f9e810aebbbc8e5d072675fcaece7` under
+`.cache/integration/leap-finetune`, install pinned `llama.cpp` 10450 and `uv`, then run:
 
 ```bash
-./scripts/export-sotto-integration-gguf.sh
+./scripts/export-sotto-b-epoch2-gguf.sh
 ```
 
-The exporter verifies every source file, applies the committed LFM2.5 tensor-name mapping, writes
-a 711,483,232-byte F16 reference, and quantizes the 229,310,304-byte deployment GGUF. It refuses to
-overwrite an existing export.
+The exporter verifies the source identity, makes compatibility aliases only in an ignored export
+copy, applies the committed LFM2.5 tensor-name mapping, and quantizes the selected deployment GGUF.
+It refuses to overwrite an existing export. The older public-checkpoint exporter remains available
+as a reproducible historical baseline, but its artifact is no longer the ordinary app default.
 
 Build and install the APK before staging its app-scoped model directory:
 
@@ -236,7 +244,7 @@ adb shell am start -n dev.localflow.dictation/.MainActivity
 
 In the app:
 
-1. Tap **Load staged Parakeet** and **Load staged Sotto**.
+1. Tap **Load staged Parakeet** and **Load staged Sotto B**.
 2. Tap **Start dictation**, grant microphone permission, speak, and tap **Stop dictation**.
 3. Parakeet transcribes the completed local capture, then Sotto cleanup runs automatically.
 4. Inspect the raw transcript, exact post-filler model input, complete unguarded Sotto output,
@@ -288,10 +296,13 @@ JOINED_EVAL_REFERENCE="The words spoken in the recording." \
 This is the fastest model-pipeline regression path. It deliberately does not test microphone
 capture, room acoustics, endpointing, or recorder lifecycle; use the ordinary Activity for those.
 
-This flow is for integration testing, not model qualification. Public Sotto scored 42/69 strict
-exact and 59/69 user-acceptable in its frozen screen, with ten relevant failures. Guardrail
-fallback is visible defense in depth and cannot turn that checkpoint into a deployment candidate.
-See the [integration build evidence](docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json).
+This flow is for integration testing, not model qualification. B epoch 2 scored 15/20 acceptable,
+only 1/3 corrections, and 0/3 formatting directives in the active direct suite, with broader raw
+semantic failures. Guardrail fallback is visible defense in depth and cannot turn it into a
+deployment candidate. See the
+[complete B/Luna Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md)
+and the historical
+[public-Sotto integration evidence](docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json).
 
 ## Cleanup-only evaluation status
 
@@ -327,11 +338,11 @@ experiment repairs those behaviors with a correction-weighted LFM training mixtu
 Android conversion or integration.
 See [the full screen](docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md).
 
-Public Sotto is therefore joined only as a replaceable integration placeholder. The deployment
-quality gate is unchanged: raw model output still must pass semantic safety before a checkpoint can
-ship. The active correction-repair experiment runs on the separate training machine. This Mac is
-used only for data tooling, model conversion, inference, and evaluation; no training job is run
-here.
+Sotto B epoch 2 is therefore the replaceable, provisional local integration baseline. The
+deployment quality gate is unchanged: raw model output still must pass semantic safety before a
+checkpoint can ship. Future cleanup work runs on the separate training machine. This Mac is used
+only for data tooling, model conversion, inference, evaluation, and app integration; no training
+job is run here.
 
 The optional hosted comparison now also covers the active 20-case personal-v3 direct-text suite.
 GPT-5.4 and GPT-5.6 Luna each reached 12/20 strict exact and 55/61 literal anchors; mini reached

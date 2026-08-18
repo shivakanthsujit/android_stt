@@ -1,6 +1,6 @@
 # Decisions
 
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 
 ## Product and architecture
 
@@ -9,6 +9,10 @@ Last updated: 2026-08-18
 3. Use explicit tap-to-start/tap-to-stop for V1; automatic endpointing is later polish.
 4. Preserve full offline operation after one-time model setup. Do not silently add cloud fallback.
 5. Keep transcript contents out of Logcat. UI may display them locally.
+6. After completing the ordinary joined Activity baseline, move product work to a minimal
+   voice-only IME while cleanup and STT qualification continue in parallel. Reuse an
+   application-scoped model coordinator, preserve explicit microphone control, and keep model
+   replacement behind the existing interfaces.
 
 ## Speech recognition
 
@@ -327,6 +331,13 @@ Last updated: 2026-08-18
     measurements as runtime evidence, but do not let 481 ms median direct latency, 2.69 J/call, or
     guardrail fallback override raw-model quality. Report cloud power as unavailable rather than
     estimating it from Pixel rails.
+54. At the user's explicit 2026-08-19 direction, promote B epoch 2 Q4_K_M from a benchmark override
+    to the ordinary app's provisional local integration default. This supersedes decisions 51–53
+    only as to the integration artifact identity; it does not reverse the deployment rejection or
+    weaken the raw semantic-safety gate. Pin the 229,310,336-byte artifact at SHA-256
+    `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`, preserve raw and guarded
+    output in the UI, retain the debug artifact override and `CleanupEngine` boundary, and make a
+    later swap only after fresh evidence and an explicit selection.
 
 ## Hosted API benchmark
 

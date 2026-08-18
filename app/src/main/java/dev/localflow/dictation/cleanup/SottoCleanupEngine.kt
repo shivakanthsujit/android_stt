@@ -19,7 +19,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-/** LEAP-backed sideloaded runtime for the pinned public Sotto LFM2.5-350M fine-tune. */
+/** LEAP-backed sideloaded runtime for a pinned Sotto LFM2.5-350M cleanup artifact. */
 class SottoCleanupEngine(
     context: Context,
     private val modelFile: File,
