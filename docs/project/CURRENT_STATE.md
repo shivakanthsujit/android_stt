@@ -427,11 +427,18 @@ Last updated: 2026-08-18
   and cleanup stages total 7.18 J per utterance; peak joined PSS is 920,517 KiB and thermal status
   remains 0. The exact post-filler Parakeet inputs are projected for Luna without including local
   output as context.
-- The hosted joined half remains pending because `OPENAI_API_KEY` is unset. A historical key was
-  found only in macOS Trash and was neither restored nor used without explicit authorization.
-  Existing Luna direct evidence remains 20/20 acceptable at 649 ms median service latency. The
-  interim report is
-  `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md`.
+- The user authorized the credential in `free_usage.md`, and the hosted half is complete. The
+  canonical usage-enabled Luna run is 20/20 acceptable direct, 11/20 strict, and 54/61 anchors at
+  630 ms median TTFT and 836 ms median total. After the exact measured Parakeet inputs, Luna is
+  17/20 acceptable, 9/20 strict, and 53/61 anchors; estimated cleanup/pipeline medians are
+  941/1,585 ms. It handles all three corrections and formats but changes case 012's protected
+  `ICO` token into a first-person subject. The guard flags it, but the raw failure prevents
+  deployment qualification. Luna remains the leading optional hosted candidate.
+- The canonical 40 Luna calls report 4,763 input and 1,068 output tokens, or $0.002234 at captured
+  standard rates. A first 40-call instrumentation pass lacked streamed usage; output caps bound
+  the entire 80-call session at $0.005353 paid-equivalent. Dashboard billing/data attribution is
+  authoritative. Complete aggregate evidence is
+  `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md`.
 
 ## Toolchain
 

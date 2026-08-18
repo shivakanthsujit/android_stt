@@ -447,3 +447,24 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   `7d5ab0ef6ebc0c4ece8b8885b2a0aca19730ae05a619f727a762ee22fada2bc4`.
 - `git diff --check`, Python byte compilation, and shell syntax checks pass for the benchmark
   publication set.
+
+## 2026-08-18 — Usage-enabled Luna comparison completion
+
+- Canonical direct/E2E/combined result SHA-256:
+  `76d5da132656775bfe9dca4284f1c09d1ebe92aab0365344a3f9c984b174c1f7`,
+  `dcd91a2baf0d843458e3be29742ef69ece0845ec06ddca36e6e3cb9bd0932666`, and
+  `b88050098689975a00b5bb3edc6b9085bd89b9c9a60e5f13804a60d74238308d`.
+- Request-extra/projection SHA-256:
+  `12f869439a7657bc9980c9feabcb1f70c17f1ed0b11dcc40de4edde48912414b` and
+  `027819989c3a7a31d83028a31f978f5c25c13d213084dbb880540f130300b78b`.
+- All 80 hosted calls completed on attempt one with `stop`, non-empty output, and zero token-cap
+  hits. The canonical 40 calls contain API-reported usage on every row.
+- Manual raw review covers all 40 canonical outputs. Direct Luna has zero semantic failures; joined
+  Luna has one protected-token/subject change on case 012. Guardrail fallback is recorded
+  separately and does not alter qualification.
+- The projection tool now rejects preservation anchors absent from the cleanup target, and the
+  combined scorer reports missing hosted usage as `null` rather than silently converting it to
+  zero. Focused benchmark/runner/scorer tests pass 23/23 after these regressions were added.
+- Full `scripts/tests` discovery runs 164 tests: 163 pass and the same unrelated macOS
+  `/var/folders` versus `/private/var/folders` path-alias assertion fails. No cleanup benchmark,
+  API runner, projection, scorer, or Android behavior fails.

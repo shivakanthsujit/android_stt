@@ -805,6 +805,34 @@
 - Did not run the hosted joined half. `OPENAI_API_KEY` is unset, and the only historical credential
   found is in macOS Trash. It was not restored or used implicitly. The already projected exact
   post-filler Parakeet input is ready for a 20-call Luna run once a credential is authorized.
-- Published aggregate-only interim evidence at
-  `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md`. Raw personal output,
-  audio, traces, projected hosted inputs, models, and checkpoint files remain ignored.
+- Published aggregate-only interim evidence, later superseded by the complete
+  `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md`. Raw personal output, audio,
+  traces, projected hosted inputs, models, and checkpoint files remain ignored.
+
+## 2026-08-18 — Luna direct and Parakeet-fed completion
+
+- The user identified and authorized the credential in `free_usage.md`. Extracted exactly one key
+  token without displaying or copying it into the repository. Sent only the 20 active direct cases
+  and 20 exact post-filler Parakeet inputs; no retired/source-dev/blind-v2 request was made.
+- The first 40 requests revealed that the streaming profile omitted usage. Added
+  `stream_options.include_usage=true` and repeated the same 40 requests for canonical token/cost
+  evidence. All 80 calls finished on their first attempt with `stop`, non-empty output, and no cap
+  hit. The first pass is excluded from canonical latency/result identity but bounded in total cost.
+- The first E2E scoring attempt also caught spoken-surface preservation anchors in the projection.
+  The API request's `raw` and `expected` fields were already correct; only scorer metadata was
+  wrong. Rebuilt from the cleanup case contract, added pre-request anchor validation, and scored
+  against projection SHA-256
+  `027819989c3a7a31d83028a31f978f5c25c13d213084dbb880540f130300b78b`.
+- Canonical Luna direct: 20/20 acceptable, 11/20 strict, 54/61 anchors, 3/3 corrections, 3/3
+  formatting, and zero raw semantic failures. Median TTFT/total are 630/836 ms; p95 total is
+  1,127 ms. Usage is 2,388 input plus 534 output tokens, or $0.001118 paid-equivalent.
+- Canonical Parakeet→Luna: 17/20 acceptable, 9/20 strict, 53/61 anchors, 3/3 corrections, and 3/3
+  formatting. Estimated cleanup/pipeline medians are 941/1,585 ms. Luna correctly repairs the
+  train-time ASR error, but on case 012 it changes protected `ICO` into a first-person subject.
+  The guard flags it; the raw semantic failure keeps Luna out of automatic deployment.
+- Canonical 40-call usage is 4,763 input and 1,068 output tokens ($0.002234). Including the first
+  usage-less pass, completion caps bound all 80 requests at $0.005353 paid-equivalent; the user's
+  dashboard remains authoritative. Cloud-server and Pixel-radio energy remain unmeasured.
+- Replaced the interim report with
+  `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md`. Luna is the leading optional
+  hosted candidate, while both Luna and Sotto remain raw-gate no-go results.

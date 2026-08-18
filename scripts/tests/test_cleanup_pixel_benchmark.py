@@ -92,6 +92,30 @@ class CleanupPixelBenchmarkTest(unittest.TestCase):
         self.assertEqual("Well hello", projected[0]["raw"])
         self.assertEqual("Well uh hello", projected[0]["source_raw_stt"])
 
+    def test_projection_rejects_spoken_surface_anchors_absent_from_cleanup_target(self) -> None:
+        source = {
+            "id": "case-1",
+            "spoken": "Meet at six thirty",
+            "expected": "Meet at 6:30.",
+            "categories": ["time"],
+            "must_preserve": ["six thirty"],
+        }
+        joined = {
+            "case_id": "case-1",
+            "run_id": "run-1",
+            "audio_sha256": "b" * 64,
+            "raw_stt": "Meet at six thirty",
+            "model_input": "Meet at six thirty",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source_path = root / "source.jsonl"
+            joined_path = root / "joined.jsonl"
+            source_path.write_text(json.dumps(source) + "\n", encoding="utf-8")
+            joined_path.write_text(json.dumps(joined) + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "absent from expected cleanup"):
+                projector.prepare(joined_path, source_path)
+
     def test_power_trace_names_reject_sql_metacharacters(self) -> None:
         self.assertEqual("localflow.cleanup", power._safe_trace_name("localflow.cleanup", "x"))
         with self.assertRaisesRegex(ValueError, "trace-safe"):
@@ -120,6 +144,8 @@ class CleanupPixelBenchmarkTest(unittest.TestCase):
             summary = hosted_joined.summarize(joined_path, hosted_path)
         self.assertEqual(750, summary["estimated_pipeline_total"]["median_ms"])
         self.assertEqual(1.0 / 0.75, summary["audio_seconds_per_pipeline_second"])
+        self.assertEqual(1, summary["usage_reported_count"])
+        self.assertEqual(100, summary["prompt_tokens"])
         self.assertIn("excludes ADB/host handoff", summary["pipeline_scope"])
 
 

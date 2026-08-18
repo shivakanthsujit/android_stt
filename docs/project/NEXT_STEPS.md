@@ -329,16 +329,18 @@ This remains required before final product selection, but it is not the current 
   correction replacement, deterministic identical-value number rendering, and consumed explicit
   list/paragraph directives. Keep Android and host behavior aligned and retain strict protection
   for changed facts, names, values, negation, uncertainty, and answered content.
-- [ ] On the Pixel-connected machine, compare hosted `gpt-5.6-luna` with local B epoch 2 in an
+- [x] On the Pixel-connected machine, compare hosted `gpt-5.6-luna` with local B epoch 2 in an
   experimental build. Copy the uncommitted checkpoint from
   `dante:/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542` and
   preserve raw/guarded output plus cleanup and end-to-end latency. Do not treat the build as a
   deployment qualification. The checkpoint copy, Q4_K_M export, direct Pixel run, and local
   Parakeet-fed run are complete. B remains a no-go at 15/20 acceptable direct and about 13/20
-  acceptable joined. Run Luna only after an authorized key is supplied, using the already
-  projected exact post-filler Parakeet inputs; then finish the E2E quality/latency/token/cost
-  comparison. Do not restore the historical credential found in Trash implicitly, and do not
-  manufacture a cloud-energy comparison from Pixel rails.
+  acceptable joined. The user authorized `free_usage.md`; Luna then reached 20/20 acceptable
+  direct and 17/20 acceptable joined, with all corrections and formatting handled. It still
+  changes one protected joined-input token into a different subject, so the raw deployment gate
+  remains closed. Keep Luna as the leading optional hosted candidate, add human/multi-speaker
+  dictation before another qualification claim, and do not manufacture cloud energy from Pixel
+  rails.
 - [ ] Replace the public Sotto model identity with the best correction-repair checkpoint only after
   its raw output passes the independent quality/safety gates.
 - [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized

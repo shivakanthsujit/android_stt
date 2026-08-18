@@ -325,9 +325,8 @@ Last updated: 2026-08-18
     direct score remains 15/20 acceptable with only 1/3 corrections and 0/3 formatting directives;
     raw semantic failures remain after quantization. Keep its new direct and Parakeet-fed Pixel
     measurements as runtime evidence, but do not let 481 ms median direct latency, 2.69 J/call, or
-    guardrail fallback override raw-model quality. Finish the Luna E2E side only with an explicitly
-    authorized credential and report cloud power as unavailable rather than estimating it from
-    Pixel rails.
+    guardrail fallback override raw-model quality. Report cloud power as unavailable rather than
+    estimating it from Pixel rails.
 
 ## Hosted API benchmark
 
@@ -356,6 +355,14 @@ Last updated: 2026-08-18
    because it retains two superseded corrections. Prefer Luna on this workload because it is
    faster and cheaper. Do not imply that Luna passed the retired safety or HF/source-dev corpora,
    which were deliberately excluded from the rerun.
+7. Keep Luna as the leading optional hosted candidate after the Pixel/Parakeet comparison, but do
+   not qualify it for automatic cleanup. It reaches 20/20 acceptable direct and 17/20 acceptable
+   joined, applies all three corrections and formats, and materially beats local Sotto B. However,
+   on joined case 012 it reinterprets a protected Parakeet token as a different grammatical
+   subject. Guardrail fallback does not rescue the raw failure. Any hosted product experiment must
+   remain explicit and privacy-aware, use a non-sharing personal key, preserve the fully local path,
+   and measure a real Pixel network client's latency/energy rather than treating the Mac-origin
+   estimate as shipping evidence.
 
 ## Android/toolchain
 

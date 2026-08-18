@@ -57,9 +57,10 @@ The current experimental cleanup comparison is hosted `gpt-5.6-luna` versus loca
 The checkpoint has now been copied from `dante`, reproducibly converted to a 229,310,336-byte
 Q4_K_M artifact, and measured on Pixel 7. It remains a no-go at 15/20 acceptable direct cleanup,
 1/3 corrections, and 0/3 formatting directives despite a 481 ms median local cleanup time. The
-Parakeet-fed local run is also complete; the exact Luna-on-Parakeet-output run is pending an
-authorized API credential. See the
-[interim Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md)
+complete comparison puts Luna at 20/20 acceptable direct and 17/20 after Parakeet, versus 15/20
+and about 13/20 for Sotto. Luna still has one model-induced raw semantic failure in the joined
+run, so neither candidate passes the deployment gate. See the
+[Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md)
 and the earlier
 [personal-v3 cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md).
 
@@ -344,13 +345,13 @@ acceptability, with strict exactness retained as secondary evidence. See the
 [cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md)
 and [acceptance policy](docs/evaluation/PERSONAL_CLEANUP_ACCEPTANCE.md).
 
-The local side of the follow-up Pixel experiment is complete. Sotto B epoch-2 Q4_K_M reaches
-15/20 acceptable on direct text at 481 ms median total, using 2.69 J per measured cleanup call on
-the attributed Pixel compute rails. With Parakeet resident, cleanup is 784 ms median and the two
-measured inference stages use 7.18 J per utterance. Luna still needs to be run on those exact
-Parakeet outputs before the E2E comparison is complete; cloud-server energy is not exposed and
-must not be inferred from Pixel power. See the
-[interim Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md).
+The follow-up Pixel/API experiment is complete. Sotto B epoch-2 Q4_K_M reaches 15/20 acceptable
+direct at 481 ms median, using 2.69 J per measured cleanup call. Luna reaches 20/20 at 836 ms.
+On identical Parakeet output, Luna reaches 17/20 acceptable versus about 13/20 for Sotto; estimated
+pipeline medians are effectively tied at 1,585 and 1,552 ms. Luna nevertheless changes one
+protected ASR token into a different subject, so raw safety keeps it out of automatic deployment.
+Cloud-server and Pixel-radio energy are not exposed and must not be inferred from local power.
+See the [complete Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md).
 
 ## File-fed STT probe status
 

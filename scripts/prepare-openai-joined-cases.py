@@ -29,6 +29,19 @@ def prepare(joined_path: Path, source_cases_path: Path) -> list[dict]:
     projected = []
     for row in source_rows:
         case_id = row["id"]
+        expected = row.get("expected")
+        anchors = row.get("must_preserve")
+        if not isinstance(expected, str) or not expected.strip():
+            raise ValueError(f"source case {case_id} has no expected cleanup text")
+        if not isinstance(anchors, list) or not all(
+            isinstance(anchor, str) and anchor for anchor in anchors
+        ):
+            raise ValueError(f"source case {case_id} has invalid preservation anchors")
+        missing_expected_anchors = [anchor for anchor in anchors if anchor not in expected]
+        if missing_expected_anchors:
+            raise ValueError(
+                f"source case {case_id} has preservation anchors absent from expected cleanup"
+            )
         raw_stt = joined[case_id].get("raw_stt")
         model_input = joined[case_id].get("model_input")
         if not isinstance(raw_stt, str) or not raw_stt.strip():
@@ -42,9 +55,9 @@ def prepare(joined_path: Path, source_cases_path: Path) -> list[dict]:
                 # Reuse the exact post-filler text supplied to local Sotto so the
                 # cleanup backends receive identical inputs.
                 "raw": model_input,
-                "expected": row["expected"],
+                "expected": expected,
                 "categories": row["categories"],
-                "must_preserve": row["must_preserve"],
+                "must_preserve": anchors,
                 "must_remove": row.get("must_remove", []),
                 "source_joined_run_id": joined[case_id].get("run_id"),
                 "source_audio_sha256": joined[case_id].get("audio_sha256"),

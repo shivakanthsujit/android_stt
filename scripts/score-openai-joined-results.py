@@ -52,6 +52,11 @@ def summarize(joined_path: Path, hosted_path: Path) -> dict:
     ]
     pipeline_ms = [stt + cleanup for stt, cleanup in zip(stt_ms, cleanup_ms)]
     audio_ms = sum(float(row["audio_duration_ms"]) for row in joined_rows)
+    usage_reported_count = sum(
+        isinstance(row.get("prompt_tokens"), int)
+        and isinstance(row.get("completion_tokens"), int)
+        for row in hosted_rows
+    )
     return {
         "schema_version": 1,
         "joined_result_file": str(joined_path),
@@ -68,8 +73,17 @@ def summarize(joined_path: Path, hosted_path: Path) -> dict:
         ),
         "audio_duration_seconds": audio_ms / 1000.0,
         "audio_seconds_per_pipeline_second": audio_ms / sum(pipeline_ms),
-        "prompt_tokens": sum(int(row.get("prompt_tokens", 0)) for row in hosted_rows),
-        "completion_tokens": sum(int(row.get("completion_tokens", 0)) for row in hosted_rows),
+        "usage_reported_count": usage_reported_count,
+        "prompt_tokens": (
+            sum(int(row["prompt_tokens"]) for row in hosted_rows)
+            if usage_reported_count == len(hosted_rows)
+            else None
+        ),
+        "completion_tokens": (
+            sum(int(row["completion_tokens"]) for row in hosted_rows)
+            if usage_reported_count == len(hosted_rows)
+            else None
+        ),
         "first_attempt_count": sum(
             int(row["timings"].get("attempt_count", 0) == 1) for row in hosted_rows
         ),
