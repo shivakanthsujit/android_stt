@@ -222,11 +222,24 @@ Last updated: 2026-08-18
   batch 32, seed 23, and the 2,112-token no-truncation contract remain fixed. This is a recipe
   follow-up, not a directly identical fourth row in the one-epoch dataset comparison. Never use
   blind-v2 to choose among its checkpoints.
-- The three-epoch run is active at
+- The three-epoch run completed at
   `/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z` from clean
-  training commit `00fae17`. Its resolved configuration records 13,797 expected optimizer steps
-  and the complete source audit again records 147,142/8,171 usable rows with zero frozen-surface
-  overlap. Durable 180-second telemetry plus terminal/error monitors are attached.
+  training commit `00fae17`: exactly 13,797 steps, 23,584.5 seconds, 0.07053 aggregate train loss,
+  and zero truncation across 147,142/8,171 rows. Complete resumable checkpoints exist at steps
+  4,599, 9,198, and 13,797; the final adapter exactly matches checkpoint 13,797.
+- Validation loss was 0.09308, 0.08544, and 0.09364 at epochs 1–3. The fixed vLLM profile scored
+  every epoch on all three publisher splits and both retired diagnostic suites. Epoch 2 is the
+  experimental selection: 4,850/6,921 Sotto, 769/1,000 Disfl-QA, 147/250 Nyra, 52/69 retired
+  exact, and 153/163 anchors. It improves the same-profile standalone Sotto/Disfl-QA counts by
+  111/4 but trails Nyra by 3. Epoch 3 marginally improves Sotto/Disfl-QA while regressing Nyra,
+  validation loss, retired exactness, anchors, no-op behavior, and safety.
+- No combined checkpoint is deployable. Exhaustive agent review of every non-exact retired raw
+  output found 8, 9, and 14 substantive policy failures at epochs 1–3, including answered content,
+  changed dictated intent, deleted framing/negation/tone, protected name/literal changes, and
+  invented formatting. Guardrails cannot rescue these raw failures. Sanitized hashes and the
+  selection rationale are in
+  `docs/evaluation/results/2026-08-18-direct-combined-qwen3-learning-curve.json`; raw artifacts and
+  review queues remain under the run's `/data/.../evaluation/epoch-*` directories.
 
 ## Toolchain
 
@@ -246,10 +259,9 @@ Last updated: 2026-08-18
    preflight. Do not run the Mac/Pixel steps below.
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Continue active Milestone 4 in `NEXT_STEPS.md`. On the RTX machine, preserve the completed
-   Sotto, Disfl-QA, Nyra, and superseded partial combined runs; monitor the three-epoch combined
-   learning-curve run to terminal status. Then evaluate each epoch checkpoint with the locked
-   vLLM server, 64 sharded publisher clients, four diagnostic clients, raw semantic review, and no
-   blind-v2 use. Preserve the stricter reviewed-pilot path for later qualification work; repeat
-   borderline results and do not compare fixed-profile vLLM scores directly with sequential
-   inference scores.
+5. Continue active Milestone 4 in `NEXT_STEPS.md`. Preserve all four completed source experiments,
+   the superseded partial run, and the epoch-2 experimental checkpoint. Do not deploy any adapter.
+   The next evidence-bearing work is a safety-curated and source-balanced data repair pass,
+   followed by a separately named Qwen3.5-0.8B rank-16 LoRA comparison at one and two epochs.
+   Preserve the reviewed-pilot Gate A path, never use blind-v2 for iteration, and compare vLLM
+   scores only under the same pinned backend/concurrency profile.

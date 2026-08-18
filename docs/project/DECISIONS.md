@@ -167,6 +167,14 @@ Last updated: 2026-08-18
     all three checkpoints with the same fixed vLLM profile and raw semantic-safety gate. This
     intentionally studies epoch sufficiency and must be reported as a recipe follow-up rather than
     an unchanged one-epoch dataset-comparison row. Never use blind-v2 for epoch selection.
+35. Reject every combined Qwen3-0.6B checkpoint for deployment and retain epoch 2 at step 9,198 as
+    the experimental baseline only. Epoch 2 has the lowest validation loss (0.08544), best
+    source-macro publisher exactness (68.59%), and best retired exactness (52/69), but exhaustive
+    raw review still finds nine substantive semantic-policy failures. Epoch 1 has eight failures;
+    epoch 3 regresses to fourteen alongside worse validation loss, retired exactness, anchors, and
+    no-op behavior. Do not train a fourth epoch. Prioritize leakage-safe safety curation and source
+    balancing, then run a separately named Qwen3.5-0.8B rank-16 LoRA one/two-epoch comparison.
+    Guardrails cannot qualify any failed raw checkpoint, and blind-v2 remains sealed.
 
 ## Android/toolchain
 

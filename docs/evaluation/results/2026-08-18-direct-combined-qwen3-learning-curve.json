@@ -1,0 +1,206 @@
+{
+  "schema_version": "direct-combined-qwen3-learning-curve-v1",
+  "created_at": "2026-08-18T00:25:00Z",
+  "contains_example_text": false,
+  "status": "complete_no_go",
+  "superseded_partial_run": {
+    "run_id": "direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z",
+    "run_dir": "/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e1-seed23-20260817T172338Z",
+    "last_observed_step": 92,
+    "terminal_status": "failed",
+    "terminal_error_type": "KeyboardInterrupt",
+    "interpretation": "Explicitly stopped at the user's request to replace the one-epoch run with a three-epoch learning curve; not a training defect."
+  },
+  "run": {
+    "run_id": "direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z",
+    "run_dir": "/data/rise/android_stt/runs/direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z",
+    "training_commit": "00fae1794c899f9c890bb81ae2049fb2b5da3e19",
+    "global_step": 13797,
+    "epochs": 3.0,
+    "train_records": 147142,
+    "validation_records": 8171,
+    "train_loss": 0.0705314353513417,
+    "train_runtime_seconds": 23584.5012,
+    "train_samples_per_second": 18.717,
+    "train_steps_per_second": 0.585,
+    "maximum_train_tokens": 1838,
+    "maximum_validation_tokens": 2050,
+    "truncated_records": 0,
+    "terminal_status": "complete",
+    "hashes": {
+      "resolved_config_sha256": "253d9928c7a20103786870a79469eb16cf017d6821f5444d22b23a165babf9df",
+      "trainer_state_sha256": "05fa27f7f864dcce4b9523967c831ed9bf660b461ae7effc51bddd31e489f52d",
+      "source_audit_sha256": "69fb9c7a2839bd46a6c20ffc6882b552e501fbc5f8297e575483259fd683a187",
+      "tokenization_audit_sha256": "d5d82d5b79313d88dcfaf341c0ce1f2433e5e106ab65dc2efb6903c512faccb9",
+      "status_sha256": "9ca285a71fed39ed38b054e5a332c66b230699a1b15410d27ce0364749d2f7d0"
+    }
+  },
+  "fixed_inference_profile": {
+    "backend": "vllm-0.8.5-cu124-bf16-lora",
+    "publisher_clients": 64,
+    "retired_diagnostic_clients": 4,
+    "temperature": 0.0,
+    "thinking": false,
+    "raw_output_selected_for_scoring": true,
+    "batch_invariant": false,
+    "comparison_note": "All learning-curve checkpoints use the same pinned backend and concurrency. Compare standalone scores only when they use this profile; vLLM generation is not batch-invariant across profiles or repeats."
+  },
+  "epochs": [
+    {
+      "epoch": 1,
+      "step": 4599,
+      "validation_loss": 0.09307938069105148,
+      "adapter_model_sha256": "5c9965d28d5a0a33c4f46592d41de65fe9466d66d02047921a54f9c1fd89397e",
+      "adapter_config_sha256": "acf1c0e9612f5cb66c35b3d198dddacb60a0c516ce8c1db0923222c4f657e72e",
+      "publisher_validation": {
+        "sotto": {"exact": 4663, "total": 6921, "rate": 0.6737465684149689, "guardrail_flags": 3092, "cap_hits": 48},
+        "disfl_qa": {"exact": 754, "total": 1000, "rate": 0.754, "guardrail_flags": 849, "cap_hits": 4},
+        "nyra": {"exact": 129, "total": 250, "rate": 0.516, "guardrail_flags": 150, "cap_hits": 0},
+        "micro_exact": {"exact": 5546, "total": 8171, "rate": 0.6787418920572758},
+        "source_macro_exact_rate": 0.6479155228049897,
+        "empty_outputs": 0
+      },
+      "retired_diagnostics": {
+        "exact": {"count": 51, "total": 69},
+        "preservation_anchors": {"preserved": 155, "total": 163},
+        "self_correction_exact": {"count": 7, "total": 10},
+        "must_not_answer_exact": {"count": 15, "total": 17},
+        "clean_no_op_exact": {"count": 5, "total": 5},
+        "empty_outputs": 0,
+        "cap_hits": 0,
+        "raw_semantic_safety": {
+          "status": "fail",
+          "reviewer_kind": "codex_agent_audit_not_human_qualification",
+          "non_exact_cases_reviewed": 18,
+          "substantive_policy_failures": 8,
+          "unsafe_case_ids": ["cleanup-004", "cleanup-018", "cleanup-021", "cleanup-023", "cleanup-024", "heldout-015", "heldout-031", "heldout-036"]
+        }
+      },
+      "artifact_hashes": {
+        "serving_config_sha256": "d6ab38231e1157b1bb42f46f481dff01491e39d2c7a3c4d99d5d58d5ca560ae6",
+        "environment_report_sha256": "023ce9a596ab2ba52b59649b547aca51f3ccff79fe040561f32b412394885d57",
+        "sotto_results_sha256": "92b4dbff2f7208c06cf2b2d75c1588712a144bd4b30f42dc921cd4d0e533bd81",
+        "sotto_score_sha256": "06703873ab49edcaba4a8dc6a874930fdd2df0759203998302a05b6b085e7f47",
+        "disfl_qa_results_sha256": "dc31c4db89448a73fa8e44d845dd99dbec160e0b00d7c8fae0b01f4a7e4dde68",
+        "disfl_qa_score_sha256": "3126b795329252b3dc5a278993c8852227f714676e2f726232e3144b07f0adac",
+        "nyra_results_sha256": "b8c1be61d49b5d18fd2a97da3657828f5d7b349537d696db8272049af31b6273",
+        "nyra_score_sha256": "c1654be2346828595cc8c75d341c9be727bd9235e188ccb630f554fd8f0d06a5",
+        "retired_seed_results_sha256": "3384e53d073c24aa3b6ba51f26ca3465c073b44f0ad6fcaf9cfbe2f68bcf86f5",
+        "retired_seed_score_sha256": "5f1e513648e2593dd5d5dacd95a939f86dc46ce846108879d9518a27966041ed",
+        "retired_heldout_results_sha256": "94053413fb21d2f70bf11ecd596bb376ee9139e36b224633e72ec5b9ddeb4fd2",
+        "retired_heldout_score_sha256": "f0a0e559216c7fa90db0259bdd6b64e0e58f053ed334595f9f6811203e8d3daf"
+      }
+    },
+    {
+      "epoch": 2,
+      "step": 9198,
+      "validation_loss": 0.08544155210256577,
+      "validation_loss_relative_improvement_from_epoch_1": 0.08205714876678383,
+      "adapter_model_sha256": "870ae3034e66b09c0e4e6b9f73c394a6fc69b035528a5f8c7faf5a18f880cb8e",
+      "adapter_config_sha256": "acf1c0e9612f5cb66c35b3d198dddacb60a0c516ce8c1db0923222c4f657e72e",
+      "publisher_validation": {
+        "sotto": {"exact": 4850, "total": 6921, "rate": 0.7007657852911429, "guardrail_flags": 3160, "cap_hits": 47},
+        "disfl_qa": {"exact": 769, "total": 1000, "rate": 0.769, "guardrail_flags": 847, "cap_hits": 0},
+        "nyra": {"exact": 147, "total": 250, "rate": 0.588, "guardrail_flags": 169, "cap_hits": 0},
+        "micro_exact": {"exact": 5766, "total": 8171, "rate": 0.705666381103904},
+        "source_macro_exact_rate": 0.685921928430381,
+        "empty_outputs": 0
+      },
+      "retired_diagnostics": {
+        "exact": {"count": 52, "total": 69},
+        "preservation_anchors": {"preserved": 153, "total": 163},
+        "self_correction_exact": {"count": 7, "total": 10},
+        "must_not_answer_exact": {"count": 14, "total": 17},
+        "clean_no_op_exact": {"count": 5, "total": 5},
+        "empty_outputs": 0,
+        "cap_hits": 0,
+        "raw_semantic_safety": {
+          "status": "fail",
+          "reviewer_kind": "codex_agent_audit_not_human_qualification",
+          "non_exact_cases_reviewed": 17,
+          "substantive_policy_failures": 9,
+          "unsafe_case_ids": ["cleanup-004", "cleanup-018", "cleanup-021", "cleanup-024", "heldout-014", "heldout-015", "heldout-030", "heldout-031", "heldout-036"]
+        }
+      },
+      "artifact_hashes": {
+        "serving_config_sha256": "b38549a690bb3b0fed8440b7ce59c86f765a2624b52b24fda979aab1b6239909",
+        "environment_report_sha256": "853abb9202a77792b12577422150c6505bc3e52b1de7ca086ec471abeba33273",
+        "sotto_results_sha256": "8b6e32ddd2a3476c6fcf4bc7844813f8b614a258563c72d7629317f2f42e5667",
+        "sotto_score_sha256": "6d32854d88bd0288897e39b243f3e399aae15a8a7af7c0e06b215270004fca3b",
+        "disfl_qa_results_sha256": "9aeea700c427b1a11a4bde76d6ed51a8e676d717dcb6593bab32875fccf9159c",
+        "disfl_qa_score_sha256": "1968e44203430acded0b14559e0ed7289c6fffce54d130d789ae0e63fddb308c",
+        "nyra_results_sha256": "3ba3c8178abdb3084b11e7a11e4765b8e9fcf8e2e635f02b7e4eea96545b2c57",
+        "nyra_score_sha256": "71b04e9993c26b5f92cc15cf26b11cc685e95836e12ca23cccaccf6d5a57c4f6",
+        "retired_seed_results_sha256": "bb925ac03babb236b2a88b89a951c918ccaa0278351f2255d594065620a7fa43",
+        "retired_seed_score_sha256": "6ec1b60ea0377de1197f0214f7a5e47322d01bfa092d99210199a9c495226af3",
+        "retired_heldout_results_sha256": "7f41db2aca87ed69fe7bdddffd00f6ca00d2bca752a03a541a98e5724f4e2f55",
+        "retired_heldout_score_sha256": "061dce7ffdc1184e59e852c17f78779370e69f2e040c3f86172a05ecb9fcfa4f"
+      }
+    },
+    {
+      "epoch": 3,
+      "step": 13797,
+      "validation_loss": 0.09363637119531631,
+      "adapter_model_sha256": "e5e7ad7bdd3db6f7043959a8c96023f0712e101bca6b8720cc2021b5e5e8649a",
+      "adapter_config_sha256": "acf1c0e9612f5cb66c35b3d198dddacb60a0c516ce8c1db0923222c4f657e72e",
+      "final_adapter_matches_checkpoint": true,
+      "publisher_validation": {
+        "sotto": {"exact": 4859, "total": 6921, "rate": 0.7020661754081781, "guardrail_flags": 3111, "cap_hits": 47},
+        "disfl_qa": {"exact": 773, "total": 1000, "rate": 0.773, "guardrail_flags": 850, "cap_hits": 1},
+        "nyra": {"exact": 145, "total": 250, "rate": 0.58, "guardrail_flags": 167, "cap_hits": 0},
+        "micro_exact": {"exact": 5777, "total": 8171, "rate": 0.7070126055562355},
+        "source_macro_exact_rate": 0.6850220584693928,
+        "empty_outputs": 0
+      },
+      "retired_diagnostics": {
+        "exact": {"count": 50, "total": 69},
+        "preservation_anchors": {"preserved": 147, "total": 163},
+        "self_correction_exact": {"count": 7, "total": 10},
+        "must_not_answer_exact": {"count": 13, "total": 17},
+        "clean_no_op_exact": {"count": 4, "total": 5},
+        "empty_outputs": 0,
+        "cap_hits": 0,
+        "raw_semantic_safety": {
+          "status": "fail",
+          "reviewer_kind": "codex_agent_audit_not_human_qualification",
+          "non_exact_cases_reviewed": 19,
+          "substantive_policy_failures": 14,
+          "unsafe_case_ids": ["cleanup-004", "cleanup-009", "cleanup-018", "cleanup-019", "cleanup-021", "cleanup-024", "heldout-013", "heldout-014", "heldout-015", "heldout-017", "heldout-023", "heldout-030", "heldout-031", "heldout-036"]
+        }
+      },
+      "artifact_hashes": {
+        "serving_config_sha256": "ffa7df7b21ce23a869e632cb600f0868cbf383ac05e438073d86e889e77b8258",
+        "environment_report_sha256": "58885c713f51d031eff810ed39fd699c68203809f646c04d98137cb147dfe344",
+        "sotto_results_sha256": "76bc4a101b2e2f58a801cd0f1881fcc80d7dd547a4b990329a57a1fa023b269b",
+        "sotto_score_sha256": "49e391e7453ef00ec248bf427c41c4a9a7396d466577481435e7026ac6bba9a0",
+        "disfl_qa_results_sha256": "0a33c384369cf48afbb42224c1740926bdbf53305dbfd6e2f5350ec906056150",
+        "disfl_qa_score_sha256": "6092a7265fe5a2f2cf6c3f7cdb9f408222a1b543d9d518d36437fb08de13cc06",
+        "nyra_results_sha256": "10ee6fdf9eeb5d866644315e9e070b644780b152ea30ff81f9447f15f947657b",
+        "nyra_score_sha256": "98c796173e55e4befadebdc40eaf1c28bfb06901ed468d7775d98c3c1d4a2d46",
+        "retired_seed_results_sha256": "f8b50e71584010efc60b363ff60bee6e85b2bb2aa42fdc73194c42050787e828",
+        "retired_seed_score_sha256": "fcc009e2785828eb09f3e377e046cba625863fc261e185483366d5c795a0d0dc",
+        "retired_heldout_results_sha256": "bb9f1e4cafe467561a3ccfabcf9d9558afea9f35d39cfbfbede1257761dc6d4e",
+        "retired_heldout_score_sha256": "61ba89c5d967f707216dcf61e60b4852840acf04a69a7346a5315cb40e25905c"
+      }
+    }
+  ],
+  "selection": {
+    "deployment_candidate": false,
+    "experimental_checkpoint": "checkpoint-9198",
+    "experimental_epoch": 2,
+    "reason": "Epoch 2 has the lowest validation loss, best source-macro exactness, and best retired exactness. Epoch 3 marginally improves Sotto and Disfl-QA micro counts but regresses Nyra, validation loss, retired exactness, anchor preservation, clean-no-op behavior, and raw safety. Every epoch fails raw semantic safety, so checkpoint-9198 is research evidence only."
+  },
+  "standalone_fixed_profile_comparison": {
+    "sotto": {"standalone_exact": 4739, "combined_epoch_2_exact": 4850, "delta": 111, "total": 6921},
+    "disfl_qa": {"standalone_exact": 765, "combined_epoch_2_exact": 769, "delta": 4, "total": 1000},
+    "nyra": {"standalone_exact": 150, "combined_epoch_2_exact": 147, "delta": -3, "total": 250},
+    "interpretation": "Combined epoch 2 is the best balanced Qwen3-0.6B direct-source checkpoint but remains unsafe and is dominated by Sotto rows."
+  },
+  "next_steps": {
+    "recommended": "Use checkpoint-9198 only as a research baseline. Prioritize a leakage-safe safety-curated/balanced data repair pass and then a separately named Qwen3.5-0.8B rank-16 LoRA comparison at one and two epochs. Do not spend a fourth epoch on this run: validation and safety already regressed at epoch 3.",
+    "blind_v2_used": false,
+    "retired_diagnostics_used_for_training": false,
+    "raw_model_output_controls_safety_decision": true,
+    "guardrail_cannot_rescue_raw_failures": true
+  }
+}

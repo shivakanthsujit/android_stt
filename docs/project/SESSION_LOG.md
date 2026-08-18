@@ -332,3 +332,27 @@
   `direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z`. The resolved 13,797-step config and
   147,142/8,171-row zero-overlap source audit are present; 180-second telemetry and durable
   terminal/error monitors are attached.
+
+## 2026-08-18 — Combined three-epoch completion and checkpoint evaluation
+
+- The combined run completed exactly 13,797 steps and exited zero after 23,584.5 seconds. It
+  retained all 147,142 train and 8,171 validation rows with zero truncation. Complete resumable
+  checkpoints are present at steps 4,599, 9,198, and 13,797; final-adapter bytes exactly match the
+  epoch-3 checkpoint. Epoch validation losses were 0.09308, 0.08544, and 0.09364.
+- Served each epoch checkpoint in turn through the same pinned vLLM 0.8.5 BF16 LoRA profile and
+  ran 64-client Sotto/Disfl-QA/Nyra publisher sweeps plus four-client 24/45-case retired suites.
+  Every chain exited zero, produced complete result sets, and was scored and hash-addressed.
+- Epoch 1 scored 4,663/6,921 Sotto, 754/1,000 Disfl-QA, 129/250 Nyra, and 51/69 retired exact.
+  Epoch 2 improved to 4,850, 769, 147, and 52 exact respectively. Epoch 3 reached 4,859, 773, 145,
+  and 50; it also regressed validation loss and anchor preservation from 153/163 to 147/163.
+- Exhaustively reviewed every non-exact retired raw output at each epoch. Found 8, 9, and 14
+  substantive safety failures at epochs 1–3. All fail the raw semantic-safety gate; the audit is
+  agent evidence, not human qualification, and guardrail fallback cannot change the decision.
+- Selected epoch 2 (`checkpoint-9198`, adapter SHA-256
+  `870ae3034e66b09c0e4e6b9f73c394a6fc69b035528a5f8c7faf5a18f880cb8e`) as research evidence
+  only. It has the best validation loss, source-macro publisher score, and retired exactness.
+  Epoch 3 shows that another epoch is counterproductive; do not extend this run.
+- Added the final sanitized report at
+  `docs/evaluation/results/2026-08-18-direct-combined-qwen3-learning-curve.json`. Raw outputs,
+  review queues, serving logs/configs, environment reports, weights, optimizer state, and
+  checkpoints remain outside Git under the completed run directory.

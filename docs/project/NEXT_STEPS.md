@@ -134,16 +134,21 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   30/250 Nyra, with 23 substantive retired-diagnostic safety failures. Nyra reached 150/250 on its
   source but only 1,479/6,921 Sotto and 73/1,000 Disfl-QA, with 18 substantive safety failures.
   Both are source-specific no-go results.
-- [ ] Complete and evaluate the justified combined learning curve. The initial one-epoch run was
+- [x] Complete and evaluate the justified combined learning curve. The initial one-epoch run was
   explicitly stopped and preserved at step 92 after the user requested a real epoch-sufficiency
   test. Run three epochs under the dedicated config, saving/evaluating at steps 4,599, 9,198, and
   13,797. Evaluate every epoch checkpoint with the same vLLM profile on the combined publisher
   validation, each source split, and both retired diagnostics; audit every non-exact retired raw
   output before selecting an epoch or deciding the next base/data/recipe experiment.
-  The active run is `direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z` from commit
+  The completed run is `direct-combined-qwen3-0.6b-e3-seed23-20260817T173233Z` from commit
   `00fae17`; preserve its durable telemetry, logs, status, and all three resumable checkpoints.
-- [ ] Use the evidence to choose whether the next base comparison is Qwen3.5-0.8B, Gemma 3 1B, or
-  whether data/recipe changes matter more. Do not use blind-v2 during this exploratory iteration.
+  Training and all three epoch evaluations are complete. Epoch 2 (`checkpoint-9198`) is the best
+  experimental checkpoint, but all epochs fail raw safety; see the final combined report.
+- [x] Use the four-way evidence to choose the next direction. Data repair matters first because all
+  Qwen3-0.6B source recipes remain unsafe and the combined set is 92% Sotto by row count. Preserve
+  epoch 2 as the research baseline; next create a leakage-safe safety-curated/source-balanced
+  revision, then compare Qwen3.5-0.8B rank-16 LoRA at one and two epochs. Do not spend a fourth
+  epoch on the current run and do not use blind-v2 during iteration.
 
 Prepare all data and training inputs portably in this repository, but run training only on the
 separate training machine when it is available. Do not start training on this Mac.
