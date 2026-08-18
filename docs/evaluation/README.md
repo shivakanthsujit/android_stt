@@ -1,4 +1,14 @@
-# Dictation cleanup evaluation
+# Evaluation
+
+This directory contains two independent evaluation tracks:
+
+- transcript cleanup quality and semantic safety, using the committed evaluation-only text corpora;
+- speech-to-text quality and Pixel performance, using file-fed public audio kept outside Git.
+
+Do not use the committed cleanup evaluation corpora, expected outputs, or captured model results as
+training data or generator examples.
+
+## Dictation cleanup evaluation
 
 `cleanup_cases.jsonl` is a deterministic seed corpus for evaluating transcript cleanup independently of speech recognition. It contains 24 cases, enough to support the first Pixel 7 go/no-go run while leaving room to grow toward the 50–100 case corpus described in the project context.
 
@@ -83,3 +93,16 @@ For a task-specific GGUF, use the reproducible two-corpus workflow in
 [`SPECIALIZED_CANDIDATE_SCREENING.md`](SPECIALIZED_CANDIDATE_SCREENING.md). It starts and stops a
 local `llama-server`, records model/server provenance, and keeps candidate-native prompt/runtime
 settings explicit.
+
+## Speech-to-text evaluation
+
+Use [`STT_BENCHMARK.md`](STT_BENCHMARK.md) to prepare the pinned 24-clip LibriSpeech probe and run
+identical WAV files through Moonshine or `parakeet.cpp` on the Pixel without opening the
+microphone. The harness scores normalized WER, repeat latency, output stability, process CPU, PSS,
+thermal status, and optional Perfetto CPU/GPU/memory rail energy.
+
+The initial F16/Q4_K/Moonshine measurements, limitations, artifact hashes, and provisional Q4_K
+decision are recorded in
+[`results/2026-08-18-pixel-parakeet-stt-probe.md`](results/2026-08-18-pixel-parakeet-stt-probe.md).
+This small read-speech probe is not the official full `test-clean` score and does not replace the
+planned dictation/streaming qualification.

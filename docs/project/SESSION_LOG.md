@@ -421,3 +421,5 @@
 - Changed the provisional STT candidate from F16 to Q4_K after the user accepted one extra proper-
   name substitution in exchange for the measured efficiency gains. F16 remains the quality
   reference; live streaming and dictation-focused protected-token qualification remain unbuilt.
+- Added the STT benchmark and result report to the project and evaluation indexes so the new
+  workflow and evidence are discoverable from both documentation entry points.
