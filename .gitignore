@@ -21,3 +21,6 @@ training/models/
 .cache/tts-eval/
 app/src/debug/jniLibs/arm64-v8a/*.so
 wandb/
+
+# Local API credentials.
+free_usage.md

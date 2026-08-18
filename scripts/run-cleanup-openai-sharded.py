@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Sequence
 
@@ -17,6 +19,48 @@ MERGER = SCRIPT_DIR / "merge-cleanup-openai-shards.py"
 
 class LaunchError(Exception):
     """A launcher preflight or child-process failure."""
+
+
+def completed_token_usage(paths: Sequence[Path]) -> tuple[int, int, int]:
+    """Return request/input/output totals from complete flushed JSONL records."""
+
+    requests = prompt_tokens = completion_tokens = 0
+    for path in paths:
+        if not path.exists():
+            continue
+        try:
+            data = path.read_bytes()
+        except OSError as exc:
+            raise LaunchError(f"cannot read token usage from {path}: {exc}") from exc
+        # A child may be between writing the JSON object and its newline. Ignore
+        # only that final unflushed fragment; every earlier line must be valid.
+        complete = data if data.endswith(b"\n") else data.rsplit(b"\n", 1)[0]
+        for line_number, line in enumerate(complete.splitlines(), 1):
+            if not line:
+                raise LaunchError(f"{path}:{line_number}: blank result record")
+            try:
+                row = json.loads(line)
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise LaunchError(
+                    f"{path}:{line_number}: invalid completed result record: {exc}"
+                ) from exc
+            current_prompt = row.get("prompt_tokens")
+            current_completion = row.get("completion_tokens")
+            if (
+                isinstance(current_prompt, bool)
+                or not isinstance(current_prompt, int)
+                or current_prompt < 0
+                or isinstance(current_completion, bool)
+                or not isinstance(current_completion, int)
+                or current_completion < 0
+            ):
+                raise LaunchError(
+                    f"{path}:{line_number}: non-negative token counts are required"
+                )
+            requests += 1
+            prompt_tokens += current_prompt
+            completion_tokens += current_completion
+    return requests, prompt_tokens, completion_tokens
 
 
 def shard_path(output_dir: Path, shard_index: int, shard_count: int) -> Path:
@@ -38,10 +82,34 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prompt-variant", default="cleanup_instruction_v2")
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--request-extra", type=Path)
+    parser.add_argument(
+        "--output-token-field",
+        choices=("max_tokens", "max_completion_tokens"),
+        default="max_tokens",
+        help="request field used for each case's fixed output cap",
+    )
+    parser.add_argument(
+        "--output-cap-policy",
+        choices=("android", "publisher"),
+        default="android",
+    )
     parser.add_argument("--api-key-env", default="OPENAI_API_KEY")
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--retries", type=int, default=0)
     parser.add_argument("--retry-delay", type=float, default=0.5)
+    parser.add_argument(
+        "--token-progress-seconds",
+        type=float,
+        default=0.0,
+        help="print aggregate API-reported token totals at this interval; 0 disables",
+    )
+    parser.add_argument("--token-offset-input", type=int, default=0)
+    parser.add_argument("--token-offset-output", type=int, default=0)
+    parser.add_argument(
+        "--max-campaign-tokens",
+        type=int,
+        help="stop all clients when completed run tokens plus offsets reach this total",
+    )
     parser.add_argument(
         "--progress-every",
         type=int,
@@ -83,6 +151,10 @@ def _runner_command(arguments: argparse.Namespace, shard_index: int) -> list[str
         str(arguments.retry_delay),
         "--progress-every",
         str(arguments.progress_every),
+        "--output-token-field",
+        arguments.output_token_field,
+        "--output-cap-policy",
+        arguments.output_cap_policy,
         "--shard-count",
         str(arguments.clients),
         "--shard-index",
@@ -127,6 +199,12 @@ def run(arguments: argparse.Namespace) -> int:
         raise LaunchError("--clients must be positive")
     if arguments.progress_every < 0:
         raise LaunchError("--progress-every must not be negative")
+    if arguments.token_progress_seconds < 0:
+        raise LaunchError("--token-progress-seconds must not be negative")
+    if arguments.token_offset_input < 0 or arguments.token_offset_output < 0:
+        raise LaunchError("token offsets must not be negative")
+    if arguments.max_campaign_tokens is not None and arguments.max_campaign_tokens <= 0:
+        raise LaunchError("--max-campaign-tokens must be positive")
     if arguments.output.exists():
         raise LaunchError(f"refusing to overwrite merged output {arguments.output}")
     if arguments.output_dir.exists() and not arguments.output_dir.is_dir():
@@ -140,21 +218,57 @@ def run(arguments: argparse.Namespace) -> int:
         raise LaunchError("output paths are not collision-free")
 
     processes: list[tuple[int, subprocess.Popen[bytes]]] = []
-    try:
-        for index in range(arguments.clients):
-            process = subprocess.Popen(_runner_command(arguments, index))
-            processes.append((index, process))
-        failures: list[tuple[int, int]] = []
-        for index, process in processes:
-            return_code = process.wait()
-            if return_code:
-                failures.append((index, return_code))
-    except KeyboardInterrupt:
+
+    def report_tokens() -> int:
+        requests, prompt_tokens, completion_tokens = completed_token_usage(paths)
+        campaign_input = arguments.token_offset_input + prompt_tokens
+        campaign_output = arguments.token_offset_output + completion_tokens
+        campaign_total = campaign_input + campaign_output
+        print(
+            "[tokens "
+            f"requests={requests} run_input={prompt_tokens} run_output={completion_tokens} "
+            f"campaign_input={campaign_input} campaign_output={campaign_output} "
+            f"campaign_total={campaign_total}]",
+            file=sys.stderr,
+            flush=True,
+        )
+        return campaign_total
+
+    def stop_running() -> None:
         for _, process in processes:
             if process.poll() is None:
                 process.terminate()
         for _, process in processes:
             process.wait()
+
+    try:
+        for index in range(arguments.clients):
+            process = subprocess.Popen(_runner_command(arguments, index))
+            processes.append((index, process))
+        next_token_report = time.monotonic()
+        while any(process.poll() is None for _, process in processes):
+            now = time.monotonic()
+            if arguments.token_progress_seconds and now >= next_token_report:
+                campaign_total = report_tokens()
+                next_token_report = now + arguments.token_progress_seconds
+                if (
+                    arguments.max_campaign_tokens is not None
+                    and campaign_total >= arguments.max_campaign_tokens
+                ):
+                    stop_running()
+                    raise LaunchError(
+                        "campaign token limit reached; completed shard records were preserved"
+                    )
+            time.sleep(0.25)
+        failures = [
+            (index, return_code)
+            for index, process in processes
+            if (return_code := process.poll())
+        ]
+        if arguments.token_progress_seconds:
+            report_tokens()
+    except KeyboardInterrupt:
+        stop_running()
         raise LaunchError("interrupted; completed shard records were preserved")
 
     if failures:

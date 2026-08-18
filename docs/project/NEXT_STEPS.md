@@ -182,11 +182,11 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   identifier, and name-preservation failures. Preserve the evidence; any next local-model run must
   be a separately reviewed targeted repair experiment rather than an automatic extra epoch.
 - [x] Evaluate the public start and every retained A/B epoch on fixed personal v3. Public start is
-  best at 11/20 exact and 53/61 literal anchors. B epoch 2 is best fine-tuned at 8/20 and 50/61;
-  campaign-selected B epoch 1 reaches 7/20 and 46/61. Raw review keeps every fine-tuned checkpoint
-  out of Android: A changes a currency unit, while B retains required corrections and formatting
-  directives. Record the guardrail false negatives and false rejection separately; do not repair
-  policy against v3 and then rescore the same version as fresh evidence.
+  the strict leader at 11/20 exact and 53/61 literal anchors. Under the later default relaxed
+  semantic calibration, all B epochs lead local models at 15/20 acceptable versus 14/20 for public
+  and A. Raw review still keeps every fine-tuned checkpoint out of Android: A changes a currency
+  unit/tense, while B retains required corrections and formatting directives. Record the guardrail
+  false negatives and false rejection separately; do not use v3 output text for training.
 
 Prepare all data and training inputs portably in this repository, but run training only on the
 separate training machine when it is available. Do not start training on this Mac.
@@ -265,6 +265,41 @@ deterministic cleanup while generative corrections remain disabled.
 - [ ] Make the final STT choice after the dictation/streaming gate; the read-speech probe is not
   sufficient by itself.
 
+## Separate campaign: hosted GPT-5.4 API comparison
+
+This optional personal-use/cloud comparison is not part of the local-model training research plan.
+Keep its data handling, evidence, pricing, and product decision separate.
+
+- [x] Define the isolated campaign and record the user's authorization to send both committed
+  24/45-case evaluation corpora to the OpenAI API. Continue to prohibit blind-v2 and any reuse of
+  evaluation inputs or outputs for training, retrieval, demonstrations, or preference data.
+- [x] Add explicit `max_completion_tokens` support to the OpenAI-compatible runner and retain the
+  local-server `max_tokens` default; cover the new request field with a unit test.
+- [x] Run a four-case seed pilot on dated GPT-5.4-mini and GPT-5.4 snapshots with streaming,
+  `reasoning_effort=none`, raw scoring, and usage capture. Eight successful requests used 957
+  tokens total; the pilot evidence is
+  `docs/evaluation/results/2026-08-18-gpt54-api-pilot.md`.
+- [x] The user verified that pilot usage appeared under the complimentary shared-data offer, then
+  authorized the complete hosted screens.
+- [x] Run all 24 seed and 45 heldout-v1 cases sequentially for each model. Score raw output and
+  parallel guardrail evidence, manually audit every non-exact output and safety-sensitive case,
+  and report token usage plus sequential TTFT/total distributions.
+- [x] Reuse the checkpoint publisher-dev evaluation inputs without running checkpoint inference:
+  all 8,519 rows for mini and a deterministic source-stratified 1,500-row GPT-5.4 sample bounded by
+  the 250k pool. Record four-client latency/throughput separately from sequential product latency.
+  Do not run a further concurrency sweep because both models fail raw quality/safety gates.
+- [x] Estimate standard paid cost from recorded input and output usage using
+  `model_page.md`; distinguish the shared-data test project from the owner's later non-sharing key.
+  The entire campaign used 1,343,189 tokens and corresponds to $2.4309 if billed.
+- [x] Rerun only the active 20-case personal-v3 internal suite on both GPT-5.4 models and add
+  GPT-5.6 Luna. Do not rerun the HF/publisher source-dev split. Full and Luna tie at 12/20 strict
+  and 20/20 user-acceptable; Luna wins the hosted latency/cost comparison. Mini is 18/20 accepted
+  because it retains two superseded corrections.
+- [x] Make relaxed semantic acceptability the default product metric and compare every raw local
+  Sotto result with the hosted models. Keep strict exactness as secondary reproducibility evidence.
+  Luna/full reach 20/20, mini 18/20, B 15/20, and public-HF/A 14/20. Do not weaken correction,
+  fact/unit/tense, must-not-answer, or explicit-formatting requirements.
+
 This remains required before final product selection, but it is not the current bottleneck.
 
 ## Diagnostic joined pipeline
@@ -294,6 +329,11 @@ This remains required before final product selection, but it is not the current 
   correction replacement, deterministic identical-value number rendering, and consumed explicit
   list/paragraph directives. Keep Android and host behavior aligned and retain strict protection
   for changed facts, names, values, negation, uncertainty, and answered content.
+- [ ] On the Pixel-connected machine, compare hosted `gpt-5.6-luna` with local B epoch 2 in an
+  experimental build. Copy the uncommitted checkpoint from
+  `dante:/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542` and
+  preserve raw/guarded output plus cleanup and end-to-end latency. Do not treat the build as a
+  deployment qualification.
 - [ ] Replace the public Sotto model identity with the best correction-repair checkpoint only after
   its raw output passes the independent quality/safety gates.
 - [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized

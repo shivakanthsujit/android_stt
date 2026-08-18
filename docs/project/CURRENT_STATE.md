@@ -76,9 +76,10 @@ Last updated: 2026-08-18
   guardrails and emits scorer-compatible JSONL with raw output, guarded selection, TTFT, and total
   latency.
 - Cleanup is still the product bottleneck. Correction-repair training and the personal-v3
-  checkpoint matrix are complete; public Sotto remains the integration-only placeholder because
-  every fine-tuned checkpoint regresses on the revised workload. The joined build is not a
-  deployment qualification claim.
+  checkpoint matrix are complete. Under the default relaxed semantic calibration, clean-base B
+  leads the local family at 15/20 acceptable versus 14/20 for public Sotto and A, but it still
+  misses required corrections/formatting and fails broader safety. Public Sotto therefore remains
+  the integration-only placeholder; the joined build is not a deployment qualification claim.
 
 ## Physical device
 
@@ -377,14 +378,43 @@ Last updated: 2026-08-18
   `docs/evaluation/results/2026-08-18-sotto-lfm-ab-comparison.json`. The post-merge script suite
   passes 159/159 tests.
 - The fixed personal-v3 BF16 matrix covers public start, all four A epochs, and all three B epochs.
-  Public start leads at 11/20 exact, 53/61 literal anchors, and 15/20 all-anchor cases. Best
-  fine-tuned is B epoch 2 at 8/20, 50/61, and 12/20; prior campaign-selected B epoch 1 reaches
-  7/20, 46/61, and 10/20. All models are only 1/4 exact on long-form cleanup and no run hits the
-  output cap. Raw review finds an unsupported currency-unit substitution in every A epoch, while
-  public/B retain important explicit corrections and formatting directives. Guardrails miss the A
-  currency change and one public retained correction, and falsely reject A's valid numbered-list
-  formatting. No fine-tuned checkpoint should replace the public placeholder. See
+  Strict diagnostics still put public first at 11/20 exact and 53/61 anchors. The default relaxed
+  product calibration instead puts every B epoch at 15/20 acceptable, ahead of public/A at 14/20;
+  B epoch 2 is the strict/anchor tie-breaker within B. Public fails three corrections and three
+  formatting directives; B fixes one correction but still fails two corrections and all three
+  directives. A also changes a euro value to dollars and changes past to present tense. No
+  fine-tuned checkpoint should replace the public placeholder because its broader safety failures
+  remain. See
   `docs/evaluation/results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`.
+- A separate hosted-API campaign now compares `gpt-5.4-mini-2026-03-17` and
+  `gpt-5.4-2026-03-05` for the owner's optional personal-use path. It is isolated from local-model
+  training and may not consume or produce training data. The user explicitly authorized sending
+  both committed 24/45-case corpora and the public/synthetic source-dev evaluation split to this
+  API evaluation, but blind-v2 remains prohibited. The user confirmed pilot traffic was free, then
+  both models completed the 69-case sequential screen. Mini reached 27/69 exact but retained
+  superseded text in 8/10 correction cases. GPT-5.4 reached 51/69 but obeyed a dictated instruction
+  by outputting `Approved`, so both fail raw safety. On the same deterministic 1,500-row
+  publisher-dev sample, GPT-5.4 reached 511 exact versus mini's 380, selected local A4's 848, and
+  selected local B1's 951. Four-client median/p95 total latency was 788/1,207 ms for mini and
+  855/1,348 ms for GPT-5.4. The complete hosted campaign used 1,343,189 tokens; standard paid
+  equivalent is $2.4309, while dashboard attribution remains authoritative. See
+  `docs/evaluation/results/2026-08-18-gpt54-api-screen.md`.
+- The hosted campaign now also covers the active 20-case personal-v3 suite without rerunning the
+  HF/publisher source-dev split. GPT-5.4 and GPT-5.6 Luna tie at 12/20 strict exact and 55/61
+  anchors; mini reaches 10/20 and 53/61. Under user calibration, full and Luna are 20/20
+  acceptable while mini is 18/20 because it retains two corrections. Luna leads the hosted
+  comparison at 649 ms median total and $0.00112 paid-equivalent for the 20 requests. This makes
+  Luna a personal-v3 candidate, not a claim about corpora that were deliberately not rerun.
+- The default cross-model personal-v3 ranking is Luna/GPT-5.4 at 20/20 acceptable, mini at 18/20,
+  clean-base Sotto B at 15/20, and public-HF/A at 14/20. Strict exactness remains secondary
+  diagnostic evidence. The generic relaxed policy does not permit retained corrections, changed
+  facts/units/tense, answered content, or unrealized explicit formatting directives.
+- The user-authorized Pixel integration comparison should use hosted model slug `gpt-5.6-luna`
+  and local B epoch 2. The latter remains outside Git on host `dante` at
+  `/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542` (weight
+  SHA-256 `5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6`). This is an
+  integration-test candidate, not a deployment-qualified checkpoint.
+
 ## Toolchain
 
 - Android Studio Quail 3 / 2026.1.3 Patch 1

@@ -37,6 +37,14 @@ validation files produced by `prepare_direct_source_validation.py` have the same
 so pass their outside-Git JSONL path to `--cases` unchanged. The authoring-side runner rejects case
 paths containing `blind` and records marked with a blind split; do not use it for blind-v2.
 
+Hosted GPT-5.4-family endpoints require `--output-token-field max_completion_tokens`. Keep the
+default `max_tokens` for local OpenAI-compatible servers that implement that field.
+For quota-bounded hosted runs, `--token-progress-seconds N` prints cumulative API-reported input
+and output usage across flushed shards. Use `--token-offset-input` and `--token-offset-output` for
+earlier same-pool traffic, then set `--max-campaign-tokens` to terminate all clients and preserve
+their resumable shard prefixes before the account ceiling. `--output-cap-policy publisher` matches
+the checkpoint source-dev allowance; the default `android` keeps the production 16–96-token cap.
+
 `--resume` is safe on the first launch and on a retry. It validates every completed row against the
 case-file hash, evaluation fingerprint, source index, shard assignment, and completed-prefix order
 before appending. It refuses incomplete JSON, config drift, duplicates, and reassignment rather

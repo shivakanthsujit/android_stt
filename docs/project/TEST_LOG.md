@@ -1,5 +1,33 @@
 # Test log
 
+## 2026-08-18 — Relaxed personal-v3 cross-model audit
+
+- Verified all eight local result JSONLs against their recorded SHA-256 values and confirmed 20
+  unique cases per file. Reused raw outputs only; no local or hosted inference was launched.
+- Reviewed the public Hugging Face Sotto SFT, A1–A4, B1–B3, GPT-5.4-mini, GPT-5.4, and GPT-5.6
+  Luna under personal cleanup acceptance policy v1. Relaxed accepted counts are 14 for public,
+  14 for every A epoch, 15 for every B epoch, 18 for mini, and 20 for full/Luna.
+- Verified the relaxed failure sets: public `002/011/014/017/019/020`; A
+  `011/013/014/016/019/020`; B `011/014/017/019/020`; mini `002/011`; full/Luna none.
+- Historical strict scores and raw artifacts remain unchanged. Complete policy, comparison,
+  provenance, and result hashes are in
+  `docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md`.
+
+## 2026-08-18 — Hosted GPT personal-v3 screen
+
+- Focused hosted runner/sharding tests passed 17/17 before transmission.
+- Explicitly authorized personal-v3 run completed 60/60 first-attempt requests across
+  GPT-5.4-mini, GPT-5.4, and GPT-5.6 Luna; every response was non-empty, finished with `stop`, and
+  stayed below the Android-equivalent output cap. The HF/publisher source-dev corpus was not run.
+- Raw strict results were 10/20, 12/20, and 12/20; literal anchors were 53/61, 55/61, and 55/61.
+  Median total latency was 827, 860, and 649 ms respectively.
+- Every non-exact and safety-sensitive output was reviewed. Under the user's explicit acceptance
+  of collapsed duplicated emphasis, full and Luna are 20/20 user-acceptable. Mini is 18/20 because
+  it retains superseded corrections in cases 002 and 011. No model answered either dictated
+  question in the suite.
+- Corpus/result SHA-256 values and the complete sanitized decision are recorded in
+  `docs/evaluation/results/2026-08-18-gpt54-api-screen.md`.
+
 ## 2026-08-18 — Sotto LFM personal-v3 checkpoint matrix
 
 - Integrated remote commits `b0ed579` and `cd77e76` through local merge `ab85a54`, preserving the
@@ -367,3 +395,29 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   `overwrite_output_dir` argument. Both failed before optimizer step 1. The earlier tmux launch
   `20260817T121303Z` was externally terminated during tokenizer download and retains a stale
   `running` status; it produced no metric or checkpoint.
+
+## 2026-08-18 — Hosted GPT-5.4 evaluation runner and evidence
+
+- `python3 -m unittest scripts.tests.test_run_cleanup_openai scripts.tests.test_cleanup_openai_sharding scripts.tests.test_score_sotto_lfm_source_dev`
+  passed 19/19.
+- `git diff --check` passed.
+- The sharded runner validated and merged all 8,519 mini rows and all 1,500 GPT-5.4 sample rows.
+  Resume validation preserved the four GPT-5.4 shard prefixes across an intentional cancellation;
+  live token monitoring then resumed without duplicate case IDs.
+- GPT-5.4's seven production-cap hits were isolated and merged after publisher-cap repair. Final
+  corrected sample has 1,500 unique case IDs, zero cap hits, and score SHA-256
+  `8a52cbf4df8513c5bb05c8f33208de6cb13451571172fa0815157b28dbbf60c8`.
+- The token monitor reported final GPT-5.4 campaign usage of 178,988 input and 33,031 output tokens
+  (212,019 total), below the enforced 220k cutoff. No hosted runner remained after validation.
+
+## 2026-08-18 — Personal-v3 hosted/local comparison publication gate
+
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v`
+  passed 159/159 after the Luna extension, relaxed cross-model review, and Pixel integration
+  handoff documentation.
+- `git diff --check` passed.
+- Verified that B epoch 2's `checkpoint-542/model.safetensors` exists on `dante` under the recorded
+  run path and is 708,984,464 bytes. Its SHA-256 remains
+  `5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6` from the checkpoint matrix.
+- No checkpoint, raw personal-v3 API result, credential file, or personal transcript is included
+  in the Git publication set.

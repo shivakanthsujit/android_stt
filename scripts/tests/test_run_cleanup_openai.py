@@ -91,6 +91,8 @@ class RunnerUnitTest(unittest.TestCase):
         self.assertEqual(18, runner.max_output_tokens("x" * 30))
         self.assertEqual(16, runner.max_output_tokens("🧭" * 3))
         self.assertEqual(96, runner.max_output_tokens("x" * 1_000))
+        self.assertEqual(900, runner.publisher_output_tokens("short source row"))
+        self.assertEqual(900, runner.output_tokens_for_policy("short", "publisher"))
 
     def test_nonstream_run_writes_scorer_compatible_record(self) -> None:
         response = json.dumps(
@@ -156,6 +158,7 @@ class RunnerUnitTest(unittest.TestCase):
             self.assertEqual("candidate-model", request["model"])
             self.assertEqual(0.1, request["temperature"])
             self.assertEqual(23, request["seed"])
+            self.assertEqual(16, request["max_tokens"])
             self.assertFalse(request["stream"])
             self.assertEqual("system", request["messages"][0]["role"])
             self.assertEqual(runner.BASELINE_SYSTEM_PROMPT, request["messages"][0]["content"])
@@ -212,6 +215,21 @@ class RunnerUnitTest(unittest.TestCase):
             self.assertEqual(3, record["completion_tokens"])
             self.assertGreaterEqual(record["timings"]["ttft_ms"], 0)
             self.assertTrue(captured["json"]["stream"])
+
+    def test_openai_output_token_field_uses_max_completion_tokens(self) -> None:
+        payload = runner.build_request_payload(
+            model="gpt-5.4-mini-2026-03-17",
+            prompt_variant="baseline_rules",
+            raw_text="uh keep this",
+            output_tokens=16,
+            stream=True,
+            include_seed=True,
+            temperature=0.1,
+            request_extra={},
+            output_token_field="max_completion_tokens",
+        )
+        self.assertEqual(16, payload["max_completion_tokens"])
+        self.assertNotIn("max_tokens", payload)
 
     def test_limit_finish_reason_falls_back_to_raw(self) -> None:
         case = runner.EvaluationCase(

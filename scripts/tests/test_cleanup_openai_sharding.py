@@ -151,10 +151,16 @@ class LauncherTest(unittest.TestCase):
             prompt_variant="cleanup_instruction_v2",
             temperature=0.0,
             request_extra=root / "extras.json",
+            output_token_field="max_completion_tokens",
+            output_cap_policy="android",
             api_key_env="OPENAI_API_KEY",
             timeout=120.0,
             retries=1,
             retry_delay=0.5,
+            token_progress_seconds=0.0,
+            token_offset_input=0,
+            token_offset_output=0,
+            max_campaign_tokens=None,
             progress_every=100,
             case_id=[],
             resume=True,
@@ -184,6 +190,13 @@ class LauncherTest(unittest.TestCase):
             self.assertTrue(
                 all(
                     command[command.index("--progress-every") + 1] == "100"
+                    for command in commands
+                )
+            )
+            self.assertTrue(
+                all(
+                    command[command.index("--output-token-field") + 1]
+                    == "max_completion_tokens"
                     for command in commands
                 )
             )

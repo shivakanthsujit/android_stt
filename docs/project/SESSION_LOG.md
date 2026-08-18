@@ -634,6 +634,27 @@
   outside Git. All four resumable checkpoints remain retained for comparison with the predeclared
   clean-base Experiment B; artifact storage still has more than 9 TB free.
 
+## 2026-08-18 — Separate GPT-5.4 hosted-API pilot
+
+- Created `docs/evaluation/GPT54_CLOUD_API_EVALUATION.md` as an isolated optional cloud campaign;
+  it is explicitly not part of the local-LLM training plan. Recorded the user's authorization to
+  send both committed evaluation corpora while retaining evaluation-only and blind-v2 boundaries.
+- The first heldout pilot attempt was blocked locally before transmission. Switched the pilot to
+  four older seed cases. The first API compatibility request returned HTTP 400 without generation
+  because GPT-5.4 rejects `max_tokens` and requires `max_completion_tokens`.
+- Added a fingerprinted `--output-token-field` runner option, kept `max_tokens` as the local-server
+  default, protected both cap fields from request-extra overrides, and added focused unit coverage.
+  All 12 runner tests pass.
+- Completed four successful sequential requests on each dated model with the frozen baseline
+  prompt, streaming, standard/default service tier, `reasoning_effort=none`, temperature 0.1, seed
+  23, raw scoring, and Android-equivalent caps. GPT-5.4-mini used 418 input/64 output tokens and
+  scored 2/4 raw exact; GPT-5.4 used 418/57 and scored 3/4.
+- Median TTFT/total was 932/1,156 ms for mini and 1,209/1,336 ms for full. Mini retained a
+  superseded correction; full title-cased a protected literal. The sample is not a selection
+  result. Preserved hashes and the conservative no-cache paid-cost estimate in
+  `docs/evaluation/results/2026-08-18-gpt54-api-pilot.md`; raw JSONL remains under ignored `build/`.
+- Paused before the complete 138-request evaluation so the user can confirm the Usage dashboard
+  attributes the 957 successful tokens to the data-sharing incentive tier without a Cost increase.
 - Downloaded pinned `LiquidAI/LFM2.5-350M-Base` revision
   `9960764e30892e01f29a6dc23df2533fcd8bd5ae` into the machine-wide Hugging Face cache and pinned
   its weight SHA-256 as `af70818c41a5cdb3f9587f91de12ff5f7847b8b0a2ba734534205ccea1d98aba`.
@@ -690,3 +711,71 @@
 - Raw/provenance JSONL remains outside Git under
   `/data/rise/android_stt/evaluations/personal-v3-20260818/`; sanitized evidence is
   `docs/evaluation/results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`.
+
+## 2026-08-18 — GPT-5.4 hosted API full and publisher-dev screens
+
+- After the user confirmed the pilot calls were complimentary, completed sequential raw-output
+  runs on all 24 seed and 45 heldout-v1 cases for both dated hosted models. Mini reached 27/69
+  exact and 155/163 anchors; GPT-5.4 reached 51/69 and 150/163. Mini retained superseded content in
+  eight correction cases. GPT-5.4 answered dictated instruction text with `Approved`; both fail
+  the raw deployment gate.
+- Reused the checkpoint harness's public/synthetic 8,519-row source-dev input set without running
+  any checkpoint inference. Mini completed all rows at 2,358/8,519 exact. GPT-5.4 completed a
+  deterministic 1,500-row source-stratified sample at 511/1,500, versus mini 380, existing A4 848,
+  and existing B1 951 on the identical IDs.
+- Added hosted `max_completion_tokens` forwarding to the sharded launcher, a selectable
+  Android/publisher output-cap policy, live API-reported input/output aggregation, prior-use
+  offsets, and an automatic campaign token cutoff. The focused runner/sharding suite passes 17/17.
+- Mini's first source pass used the Android cap and retained 52 documented cap hits per the user's
+  direction to leave the completed run alone. GPT-5.4's seven cap-hit rows alone were rerun with
+  the checkpoint evaluator's 900-token allowance; they produced zero exact matches and no final
+  cap hits. No mini repair API request was sent.
+- Mini used an estimated 1,131,170 campaign tokens after reconstructing one missing usage trailer.
+  GPT-5.4 live accounting stopped at 212,019, below the 220k automatic cutoff and 250k pool. Total
+  hosted traffic was 1,343,189 tokens, corresponding to $2.4309 at captured standard rates if
+  billed. Raw API artifacts remain ignored under `build/`; the sanitized decision, costs, timings,
+  and hashes are in `docs/evaluation/results/2026-08-18-gpt54-api-screen.md`.
+
+## 2026-08-18 — Hosted GPT personal-v3 rerun with GPT-5.6 Luna
+
+- Used the user's explicit authorization to send only the 20-case evaluation-only personal-v3
+  corpus to the OpenAI API. Loaded the credential from local `free_usage.md` without printing it;
+  added that filename to `.gitignore` and restricted it to owner-only mode `0600`. No
+  HF/publisher source-dev, retired-69, or blind-v2 request was made.
+- Ran dated GPT-5.4-mini, dated GPT-5.4, and `gpt-5.6-luna` sequentially with the frozen
+  `baseline_rules` prompt, streaming, standard/default service tier, `reasoning_effort=none`,
+  temperature 0.1, seed 23, raw scoring, and Android-equivalent completion caps. All 60 requests
+  completed on their first attempt with `stop`, non-empty output, and no cap hit.
+- Mini/full/Luna reached 10/12/12 strict exact of 20 and 53/55/55 literal anchors of 61. The user
+  explicitly accepts collapsed `really really` emphasis; under that calibration full and Luna are
+  20/20 acceptable, while mini is 18/20 because cases 002 and 011 retain superseded content. Luna
+  had the best median total latency at 649 ms versus 827/860 ms.
+- The extension used 7,164 input and 1,631 output tokens. Captured standard paid equivalent is
+  $0.01951 total. Raw results remain ignored under `build/evaluation-results/gpt-personal-v3/`;
+  the sanitized report and exact result hashes are in the hosted API screen.
+
+## 2026-08-18 — Default relaxed calibration and cross-model comparison
+
+- Made version 1 of `docs/evaluation/PERSONAL_CLEANUP_ACCEPTANCE.md` the default product-ranking
+  policy. User-calibrated semantic acceptability now leads result tables; strict exactness and
+  literal anchors remain immutable secondary diagnostics. The policy accepts harmless surface
+  equivalence and collapsed duplicated intensifiers but retains hard failures for corrections,
+  facts/units/tense, negation/uncertainty, answered content, invention/deletion, and unfulfilled
+  explicit formatting directives.
+- Re-reviewed all 160 existing local raw outputs covering the public Hugging Face Sotto SFT, A
+  epochs 1–4, and B epochs 1–3. No local inference was rerun. Public and every A epoch reach 14/20
+  acceptable; all B epochs reach 15/20. B fixes public's case-002 time correction but still fails
+  cases 011, 014, 017, 019, and 020. A additionally changes past tense and euros to dollars.
+- Compared those results with the 60 hosted outputs. GPT-5.4 and Luna reach 20/20 acceptable, mini
+  18/20, B 15/20, and public-HF/A 14/20. Luna leads the hosted option on latency/cost. The revised
+  local ordering does not authorize checkpoint conversion or replacement because B still fails
+  required behavior and its broader safety evidence remains disqualifying.
+- Preserved the immutable v3 case file and historical strict results. Added the policy and complete
+  case-level failure matrix in
+  `docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md`; no evaluation
+  text or outputs were used for training or repair generation.
+- Corrected the formatting submetric to require both realizing and consuming each directive:
+  public and B are 0/3, A is 1/3, and all hosted models are 3/3. Recorded the user-authorized Pixel
+  integration handoff for Luna plus local B epoch 2. The local checkpoint stays on `dante` at
+  `/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`; no weights
+  are included in Git.

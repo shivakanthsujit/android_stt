@@ -53,6 +53,13 @@ Implemented:
   and four 3–5 sentence latency cases; phone-number and technical synthetic cases are excluded
 - command-line build, install, log, and toolchain-check scripts
 
+The current experimental cleanup comparison candidates are hosted `gpt-5.6-luna` and local Sotto
+B epoch 2. The local checkpoint is stored outside Git on `dante` at
+`/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`; copy it from
+that host for Pixel integration. See the
+[personal-v3 relaxed cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md)
+for the quality result and safety limitations.
+
 Not implemented yet:
 
 - a cleanup model that has passed the fixed quality/safety bar
@@ -321,6 +328,18 @@ quality gate is unchanged: raw model output still must pass semantic safety befo
 ship. The active correction-repair experiment runs on the separate training machine. This Mac is
 used only for data tooling, model conversion, inference, and evaluation; no training job is run
 here.
+
+The optional hosted comparison now also covers the active 20-case personal-v3 direct-text suite.
+GPT-5.4 and GPT-5.6 Luna each reached 12/20 strict exact and 55/61 literal anchors; mini reached
+10/20 and 53/61. Under the user's product calibration, full GPT-5.4 and Luna are both 20/20
+acceptable, while mini is 18/20 because it retains two superseded corrections. Luna is the leading
+hosted result at 649 ms median total versus 860 ms for GPT-5.4, with much lower token cost. The best
+local family is clean-base Sotto B at 15/20 acceptable; the public Hugging Face Sotto SFT and every
+public-refinement A epoch reach 14/20. Only this project-authored personal suite was rerun; the
+HF/publisher source-dev evaluation was not. The default product metric is now semantic
+acceptability, with strict exactness retained as secondary evidence. See the
+[cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md)
+and [acceptance policy](docs/evaluation/PERSONAL_CLEANUP_ACCEPTANCE.md).
 
 ## File-fed STT probe status
 

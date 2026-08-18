@@ -1,7 +1,7 @@
 # Sotto LFM personal-v3 checkpoint matrix
 
 Date: 2026-08-18
-Decision: public start is the strongest checkpoint on personal v3; no checkpoint qualifies for deployment
+Decision: B is the strongest local family under the default relaxed calibration; no checkpoint qualifies for deployment
 
 ## Scope and provenance
 
@@ -38,11 +38,36 @@ be semantically safe while failing the strict target and anchor checks.
 | B epoch 2 | `5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6` | `758a21a5656fbddec3e193b0cd68d680f9a606fc31a84a6a42ad29f1d35045ed` | **8/20** | **50/61** | **12/20** | 2 | 287 / 999 / 1,116 ms |
 | B epoch 3 | `7e817690331e4d8f5e067ff8df1e499de1013567f70c8dbb976ce52820db6ffb` | `20a9577350f0d34b98197f96b4989f644740fb27a4edb93596cc0ebffe201828` | 8/20 | 47/61 | 11/20 | 2 | 237 / 1,119 / 1,234 ms |
 
+### Default relaxed product calibration
+
+Strict exactness above remains immutable diagnostic evidence. Product ranking now uses version 1
+of `docs/evaluation/PERSONAL_CLEANUP_ACCEPTANCE.md`: harmless surface equivalence and collapsed
+duplicated emphasis are acceptable, while retained corrections, changed values/units/tense, and
+unrealized formatting directives remain failures.
+
+| Checkpoint family | Relaxed acceptable | Correction success | Formatting success | Relaxed failure cases |
+|---|---:|---:|---:|---|
+| Public Hugging Face SFT | 14/20 | 0/3 | 0/3 | 002, 011, 014, 017, 019, 020 |
+| A epochs 1–4 | 14/20 each | 1/3 | 1/3 | 011, 013, 014, 016, 019, 020 |
+| B epochs 1–3 | **15/20 each** | 1/3 | 0/3 | 011, 014, 017, 019, 020 |
+
+This reverses the strict-only local ordering: B fixes the public checkpoint's case-002 time
+correction and leads by one relaxed case. B epoch 2 remains the strict/anchor tie-breaker within
+the B family, while B epoch 3 has the lowest single-run latency. None should replace the public
+Android placeholder because all B epochs still fail two corrections and all three explicit
+formatting directives, in addition to their broader previously recorded safety failures.
+
 All checkpoints score 1/4 exact on the long-form subset. Public-start total latency for cases
 015/018/019/020 is 725/447/1,015/790 ms. A epoch 4 is 1,093/746/1,046/1,124 ms; selected campaign
 B epoch 1 is 1,117/456/1,027/1,265 ms; B epoch 2 is 1,116/722/999/803 ms; and source leader B epoch
 3 is 1,119/726/1,025/1,234 ms. These are single sequential A6000 observations, not sustained
 performance measurements.
+
+For the experimental Pixel comparison, the relaxed-metric local candidate is B epoch 2 on
+`dante` at
+`/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`.
+The checkpoint remains outside Git; its `model.safetensors` hash is the B epoch 2 weight hash in
+the results table above. This is an integration-test handoff, not deployment qualification.
 
 ## Raw-output review
 
@@ -70,10 +95,11 @@ tests before the guard can be relied upon for these cases.
 
 ## Conclusion
 
-Personal v3 reverses the apparent ranking from the publisher-source and retired technical suites:
-the public checkpoint beats every fine-tuned epoch by at least three exact cases and three literal
-anchors. B epoch 2 is the strongest fine-tuned model on the revised product workload, while B epoch
-1 remains only the earlier campaign selection under the pre-v3 safety-weighted criteria. Do not
-replace the public Android placeholder with any fine-tuned checkpoint, and do not use v3 failures
-as training examples. A future repair experiment needs independently authored training data and a
-fresh evaluation version for any policy change.
+The public checkpoint remains the strict-exact leader, but the default relaxed product metric puts
+all three B epochs one acceptable case ahead of it. B epoch 2 is the best strict/anchor tie-breaker
+within that local family, while B epoch 1 remains only the earlier campaign selection under the
+pre-v3 safety-weighted criteria. Do not replace the public Android placeholder with any fine-tuned
+checkpoint: the B family's 15/20 still misses required correction and formatting behavior, and its
+broader safety failures remain. Do not use v3 failures as training examples. A future repair
+experiment needs independently authored training data and a fresh evaluation version for any case
+or transformation-policy change.

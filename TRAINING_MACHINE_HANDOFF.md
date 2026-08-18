@@ -75,15 +75,17 @@ model output.
 6. `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`
 7. `docs/evaluation/cleanup_personal_conversation_v3.jsonl`
 8. `docs/evaluation/stt_personal_conversation_tts_cases_v3.jsonl`
-9. `docs/evaluation/results/2026-08-18-personal-v3-long-form-file-fed-integration.md`
-10. `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`
-11. `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
-12. `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
-13. `docs/training/DATASET_SCHEMA_V2.md`
-14. `docs/training/cleanup_training_record_v2.schema.json`
-15. `docs/evaluation/README.md`
-16. `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`
-17. `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`
+9. `docs/evaluation/PERSONAL_CLEANUP_ACCEPTANCE.md`
+10. `docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md`
+11. `docs/evaluation/results/2026-08-18-personal-v3-long-form-file-fed-integration.md`
+12. `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`
+13. `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
+14. `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
+15. `docs/training/DATASET_SCHEMA_V2.md`
+16. `docs/training/cleanup_training_record_v2.schema.json`
+17. `docs/evaluation/README.md`
+18. `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`
+19. `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`
 
 The detailed research plan controls quality gates and category balance. This handoff controls the
 machine workflow and resolves the newly discovered public-data path. If the two conflict, stop and
@@ -125,8 +127,9 @@ Implemented in the current Phase 0 checkpoint:
 - pinned `LFM2.5-350M-Base`, complete format/overfit/longest/resume/saved-inference gates, and
   deletion of test-only heavyweight checkpoints after reload verification; and
 - completed public-refinement and clean-base LFM full-SFT learning curves, evaluation of every
-  epoch checkpoint, and a sanitized A/B selection report. Clean-base epoch 1 is the research
-  selection; no checkpoint passes deployment safety.
+  epoch checkpoint, and a sanitized A/B selection report. Under the default relaxed personal-v3
+  ranking, clean-base epoch 2 is the local Pixel comparison candidate; clean-base epoch 1 remains
+  only the earlier safety-weighted research selection. No checkpoint passes deployment safety.
 
 Not implemented yet:
 
@@ -136,10 +139,19 @@ Not implemented yet:
 - Android conversion/integration for a trained model.
 
 The public start and all saved LFM full-SFT epochs have now been evaluated on fixed personal v3.
-Public start leads, B epoch 2 is the best fine-tuned v3 checkpoint, and no checkpoint qualifies for
-deployment. The session is not authorized to add epochs, feed evaluation references into training,
+Public start remains the strict-exact leader, while the default relaxed semantic calibration puts
+all B epochs at 15/20 acceptable versus 14/20 for public/A. B epoch 2 is the strict/anchor local
+tie-breaker, and no checkpoint qualifies for deployment. The session is not authorized to add
+epochs, feed evaluation references into training,
 publish artifacts, improvise an undocumented GRPO stage, tune guardrails against v3 and call the
-rescore fresh, or integrate a fine-tuned model into Android before qualification.
+rescore fresh, or treat a fine-tuned model as deployment-qualified. The user has separately
+authorized an experimental Pixel integration comparison.
+
+For that integration test, B epoch 2 remains on host `dante` at
+`/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`. Its
+`model.safetensors` SHA-256 is
+`5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6`. Do not commit the
+checkpoint; copy it directly from `dante`.
 
 ## Phase 0: machine and repository preflight
 

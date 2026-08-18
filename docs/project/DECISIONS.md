@@ -307,6 +307,48 @@ Last updated: 2026-08-18
     corrections and formatting directives. Treat the observed guardrail misses and false rejection
     as defects to repair against new regression coverage, not permission to tune on v3 and rescore
     it as unseen evidence.
+51. Supersede strict exactness as the primary personal-workload ranking metric with version 1 of
+    `docs/evaluation/PERSONAL_CLEANUP_ACCEPTANCE.md`. Report user-calibrated semantic acceptability
+    first and strict exactness/anchors as secondary diagnostics. Accept harmless punctuation,
+    number-surface, conservative wording, and collapsed duplicated-intensifier differences. Still
+    reject retained corrections, changed facts/names/values/units/temporal tense/negation/
+    uncertainty, answered content, invention/deletion, and unrealized explicit formatting
+    directives. Under this default, all B epochs reach 15/20 and lead public-HF/A at 14/20, but no
+    local checkpoint is deployment-qualified or authorized to replace the public placeholder.
+52. Use clean-base B epoch 2 as the local side of the user-authorized experimental Pixel
+    comparison against hosted `gpt-5.6-luna`. This follows the default relaxed personal-v3 ranking
+    and its strict/anchor tie-breaker, without changing the deployment decision. Keep the weights
+    outside Git on `dante` at
+    `/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`; the Pixel
+    build machine may copy them directly from that host.
+
+## Hosted API benchmark
+
+1. Keep the GPT-5.4 hosted-API comparison as a separate optional personal-use campaign. It does
+   not replace, tune, select, or supply examples to the local cleanup-model training plan.
+2. The user authorizes sending both committed cleanup corpora to the OpenAI API for this campaign.
+   Keep them evaluation-only, never send blind-v2, and never reuse API inputs or outputs for local
+   training, demonstrations, retrieval, prompt tuning, or preference pairs.
+3. Use dated GPT-5.4 snapshots, standard/default service tier, streaming, raw-output scoring,
+   `reasoning_effort=none`, and the Android-equivalent output cap through
+   `max_completion_tokens`. Measure sequential product latency before a separately labeled
+   concurrency/throughput profile.
+4. Stage the campaign behind a four-case-per-model seed pilot and user dashboard confirmation of
+   complimentary shared-data usage. A later personal deployment uses a separate non-sharing key;
+   never treat the shared-data test key as the privacy configuration for real transcripts.
+5. Reject both hosted snapshots for automatic cleanup on current raw-output evidence. Mini's
+   systematic correction retention is disqualifying; GPT-5.4's `Approved` response to dictated
+   instruction text is a direct must-not-answer failure. GPT-5.4 is faster than the product's
+   likely one-second cleanup budget and materially better than mini on publisher dev, but latency
+   and low per-call price cannot override safety or its large exactness gap to task-trained local
+   checkpoints. Do not spend more hosted quota on prompt/concurrency tuning from these evaluation
+   cases, and never use blind-v2 in this campaign.
+6. Treat GPT-5.6 Luna as the leading hosted candidate on active personal v3, while keeping its
+   evidence scoped to that suite. Under the default personal cleanup acceptance policy, Luna and
+   GPT-5.4 are both 20/20 user-acceptable; mini is 18/20
+   because it retains two superseded corrections. Prefer Luna on this workload because it is
+   faster and cheaper. Do not imply that Luna passed the retired safety or HF/source-dev corpora,
+   which were deliberately excluded from the rerun.
 
 ## Android/toolchain
 

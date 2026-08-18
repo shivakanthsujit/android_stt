@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import sys
 import time
@@ -272,6 +273,8 @@ def evaluation_fingerprint(
     include_seed: bool,
     url: str,
     request_extra: dict[str, Any],
+    output_token_field: str,
+    output_cap_policy: str,
     raw_scoring: bool,
     selected_case_ids: Sequence[str],
 ) -> str:
@@ -290,6 +293,8 @@ def evaluation_fingerprint(
         "seed": DETERMINISTIC_SEED if include_seed else None,
         "url": url,
         "request_extra": request_extra,
+        "output_token_field": output_token_field,
+        "output_cap_policy": output_cap_policy,
         "raw_scoring": raw_scoring,
         "selected_case_ids": list(selected_case_ids),
     }
@@ -304,6 +309,20 @@ def max_output_tokens(raw_text: str) -> int:
 
     derived = (len(raw_text) + 2) // 3 + OUTPUT_TOKEN_MARGIN
     return max(MIN_OUTPUT_TOKENS, min(MAX_OUTPUT_TOKENS, derived))
+
+
+def publisher_output_tokens(raw_text: str) -> int:
+    """Match the checkpoint evaluator's publisher-dev output allowance."""
+
+    return max(900, math.ceil(len(raw_text.split()) * 1.5))
+
+
+def output_tokens_for_policy(raw_text: str, policy: str) -> int:
+    if policy == "android":
+        return max_output_tokens(raw_text)
+    if policy == "publisher":
+        return publisher_output_tokens(raw_text)
+    raise RunnerError(f"unsupported output cap policy {policy!r}")
 
 
 def system_prompt(prompt_variant: str) -> str:
@@ -403,6 +422,7 @@ def load_request_extra(path: Path | None) -> dict[str, Any]:
         "temperature",
         "seed",
         "max_tokens",
+        "max_completion_tokens",
         "stream",
     }
     collisions = sorted(protected.intersection(value))
@@ -424,6 +444,7 @@ def build_request_payload(
     include_seed: bool,
     temperature: float,
     request_extra: dict[str, Any],
+    output_token_field: str = "max_tokens",
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "model": model,
@@ -432,9 +453,9 @@ def build_request_payload(
             {"role": "user", "content": user_message(prompt_variant, raw_text)},
         ],
         "temperature": temperature,
-        "max_tokens": output_tokens,
         "stream": stream,
     }
+    payload[output_token_field] = output_tokens
     if include_seed:
         payload["seed"] = DETERMINISTIC_SEED
     payload.update(request_extra)
@@ -660,6 +681,8 @@ def make_result_record(
     output_tokens: int,
     temperature: float,
     raw_scoring: bool = False,
+    output_token_field: str = "max_tokens",
+    output_cap_policy: str = "android",
 ) -> dict[str, Any]:
     model_text = chat_result.text.strip()
     normalized_finish_reason = (chat_result.finish_reason or "").casefold()
@@ -676,7 +699,7 @@ def make_result_record(
         and chat_result.completion_tokens > output_tokens
     ):
         raise RunnerError(
-            "endpoint reported more completion tokens than the requested max_tokens "
+            "endpoint reported more completion tokens than the requested output cap "
             f"({chat_result.completion_tokens} > {output_tokens})"
         )
     selected_text, used_fallback, fallback_reason = select_text(
@@ -716,6 +739,8 @@ def make_result_record(
             "attempt_count": chat_result.attempts,
         },
         "max_output_tokens": output_tokens,
+        "output_token_field": output_token_field,
+        "output_cap_policy": output_cap_policy,
         "hit_output_token_limit": hit_output_token_limit,
     }
     if chat_result.prompt_tokens is not None:
@@ -867,6 +892,21 @@ def build_argument_parser() -> argparse.ArgumentParser:
         type=Path,
         help="JSON object merged into each request without overriding fixed fields",
     )
+    parser.add_argument(
+        "--output-token-field",
+        choices=("max_tokens", "max_completion_tokens"),
+        default="max_tokens",
+        help=(
+            "request field used for the fixed output cap; OpenAI GPT-5.4 models "
+            "require max_completion_tokens"
+        ),
+    )
+    parser.add_argument(
+        "--output-cap-policy",
+        choices=("android", "publisher"),
+        default="android",
+        help="Android production bound or checkpoint publisher-dev allowance",
+    )
     shard_group = parser.add_argument_group("deterministic sharding")
     shard_group.add_argument(
         "--shard-count",
@@ -927,6 +967,8 @@ def run(arguments: argparse.Namespace) -> int:
         include_seed=not arguments.omit_seed,
         url=url,
         request_extra=request_extra,
+        output_token_field=arguments.output_token_field,
+        output_cap_policy=arguments.output_cap_policy,
         raw_scoring=arguments.raw_scoring,
         selected_case_ids=[case.case_id for case in cases],
     )
@@ -958,7 +1000,9 @@ def run(arguments: argparse.Namespace) -> int:
             case for case in assigned_cases if case.case_id not in completed
         )
         for index, evaluation_case in enumerate(pending_cases, 1):
-            output_tokens = max_output_tokens(evaluation_case.raw)
+            output_tokens = output_tokens_for_policy(
+                evaluation_case.raw, arguments.output_cap_policy
+            )
             payload = build_request_payload(
                 model=arguments.model,
                 prompt_variant=arguments.prompt_variant,
@@ -968,6 +1012,7 @@ def run(arguments: argparse.Namespace) -> int:
                 include_seed=not arguments.omit_seed,
                 temperature=arguments.temperature,
                 request_extra=request_extra,
+                output_token_field=arguments.output_token_field,
             )
             if arguments.progress_every and (
                 index == 1
@@ -997,6 +1042,8 @@ def run(arguments: argparse.Namespace) -> int:
                 output_tokens=output_tokens,
                 temperature=arguments.temperature,
                 raw_scoring=arguments.raw_scoring,
+                output_token_field=arguments.output_token_field,
+                output_cap_policy=arguments.output_cap_policy,
             )
             record.update(
                 {

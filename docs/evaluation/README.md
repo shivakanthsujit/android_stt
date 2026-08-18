@@ -28,6 +28,11 @@ guardrail false-rejection review are recorded in
 [`results/2026-08-18-personal-v3-long-form-file-fed-integration.md`](results/2026-08-18-personal-v3-long-form-file-fed-integration.md).
 The BF16 public/A/B checkpoint matrix and raw-output audit are recorded in
 [`results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md`](results/2026-08-18-sotto-lfm-personal-v3-checkpoint-matrix.md).
+The default product-ranking policy is user-calibrated semantic acceptability rather than strict
+single-reference equality; its generic rules are in
+[`PERSONAL_CLEANUP_ACCEPTANCE.md`](PERSONAL_CLEANUP_ACCEPTANCE.md). The relaxed comparison across
+all local Sotto variants and the three hosted GPT models is in
+[`results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md`](results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md).
 
 ## Dictation cleanup evaluation
 
@@ -127,3 +132,12 @@ decision are recorded in
 [`results/2026-08-18-pixel-parakeet-stt-probe.md`](results/2026-08-18-pixel-parakeet-stt-probe.md).
 This small read-speech probe is not the official full `test-clean` score and does not replace the
 planned dictation/streaming qualification.
+
+## Optional hosted comparison
+
+The optional hosted GPT comparison is intentionally separate from local-model training. Its
+authorization, privacy boundary, staged quota check, fixed API profile, and latency/throughput plan
+are in [`GPT54_CLOUD_API_EVALUATION.md`](GPT54_CLOUD_API_EVALUATION.md).
+The completed 69-case safety screen, historical publisher source-dev comparison, and active
+personal-v3 screen of GPT-5.4-mini, GPT-5.4, and GPT-5.6 Luna are recorded in
+[`results/2026-08-18-gpt54-api-screen.md`](results/2026-08-18-gpt54-api-screen.md).
