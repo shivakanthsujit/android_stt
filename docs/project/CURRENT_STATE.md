@@ -26,6 +26,9 @@ Last updated: 2026-08-18
 - Debug-only, microphone-free STT benchmark Activity that accepts checksum-verified 16 kHz PCM16
   WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
   native heap, and thermal status.
+- Debug-only joined benchmark Activity that accepts a generated corpus or one host-canonicalized
+  WAV/MP3, loads Parakeet and Sotto once, never opens the microphone, and records raw STT, exact
+  model input/output, guarded output, fallback reason, and per-stage/joined latency.
 - Mac-local, locked Qwen3-TTS/MLX-Audio fixture pipeline that converts literal text or bounded
   regression suites into resumable, hash-addressed 24 kHz masters and Pixel-compatible 16 kHz
   mono PCM16 WAV corpora without putting model weights or generated audio in Git.
@@ -34,8 +37,8 @@ Last updated: 2026-08-18
   Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined debug APK; current verified APK is 88,044,124 bytes with SHA-256
-  `a00353b6b1975f6a016878fdd694f33e9668eb25f8a3eaed2a67938b55239865`.
+- ARM64-only joined debug APK; current verified APK is 88,044,472 bytes with SHA-256
+  `737c6eecd425df89ec2564d1eb7ce818675f2f308300d39921d16a1062a50ab5`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -50,14 +53,20 @@ Last updated: 2026-08-18
   to a 229,310,304-byte Q4_K_M GGUF. The native Sotto prompt/parser and decoder settings are fixed.
 - Joined Parakeet → Sotto execution after every non-empty final transcript. The UI preserves raw
   STT, complete raw model output, guarded output, STT tail, cleanup timing, and end-to-end tail.
-- All 20 project-authored Qwen3-TTS dictation stress fixtures have now run acoustically from the
-  MacBook Air speakers through the physical Pixel microphone and joined Activity. Every case
-  completed and released the microphone; the synthetic run remains regression evidence only.
+- The active synthetic product regression is now the 20-case personal-conversation v2 suite:
+  messages, journal entries, lists, ordinary names/numbers, uncertainty, repetition, explicit
+  formatting, and natural corrections. The previous technical v1 cases and acoustic report are
+  historical; git/URL/checksum/CLI/path/TLS/version stress is excluded from the active workload.
 - A deterministic pre-model pass removes only standalone `um`, `uh`, and `erm`. Result metadata and
   cleanup JSON preserve the original transcript, exact model input, removed-token list, and whether
   Sotto ran; the UI exposes the model input and removal count. Ambiguous discourse words,
   uncertainty markers, acronyms, likely names, quotes, paths, identifiers, hyphenated words, and
   paragraph breaks are excluded from removal.
+- Android and host guardrails no longer protect lexical surfaces more strictly than meaning where
+  deterministic equivalence exists. They accept bounded removal of sentence-initial discourse,
+  explicit `sorry`/`actually make that` corrections, equivalent word→digit/time rendering, and
+  consumed list/paragraph directives; changed names, values, negation, uncertainty, unsupported
+  additions, and answered content still fail closed.
 - LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` were exercised on-device; their raw static-corpus
   results and summaries are preserved under `docs/evaluation/`. All three are cleanup no-go results.
 - A deterministic baseline plus Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B, and Gemma 1B
@@ -82,11 +91,17 @@ Last updated: 2026-08-18
   Stop-to-STT final; Sotto total 456 ms; 2,029 ms Stop-to-cleanup. Sotto deleted protected negation,
   and the guardrail correctly returned the raw STT text. This is useful integration evidence and a
   direct reminder that the placeholder cleanup model remains unqualified.
-- Twenty-case acoustic synthetic run: 4/20 strict and 11/20 normalized STT exact; 934 ms median
+- Historical technical-v1 acoustic synthetic run under the superseded guardrail: 4/20 strict and
+  11/20 normalized STT exact; 934 ms median
   Stop-to-STT final; 565 ms median cleanup total; 1,466 ms median Stop-to-cleanup. Sotto fell back
   on 15/20 cases. Case 014 changed a dictated technical command and passed the guardrail; case 011
   correctly resolved a beta-to-canary correction but was rejected by the guardrail. The 35-second
   long case completed at 3,350 ms STT tail and 5,484 ms end to end. Thermal status remained 0.
+- Personal-v2 direct-file joined run: 20/20 completed; Parakeet reached 6/20 strict and 16/20
+  normalized exact against spoken references. Public Sotto/guarded output reached 8/20 strict and
+  10/20 normalized exact against intended cleanup with three fallbacks, all on retained explicit
+  corrections. Final timing-run medians were 499 ms STT, 637 ms cleanup, and 1,135 ms joined. This
+  fast regression does not test microphone acoustics or lifecycle.
 - Pixel `stay_on_while_plugged_in` was restored to its original `0`; airplane mode is disabled.
 - The cleanup harness and all three Liquid evaluations are committed in `8dce7ab`.
 

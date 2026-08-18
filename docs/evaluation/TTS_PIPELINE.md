@@ -1,7 +1,8 @@
 # Mac-local TTS evaluation pipeline
 
 This pipeline turns literal text into reproducible local WAV fixtures for the file-fed Pixel STT
-benchmark. It uses Qwen3-TTS 1.7B CustomVoice 8-bit through MLX-Audio on Apple Silicon, retains
+and joined STT→cleanup benchmarks. It uses Qwen3-TTS 1.7B CustomVoice 8-bit through MLX-Audio on
+Apple Silicon, retains
 the model's native 24 kHz master, and derives a 16 kHz mono signed-PCM16 WAV accepted by the
 Android harness.
 
@@ -53,10 +54,12 @@ TTS_OFFLINE=1 ./scripts/generate-tts-audio.sh \
   --output .cache/stt-eval/offline-cache-check
 ```
 
-## Cleanup regression and supplemental dictation corpus
+## Active personal-conversation corpus
 
-The default batch contains the 45-case `cleanup_cases_heldout_v1.jsonl` suite plus 20 newly
-authored dictation stress cases:
+The default batch is the 20-case
+`docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl` suite. It reflects the intended
+personal-phone workload: ordinary messages, journal entries, grocery/household lists, common
+names, times, phone numbers, uncertainty, intentional repetition, and natural corrections:
 
 ```bash
 ./scripts/prepare-cleanup-tts-eval.sh
@@ -78,33 +81,46 @@ Other bounded suites are available without allowing arbitrary evaluation paths:
   --output .cache/stt-eval/cleanup-all-regressions-qwen3-ryan
 ```
 
-Both committed cleanup corpora are retired regression diagnostics, not untouched blind tests.
+Both committed cleanup corpora available through the non-default options are retired regression
+diagnostics, not untouched blind tests.
 The generator projects only `id`, `spoken`, and `categories` into its generation plan. It never
 passes `raw`, `expected`, `must_preserve`, prompts, captured model results, VoiceInk material, or
 blind-v2 into the TTS backend. Android's `reference` is the human-readable `spoken` surface.
 
-The 20 project-authored cases cover names and Unicode, times/dates/currency/phone numbers,
-correction chains, uncertainty and negation, acronyms and letter-number identifiers, URLs and
-paths, spoken punctuation, dictated questions/commands, intentional repetition, homophones,
-numbered-list formatting, and longer dictation. They are also regression-only—not blind evidence
-or training data.
+The active 20 cases intentionally exclude git commands, URLs, checksums, CLI flags, filesystem
+paths, TLS, version strings, and similar developer stress text. The superseded v1 technical source
+was removed from the active corpus after product calibration showed that it did not represent the
+personal mobile workload. Historical reports remain historical evidence only.
 
-## Pixel file-fed run
+The `expected` field is used only by the host result scorer after inference. It is never included
+in the TTS generation plan or supplied to the speech generator, Parakeet, or Sotto. This suite is
+evaluation-only: do not use its spoken text, expected cleanup, generated audio, or captured model
+outputs for training, prompt demonstrations, retrieval, or preference pairs.
 
-The generated manifest is already compatible with the existing debug benchmark. With the Pixel
-attached, pass the corpus directory directly:
+## Fast joined Pixel run
+
+With both integration models staged and the Pixel attached, pass the generated directory to the
+debug-only joined runner:
 
 ```bash
-./scripts/run-stt-eval.sh \
-  .cache/stt-eval/cleanup-heldout-v1-plus-dictation-tts-v1-qwen3-ryan
+./scripts/run-joined-file-eval.sh \
+  .cache/stt-eval/personal-conversation-tts-v2-qwen3-ryan
 ```
 
-Set `STT_EVAL_ENGINE`, `STT_EVAL_MODEL`, and `STT_EVAL_MODEL_VARIANT` exactly as documented in
-`STT_BENCHMARK.md` to use Parakeet. Unknown manifest fields are ignored by the current Android
-reader; they retain TTS provenance, native hashes, stable seeds, signal statistics, and categories
-for later staged scoring.
+This runner never opens the microphone. It loads the staged Parakeet and Sotto artifacts once,
+verifies every WAV hash, executes the complete joined pipeline, pulls raw JSONL results, and
+automatically joins the active suite's intended cleanup targets for scoring. A single WAV or MP3
+can be passed instead; ffmpeg canonicalization happens on the host:
 
-Before treating a clip as acoustic evidence, listen to technical, Unicode, correction, and
-identifier cases for skipped or inserted speech and pronunciation errors. Literal WER also treats
-many semantically equivalent number/symbol renderings as different; add protected-token and
-numeric-equivalence scoring before making a dictation-quality decision.
+```bash
+JOINED_EVAL_REFERENCE="Optional literal spoken reference." \
+  ./scripts/run-joined-file-eval.sh recording.wav
+```
+
+Use `run-stt-eval.sh` when measuring STT alone with repeats, WER, memory, thermal, or Perfetto power
+telemetry. Use the ordinary microphone Activity for capture/lifecycle and real acoustic testing.
+
+Before treating synthetic speech as acoustic evidence, listen for skipped or inserted speech and
+name pronunciation errors. Literal WER also treats many semantically equivalent number/symbol
+renderings as different; the joined target score is a cleanup regression metric, not a final
+dictation-quality or real-speaker claim.

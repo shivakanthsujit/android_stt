@@ -1,5 +1,39 @@
 # Test log
 
+## 2026-08-18 — Personal-v2 file-fed joined regression
+
+- `bash -n scripts/run-joined-file-eval.sh`: passed.
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.tests.test_tts_pipeline scripts.tests.test_score_joined_results -v`:
+  16/16 passed after adding cleanup-target scoring.
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.tests.test_cleanup_guardrails -v`:
+  28/28 passed, including host parity for sentence-initial discourse removal, numeric equivalence,
+  changed-value rejection, repeated-imperative `sorry` correction, formatting directives, and the
+  bounded journal lead-in.
+- `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`:
+  final rerun passed (55 tasks, no lint/build/unit failure).
+- Complete `scripts/tests` discovery: 139/140 passed. The sole failure is the pre-existing macOS
+  `/var` versus `/private/var` temporary-path assertion in
+  `test_safe_target_rejects_archive_escape`; all 28 updated host guardrail parity cases and all new
+  TTS/joined-scorer tests passed. Separate `tests/` discovery passed 10/10.
+- Offline TTS generation completed 20/20 personal v2 clips. Cases SHA-256:
+  `2a8c6e247a47b6ad9a48a78e37c540ab44707cb546f53bef2b421c540a3103ba`; manifest SHA-256:
+  `771d2fff6b1d9bf8c2e9492d483dbe461f07dd7176996ad6f817e9e5f7c62029`.
+- Final Pixel run `20260818T093938Z-joined-file`: 20/20 complete; raw STT strict/normalized exact 6/20 and
+  16/20; raw/guarded cleanup strict/normalized exact 8/20 and 10/20; three fallbacks. Valid medians:
+  499 ms STT, 637 ms cleanup, 1,135 ms joined. Raw result SHA-256:
+  `f25543e4f7447900069ce4d1acf49f20732e6dfc987ef8748b863ea2dad7d1a8`.
+- Tested/installed APK: 88,044,472 bytes, SHA-256
+  `0b594350f9239376a16b9abf508e9f51f64fa92651085d084a164afb6a91b654`.
+- Final documentation-inclusive local build APK: 88,044,472 bytes, SHA-256
+  `737c6eecd425df89ec2564d1eb7ce818675f2f308300d39921d16a1062a50ab5`.
+- Schema repeat `20260818T092847Z-joined-file` reproduced all quality counts and verified JSON-array
+  filler metadata plus explicit nullable fields. Its latency is excluded because the Pixel slept
+  while the Activity was paused; the launcher now wakes/dismisses keyguard before starting.
+- Manual raw-output review: the three fallbacks were genuine retained correction content in cases
+  002, 011, and 020. Accepted Sotto output did not invent a new semantic fact beyond Parakeet's
+  hypothesis, but list/paragraph/false-start cleanup remained incomplete and name errors propagated
+  from STT. Public Sotto remains no-go.
+
 ## 2026-08-18 — Twenty-case acoustic joined-pipeline regression
 
 - Played `dictation-tts-001` through `dictation-tts-020` from the pinned Qwen3-TTS/Ryan fixture

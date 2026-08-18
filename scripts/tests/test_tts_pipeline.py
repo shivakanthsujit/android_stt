@@ -55,11 +55,19 @@ class TtsPipelineTest(unittest.TestCase):
                 MODULE.project_cleanup_cases(path, "fixture", REPO)
 
     def test_additional_suite_is_bounded_and_safe(self) -> None:
-        path = REPO / "docs/evaluation/stt_dictation_tts_cases_v1.jsonl"
+        path = REPO / "docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl"
         cases = MODULE.project_additional_cases(path, REPO)
         self.assertEqual(20, len(cases))
         self.assertEqual(20, len({case.case_id for case in cases}))
         self.assertTrue(all(MODULE.SAFE_ID.fullmatch(case.case_id) for case in cases))
+        self.assertTrue(all(case.case_id.startswith("personal-tts-") for case in cases))
+        combined = "\n".join(case.text.lower() for case in cases)
+        for excluded in (
+            "https", "checksum", "git clone", "tls", "max retries", ".jp",
+            "reports/", "download csv", "version 2", "gradle",
+        ):
+            with self.subTest(excluded=excluded):
+                self.assertNotIn(excluded, combined)
 
     def test_case_seed_is_stable_and_text_sensitive(self) -> None:
         first = MODULE.TtsCase("case-1", "hello", (), "source", "path")

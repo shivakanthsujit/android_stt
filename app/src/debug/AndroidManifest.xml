@@ -5,5 +5,9 @@
             android:name=".stt.benchmark.SttBenchmarkActivity"
             android:exported="true"
             android:label="Local Flow STT benchmark" />
+        <activity
+            android:name=".stt.benchmark.JoinedPipelineBenchmarkActivity"
+            android:exported="true"
+            android:label="Local Flow joined file benchmark" />
     </application>
 </manifest>

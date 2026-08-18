@@ -44,11 +44,13 @@ Implemented:
   staging into app-scoped device storage
 - joined Parakeet → Sotto integration flow with automatic cleanup, raw/guarded output, STT tail,
   cleanup TTFT/total, and Stop-to-cleanup end-to-end tail
+- a debug-only joined file runner that accepts a WAV/MP3 or generated corpus, loads both staged
+  models once, and records Parakeet → Sotto → guardrail output without opening the microphone
 - deterministic pre-model removal of only standalone `um`, `uh`, and `erm`, with protections for
   uppercase acronyms, likely names, quoted text, hyphenated words, paths, and identifiers
-- completed acoustic run of all 20 project-authored Qwen3-TTS dictation stress cases through the
-  Pixel microphone and joined pipeline; lifecycle passed, but protected-name/technical STT errors,
-  15 cleanup fallbacks, and one accepted unsafe technical edit keep the build integration-only
+- an active 20-case personal-conversation voice suite centered on messages, journal entries, lists,
+  ordinary names/numbers, uncertainty, repetition, formatting, and natural self-corrections; the
+  earlier technical synthetic cases are retired from the product-facing regression set
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
@@ -239,8 +241,41 @@ Before Sotto runs, a deterministic pass removes only low-ambiguity standalone `u
 `erm` tokens. It deliberately does not remove `like`, `well`, `you know`, `hmm`, or other terms
 that may carry tone or meaning. Uppercase acronyms, likely title-cased names without filler
 punctuation, quoted text, hyphenated words, paths, identifiers, and paragraph breaks are preserved.
-If Sotto fails a guardrail, the fallback is this visible deterministic model input; the original
-Parakeet transcript remains unchanged above it.
+Sotto may remove a discourse lead-in such as sentence-initial `Well` when the remaining content is
+preserved. The guardrail also accepts explicit self-correction deletion, consumed list/paragraph
+directives, and spoken-number → digit/time formatting only when deterministic numeric equivalence
+proves the value is unchanged. These rules fix earlier false rejections caused by protecting every
+surface token literally. Changed names, numeric values, negation, uncertainty, or other unsupported
+lexical additions still fail closed. If Sotto fails a guardrail, the fallback is the visible
+deterministic model input; the original Parakeet transcript remains unchanged above it.
+
+### Fast file-fed voice demo
+
+For repeatable joined testing, generate the active personal suite and feed its WAV files directly
+to the Pixel. This exercises the same Parakeet, Sotto, and guardrail code as the Activity, but it
+does not open the microphone or wait for real-time speaker playback:
+
+```bash
+TTS_OFFLINE=1 ./scripts/prepare-cleanup-tts-eval.sh --suite personal-v2 --resume
+./scripts/run-joined-file-eval.sh \
+  .cache/stt-eval/personal-conversation-tts-v2-qwen3-ryan
+```
+
+The runner installs the debug APK, verifies both staged model hashes on-device, wakes the Pixel,
+pushes checksum-verified 16 kHz PCM16 audio, writes one JSONL record per case, and scores both STT
+against the spoken reference and cleanup against the intended cleaned target. Generated audio,
+model files, and raw run artifacts stay under ignored `.cache/` paths.
+
+For a quick recording of your own, pass a WAV or MP3 directly. The host converts it to the exact
+PCM format expected by Parakeet; an optional reference enables STT exact scoring:
+
+```bash
+JOINED_EVAL_REFERENCE="The words spoken in the recording." \
+  ./scripts/run-joined-file-eval.sh my-recording.mp3
+```
+
+This is the fastest model-pipeline regression path. It deliberately does not test microphone
+capture, room acoustics, endpointing, or recorder lifecycle; use the ordinary Activity for those.
 
 This flow is for integration testing, not model qualification. Public Sotto scored 42/69 strict
 exact and 59/69 user-acceptable in its frozen screen, with ten relevant failures. Guardrail
@@ -311,7 +346,10 @@ reproduction instructions in [the STT benchmark guide](docs/evaluation/STT_BENCH
 See [the test log](docs/project/TEST_LOG.md) and
 [static result summaries](docs/evaluation/results/) for the durable evidence.
 The full synthetic acoustic integration report is
-[here](docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md).
+[here](docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md) and is now
+historical because its technical examples are outside the intended workload. The active personal
+file-fed report is
+[here](docs/evaluation/results/2026-08-18-personal-conversation-file-fed-integration.md).
 
 ## RTX A6000 vLLM evaluation
 

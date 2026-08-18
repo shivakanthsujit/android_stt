@@ -227,13 +227,14 @@ deterministic cleanup while generative corrections remain disabled.
   run final offline inference after Stop. Record the lack of partial/streaming output explicitly.
 - [x] Add a pinned, Mac-local Qwen3-TTS/MLX-Audio fixture pipeline and generate an ignored,
   Android-compatible 65-clip corpus from heldout-v1's `spoken` inputs plus 20 project-authored
-  dictation stress cases. Preserve native/canonical hashes and keep the suite classified as
-  retired synthetic regression evidence rather than blind or real-speaker qualification.
-- [ ] Define a fixed, repeatable dictation corpus covering conversational speech, protected names,
-  numbers, corrections, technical terms, paths/versions, pauses, commands/questions, and longer
-  utterances. Use the synthetic suite for early plumbing, add human/multi-speaker recordings for
-  qualification, and score protected-token preservation and numeric equivalence separately from
-  WER.
+  dictation stress cases. Preserve native/canonical hashes; that technical v1 set is now historical
+  synthetic evidence rather than the active product workload.
+- [x] Define the fixed 20-case personal-conversation v2 synthetic corpus covering messages,
+  journals, lists, ordinary names/numbers, uncertainty, repetition, explicit formatting,
+  corrections, and longer planning dictation. Exclude git/URL/checksum/CLI/path/TLS/version stress
+  from the active product-facing suite.
+- [ ] Add human/multi-speaker personal dictation recordings for qualification, and score protected
+  names, numeric equivalence, correction success, and formatting separately from literal WER.
 - [ ] Integrate Parakeet Q4_K streaming/end-of-utterance behind `SpeechToTextEngine` without
   weakening the project-owned microphone lifecycle; measure partial responsiveness and
   Stop-to-final latency.
@@ -260,6 +261,14 @@ This remains required before final product selection, but it is not the current 
   the Pixel microphone and review every joined result. The lifecycle passed 20/20, but case 014
   exposed an accepted unsafe technical edit and case 011 exposed a correction-related false
   fallback. Keep this as synthetic regression evidence, not qualification.
+- [x] Add a debug-only WAV/MP3/corpus-fed Parakeet → Sotto runner that never opens the microphone,
+  verifies audio/model hashes, records complete stage output, and scores spoken STT separately from
+  intended cleanup. Run personal v2 on Pixel: 16/20 normalized STT exact, 10/20 normalized cleanup
+  exact, and three genuine correction fallbacks.
+- [x] Reduce guardrail false rejection by accepting only bounded discourse deletion, explicit
+  correction replacement, deterministic identical-value number rendering, and consumed explicit
+  list/paragraph directives. Keep Android and host behavior aligned and retain strict protection
+  for changed facts, names, values, negation, uncertainty, and answered content.
 - [ ] Replace the public Sotto model identity with the best correction-repair checkpoint only after
   its raw output passes the independent quality/safety gates.
 - [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized

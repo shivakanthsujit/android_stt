@@ -228,6 +228,20 @@ Last updated: 2026-08-18
     guardrails to Sotto relative to the deterministic model input, and return that visible input on
     fallback. This mechanical removal is product behavior, not evidence that failed raw model
     output is safe.
+40. Replace the active technical synthetic dictation cases with the 20-case
+    `stt_personal_conversation_tts_cases_v2.jsonl` suite. Product-facing synthetic regression now
+    represents personal messages, journals, lists, ordinary names/numbers, uncertainty,
+    repetition, formatting directives, and natural self-corrections. Git/URL/checksum/CLI/path/TLS
+    and version stress examples remain outside this active workload; their earlier report is
+    historical only. Treat personal v2 and its outputs as evaluation-only and never use them for
+    training or demonstrations. Use direct WAV/MP3 → Parakeet → Sotto on the debug Activity as the
+    primary fast synthetic pipeline regression, while keeping microphone playback as a separate
+    acoustic/lifecycle check. Revise Android and host guardrails away from literal surface-token
+    protection where equivalence is provable: permit bounded sentence-initial discourse deletion,
+    explicit self-correction replacement, identical-value spoken-number rendering, and consumed
+    explicit list/paragraph directives. Continue to fail closed on changed facts, names, numeric
+    values, negation, uncertainty, unsupported additions, and answered content. Guardrail fallback
+    remains containment and cannot qualify raw model output.
 
 ## Android/toolchain
 

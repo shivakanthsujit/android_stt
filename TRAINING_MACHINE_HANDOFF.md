@@ -30,6 +30,35 @@ The RTX A6000 has ample capacity for this pilot, but do not assume CUDA, driver,
 thermal state. Inspect and record the actual machine before selecting package versions or batch
 sizes.
 
+## Product workload calibration
+
+The active product-facing regression workload was recalibrated on 2026-08-18. Local Flow is for
+ordinary personal mobile dictation: messages, journal entries, grocery/household lists, common
+names and numbers, uncertainty, intentional repetition, paragraph/list formatting, and natural
+self-corrections. Developer stress text such as git commands, URLs, checksums, CLI flags,
+filesystem paths, TLS terms, artificial email domains, and version-string exercises is not part of
+the active synthetic product gate.
+
+Read `docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl` and
+`docs/evaluation/results/2026-08-18-personal-conversation-file-fed-integration.md` to understand the
+actual examples and joined failures the user cares about. The public Sotto placeholder reached only
+10/20 normalized intended-cleanup matches and retained all three harder explicit corrections in the
+file-fed run. Prioritize correction deletion, repetition/false-start cleanup, list/paragraph
+directive consumption, and conservative identical-value numeric rendering for product relevance.
+
+This suite is committed evaluation-only material. Never copy its inputs, targets, generated audio,
+captured Parakeet/Sotto results, or phrasings into training rows, prompts, generator demonstrations,
+retrieval context, or preference pairs. Use it only as a retired/product regression after
+checkpoint work that was selected on train/dev. Blind-v2 remains the only future sealed gate.
+
+The guardrail review also found that the old surface-token policy was too conservative: it rejected
+valid deletion of sentence-initial `Well`, bounded `beta, sorry, canary`-style replacement,
+spoken-number → equivalent-digit/time rendering, and consumed list/paragraph directives. Android
+and host guardrails now permit only these deterministically bounded edits while continuing to
+reject changed names, numeric values, negation, uncertainty, novel unsupported content, and answered
+dictation. Guardrail-selected output is still defense in depth and must never qualify failed raw
+model output.
+
 ## Required reading, in order
 
 1. `AGENTS.md`
@@ -38,14 +67,16 @@ sizes.
 4. `docs/project/DECISIONS.md`
 5. `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`
 6. `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`
-7. `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`
-8. `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
-9. `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
-10. `docs/training/DATASET_SCHEMA_V2.md`
-11. `docs/training/cleanup_training_record_v2.schema.json`
-12. `docs/evaluation/README.md`
-13. `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`
-14. `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`
+7. `docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl`
+8. `docs/evaluation/results/2026-08-18-personal-conversation-file-fed-integration.md`
+9. `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`
+10. `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
+11. `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
+12. `docs/training/DATASET_SCHEMA_V2.md`
+13. `docs/training/cleanup_training_record_v2.schema.json`
+14. `docs/evaluation/README.md`
+15. `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`
+16. `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`
 
 The detailed research plan controls quality gates and category balance. This handoff controls the
 machine workflow and resolves the newly discovered public-data path. If the two conflict, stop and
@@ -77,7 +108,9 @@ Implemented in the current Phase 0 checkpoint:
 - completed Qwen3-0.6B Sotto, Disfl-QA, Nyra, and combined source experiments with preserved
   checkpoints/evaluations under `/data` and sanitized reports in Git; and
 - pinned, hash-verified public Sotto LFM2.5-350M BF16 inference plus the complete user-calibrated
-  69-case diagnostic screen.
+  69-case diagnostic screen; and
+- the evaluation-only 20-case personal-conversation v2 suite, fast file-fed Pixel joined runner,
+  and documented 10/20 public-Sotto intended-cleanup result.
 
 Not implemented yet:
 

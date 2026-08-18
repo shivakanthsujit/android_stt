@@ -125,12 +125,12 @@ def project_cleanup_cases(path: Path, source_corpus: str, repo_root: Path) -> li
 
 def project_additional_cases(path: Path, repo_root: Path) -> list[TtsCase]:
     resolved = path.resolve()
-    expected = (repo_root / "docs/evaluation/stt_dictation_tts_cases_v1.jsonl").resolve()
+    expected = (repo_root / "docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl").resolve()
     if resolved != expected:
         raise RuntimeError(f"Additional TTS source is not allowlisted: {path}")
     cases: list[TtsCase] = []
     for index, row in enumerate(read_jsonl(resolved), 1):
-        allowed_keys = {"id", "spoken", "categories", "must_preserve"}
+        allowed_keys = {"id", "spoken", "expected", "categories", "must_preserve"}
         if not set(row).issubset(allowed_keys):
             raise RuntimeError(f"Unexpected field at {path}:{index}")
         case_id = row.get("id")
@@ -141,7 +141,7 @@ def project_additional_cases(path: Path, repo_root: Path) -> list[TtsCase]:
                 case_id=case_id,
                 text=normalize_text(row.get("spoken"), location=f"{path}:{index}"),
                 categories=validate_categories(row.get("categories"), location=f"{path}:{index}"),
-                source_corpus="project-authored-dictation-tts-v1",
+                source_corpus="project-authored-personal-conversation-tts-v2",
                 source_path=str(resolved.relative_to(repo_root.resolve())),
             )
         )

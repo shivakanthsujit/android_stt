@@ -184,6 +184,113 @@ class CleanupGuardrailsTest {
     }
 
     @Test
+    fun permitsRemovableWellLeadInToBeDropped() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Well the second message the second message sounded much nicer",
+                candidate = "The second message sounded much nicer.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsSorryRecipientCorrectionAndRejectsBothRecipients() {
+        val raw = "Send this to the family group, sorry, send it only to Maya after lunch."
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = raw,
+                candidate = "Send this only to Maya after lunch.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+        assertEquals(
+            "Model retained superseded self-correction content",
+            CleanupGuardrails.fallbackReason(
+                rawText = raw,
+                candidate = "Send this to the family group and to Maya after lunch.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsSorryDeploymentCorrection() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Deploy to Beta, sorry, deploy only to canary after lunch.",
+                candidate = "Deploy only to canary after lunch.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsEquivalentSpokenNumberFormatting() {
+        val edits = listOf(
+            "The reservation is for twenty six people." to
+                "The reservation is for 26 people.",
+            "The train leaves before six twenty." to
+                "The train leaves before 6:20.",
+            "Let's meet at six, actually make that six thirty." to
+                "Let's meet at 6:30.",
+            "I spent eighty four euros on dinner." to
+                "I spent 84 euros on dinner.",
+            "My callback number is zero seven zero four one eight six two nine zero three." to
+                "My callback number is 070-4186-2903.",
+            "First pack the charger second lock the door third take the keys" to
+                "1. Pack the charger. 2. Lock the door. 3. Take the keys.",
+        )
+        edits.forEach { (raw, candidate) ->
+            assertNull(
+                raw,
+                CleanupGuardrails.fallbackReason(raw, candidate, hitOutputTokenLimit = false),
+            )
+        }
+    }
+
+    @Test
+    fun rejectsChangedNumericValue() {
+        assertEquals(
+            "Model introduced new lexical content: 25",
+            CleanupGuardrails.fallbackReason(
+                rawText = "The reservation is for twenty six people.",
+                candidate = "The reservation is for 25 people.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsExplicitListAndParagraphFormatting() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Make a bullet list buy groceries call Mom and water the plants",
+                candidate = "- Buy groceries\n- Call Mom\n- Water the plants",
+                hitOutputTokenLimit = false,
+            ),
+        )
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "Today was exhausting. New paragraph. The city felt calm after the rain.",
+                candidate = "Today was exhausting.\n\nThe city felt calm after the rain.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
+    fun permitsBoundedAbandonedJournalLeadIn() {
+        assertNull(
+            CleanupGuardrails.fallbackReason(
+                rawText = "I was going to, I wanted to write that today felt strangely quiet.",
+                candidate = "Today felt strangely quiet.",
+                hitOutputTokenLimit = false,
+            ),
+        )
+    }
+
+    @Test
     fun permitsExplicitNameAndNumberSelfCorrections() {
         assertNull(
             CleanupGuardrails.fallbackReason(

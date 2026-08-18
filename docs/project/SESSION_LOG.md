@@ -512,3 +512,30 @@
 - Added the complete sanitized report at
   `docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md`; the synthetic
   fixtures remain ignored regression evidence and were not used as training data.
+
+## 2026-08-18 — Personal conversation suite and fast joined file runner
+
+- Retired the technical v1 synthetic cases from the active product workload and replaced them with
+  20 evaluation-only personal-conversation examples: messages, journal entries, lists, common
+  names/numbers, uncertainty, repetition, formatting directives, and natural self-corrections.
+  Explicitly excluded git/URL/checksum/CLI/path/TLS/version stress examples after user calibration.
+- Added a debug-only joined Activity and host launcher accepting a corpus or one WAV/MP3. The host
+  canonicalizes single files; the Activity verifies audio and staged model hashes, never opens the
+  microphone, loads Parakeet and Sotto once, and exports complete per-stage JSONL. The scorer keeps
+  spoken-reference STT metrics separate from intended-cleanup target metrics.
+- Generated all 20 personal v2 Qwen3-TTS clips offline. Manifest SHA-256 is
+  `771d2fff6b1d9bf8c2e9492d483dbe461f07dd7176996ad6f817e9e5f7c62029`; generated audio and manifests
+  remain ignored under `.cache/`.
+- Completed the valid-timing Pixel run in roughly one minute: 20/20 completed, 6/20 strict and
+  16/20 normalized STT exact, 8/20 strict and 10/20 normalized intended-cleanup exact, and three
+  guardrail fallbacks. Final STT/cleanup/joined medians were 499/637/1,135 ms. All three fallbacks
+  were retained explicit corrections in raw Sotto output; guardrail fallback did not make them
+  successful cleanup.
+- Recorded and fixed the guardrail design problem exposed by the earlier run. Literal surface-token
+  protection had falsely rejected sentence-initial `Well` deletion, explicit correction
+  replacement, and word→equivalent-digit/time rendering. Android and host parity code now permits
+  those bounded edits plus consumed explicit list/paragraph directives and one exact abandoned
+  journal lead-in, while changed values/names/negation/uncertainty still fail closed.
+- Updated the root README, TTS guide, training-machine handoff, current state, next steps, decisions,
+  test log, and durable evaluation report. Personal v2 and all captured results remain strictly
+  evaluation-only and are forbidden as training or demonstration material.
