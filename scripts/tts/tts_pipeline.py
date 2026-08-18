@@ -125,8 +125,13 @@ def project_cleanup_cases(path: Path, source_corpus: str, repo_root: Path) -> li
 
 def project_additional_cases(path: Path, repo_root: Path) -> list[TtsCase]:
     resolved = path.resolve()
-    expected = (repo_root / "docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl").resolve()
-    if resolved != expected:
+    allowed_sources = {
+        (repo_root / "docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl").resolve():
+            "project-authored-personal-conversation-tts-v2",
+        (repo_root / "docs/evaluation/stt_personal_conversation_tts_cases_v3.jsonl").resolve():
+            "project-authored-personal-conversation-tts-v3",
+    }
+    if resolved not in allowed_sources:
         raise RuntimeError(f"Additional TTS source is not allowlisted: {path}")
     cases: list[TtsCase] = []
     for index, row in enumerate(read_jsonl(resolved), 1):
@@ -141,7 +146,7 @@ def project_additional_cases(path: Path, repo_root: Path) -> list[TtsCase]:
                 case_id=case_id,
                 text=normalize_text(row.get("spoken"), location=f"{path}:{index}"),
                 categories=validate_categories(row.get("categories"), location=f"{path}:{index}"),
-                source_corpus="project-authored-personal-conversation-tts-v2",
+                source_corpus=allowed_sources[resolved],
                 source_path=str(resolved.relative_to(repo_root.resolve())),
             )
         )

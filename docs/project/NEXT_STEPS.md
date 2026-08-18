@@ -229,10 +229,9 @@ deterministic cleanup while generative corrections remain disabled.
   Android-compatible 65-clip corpus from heldout-v1's `spoken` inputs plus 20 project-authored
   dictation stress cases. Preserve native/canonical hashes; that technical v1 set is now historical
   synthetic evidence rather than the active product workload.
-- [x] Define the fixed 20-case personal-conversation v2 synthetic corpus covering messages,
-  journals, lists, ordinary names/numbers, uncertainty, repetition, explicit formatting,
-  corrections, and longer planning dictation. Exclude git/URL/checksum/CLI/path/TLS/version stress
-  from the active product-facing suite.
+- [x] Version the active 20-case personal-conversation suite to v3: remove phone-number dictation,
+  retain messages/journals/lists/names/numbers/uncertainty/repetition/formatting/corrections, and add
+  four 3–5 sentence cases for long-form quality and latency. Exclude technical stress text.
 - [ ] Add human/multi-speaker personal dictation recordings for qualification, and score protected
   names, numeric equivalence, correction success, and formatting separately from literal WER.
 - [ ] Integrate Parakeet Q4_K streaming/end-of-utterance behind `SpeechToTextEngine` without
@@ -263,8 +262,11 @@ This remains required before final product selection, but it is not the current 
   fallback. Keep this as synthetic regression evidence, not qualification.
 - [x] Add a debug-only WAV/MP3/corpus-fed Parakeet → Sotto runner that never opens the microphone,
   verifies audio/model hashes, records complete stage output, and scores spoken STT separately from
-  intended cleanup. Run personal v2 on Pixel: 16/20 normalized STT exact, 10/20 normalized cleanup
-  exact, and three genuine correction fallbacks.
+  intended cleanup. Run personal v3 on Pixel: 15/20 normalized STT exact, 10/20 normalized cleanup
+  exact, three genuine correction fallbacks, and 2.54–4.75 s joined tails on long-form cases.
+- [x] Add the scorer-compatible `cleanup_personal_conversation_v3.jsonl` direct-text corpus and
+  hash-pinned checkpoint options to `infer_sotto_lfm.py`. Require the A6000 to evaluate the public
+  start plus every Experiment A/B epoch on v3, preserve raw output, and report long-form latency.
 - [x] Reduce guardrail false rejection by accepting only bounded discourse deletion, explicit
   correction replacement, deterministic identical-value number rendering, and consumed explicit
   list/paragraph directives. Keep Android and host behavior aligned and retain strict protection

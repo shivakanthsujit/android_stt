@@ -81,11 +81,13 @@ host_result="$host_result_dir/results-$run_id.jsonl"
 host_summary="$host_result_dir/summary-$run_id.json"
 expected_cases="${JOINED_EVAL_EXPECTED_CASES:-}"
 if [[ -z "$expected_cases" && -d "$input_path" ]]; then
-    personal_cases="$repo_dir/docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl"
     manifest_source="$(python3 -c 'import json, pathlib, sys; rows=[json.loads(line) for line in pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").splitlines() if line]; sources={row.get("source_path", "") for row in rows}; print(next(iter(sources)) if len(sources)==1 else "")' "$corpus_dir/manifest.jsonl")"
-    if [[ "$manifest_source" == "docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl" ]]; then
-        expected_cases="$personal_cases"
-    fi
+    case "$manifest_source" in
+        docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl|\
+        docs/evaluation/stt_personal_conversation_tts_cases_v3.jsonl)
+            expected_cases="$repo_dir/$manifest_source"
+            ;;
+    esac
 fi
 if [[ -n "$expected_cases" && ! -f "$expected_cases" ]]; then
     echo "Expected-case file does not exist: $expected_cases" >&2

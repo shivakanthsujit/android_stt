@@ -1,4 +1,5 @@
 import importlib.util
+import sys
 import unittest
 from pathlib import Path
 
@@ -22,6 +23,27 @@ class InferSottoLfmTest(unittest.TestCase):
 
     def test_publisher_output_parser_preserves_plain_text(self) -> None:
         self.assertEqual(MODULE.parse_publisher_output("  Clean text.  "), "Clean text.")
+
+    def test_checkpoint_cli_accepts_spoken_input_with_hash_identity(self) -> None:
+        original = sys.argv
+        try:
+            sys.argv = [
+                "infer_sotto_lfm.py",
+                "--model-dir", "/tmp/model",
+                "--cases", "/tmp/cases.jsonl",
+                "--output", "/tmp/results.jsonl",
+                "--model-id", "local/sotto-repair",
+                "--model-revision", "checkpoint-100",
+                "--expected-model-sha256", "a" * 64,
+                "--input-field", "spoken",
+            ]
+            args = MODULE.parse_args()
+        finally:
+            sys.argv = original
+        self.assertEqual("spoken", args.input_field)
+        self.assertEqual("local/sotto-repair", args.model_id)
+        self.assertEqual("checkpoint-100", args.model_revision)
+        self.assertEqual("a" * 64, args.expected_model_sha256)
 
 
 if __name__ == "__main__":

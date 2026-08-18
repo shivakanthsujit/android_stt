@@ -55,12 +55,12 @@ class TtsPipelineTest(unittest.TestCase):
                 MODULE.project_cleanup_cases(path, "fixture", REPO)
 
     def test_additional_suite_is_bounded_and_safe(self) -> None:
-        path = REPO / "docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl"
+        path = REPO / "docs/evaluation/stt_personal_conversation_tts_cases_v3.jsonl"
         cases = MODULE.project_additional_cases(path, REPO)
         self.assertEqual(20, len(cases))
         self.assertEqual(20, len({case.case_id for case in cases}))
         self.assertTrue(all(MODULE.SAFE_ID.fullmatch(case.case_id) for case in cases))
-        self.assertTrue(all(case.case_id.startswith("personal-tts-") for case in cases))
+        self.assertTrue(all(case.case_id.startswith("personal-v3-") for case in cases))
         combined = "\n".join(case.text.lower() for case in cases)
         for excluded in (
             "https", "checksum", "git clone", "tls", "max retries", ".jp",
@@ -68,6 +68,25 @@ class TtsPipelineTest(unittest.TestCase):
         ):
             with self.subTest(excluded=excluded):
                 self.assertNotIn(excluded, combined)
+        self.assertNotIn("phone", combined)
+        self.assertNotIn("callback number", combined)
+        source_rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+        sentence_counts = [len([part for part in row["spoken"].split(".") if part.strip()]) for row in source_rows]
+        self.assertGreaterEqual(sum(count >= 3 for count in sentence_counts), 4)
+        self.assertLessEqual(max(sentence_counts), 5)
+
+    def test_personal_v3_audio_and_checkpoint_cases_match(self) -> None:
+        audio_path = REPO / "docs/evaluation/stt_personal_conversation_tts_cases_v3.jsonl"
+        checkpoint_path = REPO / "docs/evaluation/cleanup_personal_conversation_v3.jsonl"
+        audio = [json.loads(line) for line in audio_path.read_text().splitlines() if line]
+        checkpoint = [json.loads(line) for line in checkpoint_path.read_text().splitlines() if line]
+        self.assertEqual([row["id"] for row in audio], [row["id"] for row in checkpoint])
+        self.assertEqual(
+            [(row["spoken"], row["expected"]) for row in audio],
+            [(row["spoken"], row["expected"]) for row in checkpoint],
+        )
+        self.assertTrue(all(row["raw"] == row["spoken"] for row in checkpoint))
+        self.assertEqual(4, sum("long_form" in row["categories"] for row in checkpoint))
 
     def test_case_seed_is_stable_and_text_sensitive(self) -> None:
         first = MODULE.TtsCase("case-1", "hello", (), "source", "path")

@@ -48,9 +48,9 @@ Implemented:
   models once, and records Parakeet → Sotto → guardrail output without opening the microphone
 - deterministic pre-model removal of only standalone `um`, `uh`, and `erm`, with protections for
   uppercase acronyms, likely names, quoted text, hyphenated words, paths, and identifiers
-- an active 20-case personal-conversation voice suite centered on messages, journal entries, lists,
-  ordinary names/numbers, uncertainty, repetition, formatting, and natural self-corrections; the
-  earlier technical synthetic cases are retired from the product-facing regression set
+- an active 20-case personal-conversation v3 voice suite centered on messages, journal entries,
+  lists, ordinary names/numbers, uncertainty, repetition, formatting, natural self-corrections,
+  and four 3–5 sentence latency cases; phone-number and technical synthetic cases are excluded
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
@@ -256,9 +256,9 @@ to the Pixel. This exercises the same Parakeet, Sotto, and guardrail code as the
 does not open the microphone or wait for real-time speaker playback:
 
 ```bash
-TTS_OFFLINE=1 ./scripts/prepare-cleanup-tts-eval.sh --suite personal-v2 --resume
+TTS_OFFLINE=1 ./scripts/prepare-cleanup-tts-eval.sh --suite personal-v3 --resume
 ./scripts/run-joined-file-eval.sh \
-  .cache/stt-eval/personal-conversation-tts-v2-qwen3-ryan
+  .cache/stt-eval/personal-conversation-tts-v3-qwen3-ryan
 ```
 
 The runner installs the debug APK, verifies both staged model hashes on-device, wakes the Pixel,
@@ -347,9 +347,9 @@ See [the test log](docs/project/TEST_LOG.md) and
 [static result summaries](docs/evaluation/results/) for the durable evidence.
 The full synthetic acoustic integration report is
 [here](docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md) and is now
-historical because its technical examples are outside the intended workload. The active personal
-file-fed report is
-[here](docs/evaluation/results/2026-08-18-personal-conversation-file-fed-integration.md).
+historical because its technical examples are outside the intended workload. Personal v2 is also
+historical after removing phone-number dictation and adding longer utterances. The active v3 report
+is [here](docs/evaluation/results/2026-08-18-personal-v3-long-form-file-fed-integration.md).
 
 ## RTX A6000 vLLM evaluation
 

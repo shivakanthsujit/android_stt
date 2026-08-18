@@ -242,6 +242,15 @@ Last updated: 2026-08-18
     explicit list/paragraph directives. Continue to fail closed on changed facts, names, numeric
     values, negation, uncertainty, unsupported additions, and answered content. Guardrail fallback
     remains containment and cannot qualify raw model output.
+41. Supersede personal-conversation v2 with v3 without rewriting the recorded v2 evidence. Remove
+    phone-number dictation from the active suite. Add four ordinary 3–5 sentence message/journal
+    cases so cleanup quality and latency are measured at 14.88–25.84 seconds of synthetic speech,
+    while retaining a short/medium mix. Commit a separate scorer-compatible direct-text v3 corpus
+    for the A6000 checkpoint matrix. Evaluate the public start and every saved correction-repair
+    epoch on that fixed corpus with exact checkpoint hashes, raw-output review, and per-long-case
+    latency. V3 is evaluation-only and may inform checkpoint comparison as a declared regression,
+    but its text, targets, outputs, errors, and phrasings must never enter training, prompting,
+    retrieval, preference construction, or repair generation. Create v4 for future product changes.
 
 ## Android/toolchain
 

@@ -539,3 +539,24 @@
 - Updated the root README, TTS guide, training-machine handoff, current state, next steps, decisions,
   test log, and durable evaluation report. Personal v2 and all captured results remain strictly
   evaluation-only and are forbidden as training or demonstration material.
+
+## 2026-08-18 — Personal v3 long-form and checkpoint-evaluation handoff
+
+- Preserved v2 as immutable historical evidence and created personal v3 after the user removed
+  phone-number dictation from scope. V3 retains 16 short/medium personal cases and adds four
+  3–5 sentence journal/message/planning cases for longer cleanup latency.
+- Generated all 20 v3 synthetic clips offline. The manifest SHA-256 is
+  `35f43e00b8e2a6fa7d95ae15de96ed75db5af82a62ca95dcd9ce079a6b69794e`; audio remains ignored.
+- Ran v3 through the file-fed Pixel path: 20/20 complete, 15/20 normalized STT exact, 10/20
+  normalized intended-cleanup exact, and three retained-correction fallbacks. Median
+  STT/cleanup/joined latency was 625/645/1,261 ms.
+- The four long cases contain 14.88–25.84 seconds of audio and completed at 2,543–4,746 ms joined.
+  The longest planning/correction case remained the slowest and fell back because Sotto retained
+  both times.
+- Added `cleanup_personal_conversation_v3.jsonl`, a standard scorer-compatible direct-text corpus,
+  plus hash-pinned checkpoint identity options in `infer_sotto_lfm.py`. Updated the LFM experiment
+  plan and training-machine handoff with commands requiring the public start and every Experiment
+  A/B epoch to run v3 with raw review and per-long-case latency.
+- V3 is evaluation-only. Its examples, expected output, results, errors, and phrasings remain
+  forbidden from training, prompt demonstrations, retrieval, preference data, and repair
+  generation.

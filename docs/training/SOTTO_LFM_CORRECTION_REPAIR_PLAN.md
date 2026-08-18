@@ -21,12 +21,57 @@ relevant failures are:
 Do not train on these cases or their expected outputs. They are retired evaluation-only
 diagnostics. Use them only after training as allowed regression evidence.
 
-The user explicitly does not treat the other 17 strict mismatches as blockers for this use case.
-They cover disposable conversational lead-ins, punctuation and contractions, word-to-digit time
-normalization, inferred list formatting, redundant-but-correct final-version wording, currency or
-non-Latin-name normalization, and technical/code-literal transformations that do not occur in the
-target ordinary-conversation workload. Keep reporting the strict metrics, but do not optimize this
-experiment to those dismissed cases.
+The original 69-case user review remains historical calibration, but it is no longer the complete
+product-facing regression definition. Technical/code-literal transformations remain outside the
+ordinary-conversation workload. Word-to-digit/time normalization, inferred list/paragraph
+formatting, disposable discourse lead-ins, journal false starts, and longer ordinary messages are
+now represented explicitly in personal-conversation v3 below. Keep reporting the immutable 69-case
+metrics while also evaluating every checkpoint on the new fixed personal suite.
+
+## Personal-v3 checkpoint evaluation
+
+The active direct-text checkpoint corpus is
+`docs/evaluation/cleanup_personal_conversation_v3.jsonl`. It contains 20 ordinary personal cases
+and is scorer-compatible without audio or Parakeet. It removes the unwanted phone-number example
+and includes four long-form utterances of three to five sentences for cleanup quality and latency:
+
+- `personal-v3-015`: four-sentence journal entry;
+- `personal-v3-018`: three-sentence movie message with intentional repetition;
+- `personal-v3-019`: five-sentence journal entry with an explicit paragraph break; and
+- `personal-v3-020`: four-sentence planning note with names, uncertainty, and a time correction.
+
+Run the public starting checkpoint and every saved Experiment A/B epoch against this exact file
+with the native prompt and fixed greedy decoder. This is evaluation-only regression material: do
+not put its raw text, expected output, anchors, errors, or phrasings into the training mixture,
+prompt demonstrations, retrieval, preference data, or repair generation. Do not edit v3 after a
+checkpoint result is recorded; create v4 for later product changes.
+
+The evaluator now accepts any single-file BF16 Sotto checkpoint only when its exact
+`model.safetensors` SHA-256 is supplied. Example:
+
+```bash
+checkpoint_dir=/data/rise/android_stt/runs/REPLACE_RUN/checkpoint-REPLACE_STEP
+checkpoint_sha="$(sha256sum "${checkpoint_dir:?}/model.safetensors" | awk '{print $1}')"
+
+python3 scripts/training/infer_sotto_lfm.py \
+  --model-dir "$checkpoint_dir" \
+  --model-id local/sotto-lfm-correction-repair \
+  --model-revision experiment-a-epoch-1 \
+  --expected-model-sha256 "$checkpoint_sha" \
+  --cases docs/evaluation/cleanup_personal_conversation_v3.jsonl \
+  --output /data/rise/android_stt/evaluations/experiment-a-epoch-1-personal-v3.jsonl
+
+python3 scripts/score-cleanup-results.py \
+  --cases docs/evaluation/cleanup_personal_conversation_v3.jsonl \
+  experiment-a-epoch-1=/data/rise/android_stt/evaluations/experiment-a-epoch-1-personal-v3.jsonl
+```
+
+Use a unique output/provenance pair for every checkpoint; the runner refuses overwrite. Record the
+case-file hash, checkpoint hash, repository commit, environment, raw model output, guardrail
+decision, strict/category scores, TTFT, and total latency. Report the four `long_form` cases
+individually as well as overall median/p90/max. Manually review every non-exact raw output and every
+self-correction, uncertainty, negation, name, number, and formatting case. Guardrail-selected text
+remains parallel evidence and cannot change raw semantic-safety status.
 
 ## Reproducibility boundary
 
@@ -78,8 +123,8 @@ This is the first and cheapest test.
    50-step warmup, AdamW beta2 0.95, weight decay 0.01, BF16+TF32, packed 4,096 context, seed 42,
    and the native prompt format.
 4. Evaluate the starting checkpoint and both new epochs through one fixed sequential Transformers
-   backend and decoder before selecting an epoch. Do not compare these counts with the earlier
-   Qwen vLLM profile.
+   backend and decoder on project dev, the retired 69 diagnostics, and personal v3 before selecting
+   an epoch. Do not compare these counts with the earlier Qwen vLLM profile.
 
 ## Experiment B: clean base-model replication
 
@@ -108,8 +153,8 @@ Before either full run:
 ## Selection
 
 Evaluate raw model output before guardrails. The primary comparison is the ten user-relevant
-retired failures plus a separately built non-evaluation correction/repetition dev set. Report
-strict exact and all legacy safety metrics for continuity, but rank checkpoints by:
+retired failures, personal v3, and a separately built non-evaluation correction/repetition dev set.
+Report strict exact and all legacy safety metrics for continuity, but rank checkpoints by:
 
 1. fewer retained superseded corrections;
 2. fewer retained direct repetitions;

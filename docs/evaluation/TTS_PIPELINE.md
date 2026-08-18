@@ -57,9 +57,10 @@ TTS_OFFLINE=1 ./scripts/generate-tts-audio.sh \
 ## Active personal-conversation corpus
 
 The default batch is the 20-case
-`docs/evaluation/stt_personal_conversation_tts_cases_v2.jsonl` suite. It reflects the intended
+`docs/evaluation/stt_personal_conversation_tts_cases_v3.jsonl` suite. It reflects the intended
 personal-phone workload: ordinary messages, journal entries, grocery/household lists, common
-names, times, phone numbers, uncertainty, intentional repetition, and natural corrections:
+names, times, uncertainty, intentional repetition, natural corrections, and four 3–5 sentence
+long-form latency cases. Phone-number dictation is intentionally excluded:
 
 ```bash
 ./scripts/prepare-cleanup-tts-eval.sh
@@ -104,7 +105,7 @@ debug-only joined runner:
 
 ```bash
 ./scripts/run-joined-file-eval.sh \
-  .cache/stt-eval/personal-conversation-tts-v2-qwen3-ryan
+  .cache/stt-eval/personal-conversation-tts-v3-qwen3-ryan
 ```
 
 This runner never opens the microphone. It loads the staged Parakeet and Sotto artifacts once,

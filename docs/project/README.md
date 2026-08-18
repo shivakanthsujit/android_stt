@@ -17,7 +17,7 @@ Start here when resuming Local Flow in a new session.
 | [Sotto recipe reference](../research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md) | Publisher model-card hyperparameters and comparison with the active Qwen LoRA run |
 | [Public Sotto LFM screen](../evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md) | Native-prompt quality screen of the publisher's finished 350M checkpoint |
 | [Joined integration evidence](../evaluation/results/2026-08-18-parakeet-sotto-integration-build.json) | Reproducible model/APK hashes and sanitized Pixel pipeline smoke evidence |
-| [Personal joined regression](../evaluation/results/2026-08-18-personal-conversation-file-fed-integration.md) | Active 20-case workload, file-fed Pixel results, guardrail findings, and reproduction commands |
+| [Personal-v3 joined regression](../evaluation/results/2026-08-18-personal-v3-long-form-file-fed-integration.md) | Active no-phone 20-case workload, long-form latency, file-fed Pixel results, and checkpoint handoff |
 | [Sotto LFM correction-repair plan](../training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md) | Approved next-session continuation and clean-base experiments |
 
 Maintenance rule: update `CURRENT_STATE.md`, `NEXT_STEPS.md`, and `SESSION_LOG.md` at the end of

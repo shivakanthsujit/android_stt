@@ -6,7 +6,7 @@ This directory contains two independent evaluation tracks:
 - speech-to-text quality and Pixel performance, using file-fed public audio kept outside Git.
 
 It also contains a [Mac-local TTS fixture pipeline](TTS_PIPELINE.md) whose default is the active
-20-case personal-conversation suite. The generated Android-compatible WAVs remain ignored.
+20-case personal-conversation v3 suite. The generated Android-compatible WAVs remain ignored.
 Synthetic speech validates plumbing and lexical regressions; it is not a replacement for
 real-speaker dictation qualification.
 
@@ -15,15 +15,17 @@ generated audio, or captured model results as training data or generator example
 
 ## Personal-conversation joined regression
 
-`stt_personal_conversation_tts_cases_v2.jsonl` is the active product-facing synthetic regression
+`stt_personal_conversation_tts_cases_v3.jsonl` is the active product-facing synthetic regression
 set. It covers ordinary messages, journals, lists, common names/numbers, uncertainty, repetition,
-formatting directives, and natural corrections. It intentionally excludes the prior technical
-git/URL/checksum/CLI/path/TLS/version stress workload.
+formatting directives, natural corrections, and four 3–5 sentence latency cases. It intentionally
+excludes phone-number dictation and the prior technical git/URL/checksum/CLI/path/TLS/version
+stress workload. `cleanup_personal_conversation_v3.jsonl` is the scorer-compatible direct-text
+projection used for training-machine checkpoint evaluation; both files are evaluation-only.
 
 Use `scripts/run-joined-file-eval.sh` to feed the suite—or one WAV/MP3—through the same staged
 Parakeet → Sotto → guardrail path without opening the microphone. The first result and the
 guardrail false-rejection review are recorded in
-[`results/2026-08-18-personal-conversation-file-fed-integration.md`](results/2026-08-18-personal-conversation-file-fed-integration.md).
+[`results/2026-08-18-personal-v3-long-form-file-fed-integration.md`](results/2026-08-18-personal-v3-long-form-file-fed-integration.md).
 
 ## Dictation cleanup evaluation
 

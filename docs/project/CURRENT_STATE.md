@@ -37,8 +37,8 @@ Last updated: 2026-08-18
   Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined debug APK; current verified APK is 88,044,472 bytes with SHA-256
-  `737c6eecd425df89ec2564d1eb7ce818675f2f308300d39921d16a1062a50ab5`.
+- ARM64-only joined debug APK; current verified APK is 88,044,777 bytes with SHA-256
+  `22719570e435a379ecbaa2d91e823fb0b5b846f93a761d9021f86524d5b40ae3`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -53,10 +53,10 @@ Last updated: 2026-08-18
   to a 229,310,304-byte Q4_K_M GGUF. The native Sotto prompt/parser and decoder settings are fixed.
 - Joined Parakeet → Sotto execution after every non-empty final transcript. The UI preserves raw
   STT, complete raw model output, guarded output, STT tail, cleanup timing, and end-to-end tail.
-- The active synthetic product regression is now the 20-case personal-conversation v2 suite:
+- The active synthetic product regression is now the 20-case personal-conversation v3 suite:
   messages, journal entries, lists, ordinary names/numbers, uncertainty, repetition, explicit
-  formatting, and natural corrections. The previous technical v1 cases and acoustic report are
-  historical; git/URL/checksum/CLI/path/TLS/version stress is excluded from the active workload.
+  formatting, natural corrections, and four 3–5 sentence latency cases. Phone-number dictation and
+  technical v1 cases are historical/excluded from the active workload.
 - A deterministic pre-model pass removes only standalone `um`, `uh`, and `erm`. Result metadata and
   cleanup JSON preserve the original transcript, exact model input, removed-token list, and whether
   Sotto ran; the UI exposes the model input and removal count. Ambiguous discourse words,
@@ -97,11 +97,12 @@ Last updated: 2026-08-18
   on 15/20 cases. Case 014 changed a dictated technical command and passed the guardrail; case 011
   correctly resolved a beta-to-canary correction but was rejected by the guardrail. The 35-second
   long case completed at 3,350 ms STT tail and 5,484 ms end to end. Thermal status remained 0.
-- Personal-v2 direct-file joined run: 20/20 completed; Parakeet reached 6/20 strict and 16/20
+- Personal-v3 direct-file joined run: 20/20 completed; Parakeet reached 8/20 strict and 15/20
   normalized exact against spoken references. Public Sotto/guarded output reached 8/20 strict and
   10/20 normalized exact against intended cleanup with three fallbacks, all on retained explicit
-  corrections. Final timing-run medians were 499 ms STT, 637 ms cleanup, and 1,135 ms joined. This
-  fast regression does not test microphone acoustics or lifecycle.
+  corrections. Median STT/cleanup/joined times were 625/645/1,261 ms. The four long-form cases ran
+  from 2,543 to 4,746 ms joined for 14.88–25.84 seconds of audio. This fast regression does not test
+  microphone acoustics or lifecycle.
 - Pixel `stay_on_while_plugged_in` was restored to its original `0`; airplane mode is disabled.
 - The cleanup harness and all three Liquid evaluations are committed in `8dce7ab`.
 

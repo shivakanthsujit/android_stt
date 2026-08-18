@@ -1,5 +1,31 @@
 # Test log
 
+## 2026-08-18 — Personal-v3 long-form and checkpoint-eval contract
+
+- TTS/checkpoint case files contain 20 matching IDs. Phone/callback-number text is absent. Four
+  cases contain 3–5 sentences and are labeled `long_form`.
+- `python3 scripts/score-cleanup-results.py --cases docs/evaluation/cleanup_personal_conversation_v3.jsonl --validate-cases-only`:
+  passed with 20 valid cases and expected-aligned preservation anchors.
+- Focused TTS/joined/inference/guardrail tests passed 49/49, including custom checkpoint identity,
+  exact expected weight hash, audio/checkpoint case parity, and input-field CLI parsing.
+- Complete `scripts/tests` discovery passed 141/142. The sole failure remains the pre-existing
+  macOS `/var` versus `/private/var` temporary-path assertion. Final Android
+  `lintDebug testDebugUnitTest assembleDebug` passed all 55 tasks.
+- Offline TTS generation completed 20/20; cases SHA-256
+  `f3939fd89d9512e3599d875d5b8391aa3267dd4556ae21b2889903bfe1026791`, direct checkpoint cases
+  SHA-256 `667715109afdf2e0e907d25c875ec7a8645f518c8ae690924128bc58a7482ac0`, and manifest SHA-256
+  `35f43e00b8e2a6fa7d95ae15de96ed75db5af82a62ca95dcd9ce079a6b69794e`.
+- Pixel run `20260818T095822Z-joined-file`: 20/20 complete; STT strict/normalized exact 8/20 and
+  15/20; raw/guarded cleanup strict/normalized exact 8/20 and 10/20; three fallbacks. Median
+  STT/cleanup/joined latency was 625/645/1,261 ms. Raw result SHA-256
+  `4567490e2d7e00039c95b12fd7db65e30f482c0f16f86cda386b6df5b20b90f9`.
+- Long-form joined latency: v3-015 3,970 ms, v3-018 2,543 ms, v3-019 3,716 ms, and v3-020
+  4,746 ms. All produced complete results; v3-020 used fallback for retained correction content.
+- Tested/installed APK: 88,044,569 bytes, SHA-256
+  `40ab366fbdf24aa15cfcff11a1ea8ce947c7106d7d65d249c4f22ab581e102a8`. Final
+  documentation-inclusive local build: 88,044,777 bytes, SHA-256
+  `22719570e435a379ecbaa2d91e823fb0b5b846f93a761d9021f86524d5b40ae3`.
+
 ## 2026-08-18 — Personal-v2 file-fed joined regression
 
 - `bash -n scripts/run-joined-file-eval.sh`: passed.
