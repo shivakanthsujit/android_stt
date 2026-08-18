@@ -356,3 +356,22 @@
   `docs/evaluation/results/2026-08-18-direct-combined-qwen3-learning-curve.json`. Raw outputs,
   review queues, serving logs/configs, environment reports, weights, optimizer state, and
   checkpoints remain outside Git under the completed run directory.
+
+## 2026-08-18 — Public Sotto LFM2.5-350M checkpoint screen
+
+- Pinned `juanquivilla/sotto-cleanup-lfm25-350m` at revision
+  `6df6f019170b8b55333c047b901886a51750a965`, downloaded its 708,984,464-byte BF16 weight file to
+  the external artifact store, and verified SHA-256
+  `6e96eeffdcdd60f881e13eb2019b339b39d1a74951446f062e7e641a82f6422e`.
+- Added a local-only, blind-refusing native-prompt Transformers runner with pinned model identity,
+  weight verification, publisher decoding/parsing, raw generation, guardrail evidence, latency,
+  and provenance. All 115 script tests pass.
+- Ran all 69 retired diagnostics on the A6000. The model reached 42 exact outputs and preserved
+  147/163 anchors, with zero empty/capped outputs and 19 guardrail flags. It transcribed rather
+  than answered all 17 dictated questions/commands.
+- Applied a practical manual audit that ignores harmless punctuation, contractions, and disposable
+  conversational lead-ins. Six outputs still changed meaning or protected text, and seven more
+  retained superseded correction content; the checkpoint is not ready for Android conversion.
+- Added the hash-addressed report at
+  `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`. Downloaded weights and raw
+  results remain outside Git under `/data/rise/android_stt/`.

@@ -149,6 +149,11 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   epoch 2 as the research baseline; next create a leakage-safe safety-curated/source-balanced
   revision, then compare Qwen3.5-0.8B rank-16 LoRA at one and two epochs. Do not spend a fourth
   epoch on the current run and do not use blind-v2 during iteration.
+- [x] Pin and directly screen the publisher's completed Sotto LFM2.5-350M checkpoint before doing
+  more training. Native-prompt BF16 inference reached 42/69 strict exact, preserved 147/163
+  anchors, and did not answer any dictated question/command, but it made six clear
+  meaning/protected-text errors and retained seven superseded corrections. Do not spend Android
+  conversion or Pixel-integration effort on this revision.
 
 Prepare all data and training inputs portably in this repository, but run training only on the
 separate training machine when it is available. Do not start training on this Mac.

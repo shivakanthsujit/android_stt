@@ -30,6 +30,9 @@ Implemented:
   completed host screen of Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B, and Gemma 1B; all
   generic candidates are no-go results
 - reproducible specialized-model screening with pinned prompt/model/corpus/tool provenance
+- completed native-prompt BF16 screen of the public Sotto LFM2.5-350M cleanup checkpoint; it is
+  stronger than generic LFM but remains a no-go because it changed protected facts/text and
+  frequently retained superseded corrections
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
@@ -78,7 +81,7 @@ load in 1.93 seconds.
 | STT model | English Small Streaming, architecture 4 |
 | Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
 | Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
-| Active cleanup candidate | None; VoiceInk 2B probe rejected, sub-1B task-specific training next |
+| Active cleanup candidate | None; VoiceInk and public Sotto LFM probes rejected, safety-curated task-specific training next |
 
 AGP 8.13.2 and target API 36 are kept intentionally because they match the current Moonshine sample
 and Liquid LEAP 0.10.9 Android requirements.
@@ -200,6 +203,14 @@ preservation and safety signals.
 The VoiceInk screen is complete and is also a no-go: 38/69 raw exact, 149/163 anchors, only 2/10
 explicit corrections exact, six retained superseded corrections, three meaning/fact changes, and
 one answered dictated instruction. It is not an automatic training-label source.
+
+The publisher's task-tuned Sotto LFM2.5-350M checkpoint was also tested directly with its native
+prompt and recommended greedy decoder. It reached 42/69 strict exact and 147/163 anchors and never
+answered any of the 17 dictated questions/commands. Harmless punctuation, contraction, and casual
+lead-in differences were ignored in the manual decision. The checkpoint still changed a currency
+symbol and a name, broke two command strings, changed one statement into a question, and retained
+seven superseded corrections. It is therefore not ready for Android conversion or integration.
+See [the full screen](docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md).
 
 Cleanup is therefore not joined to STT. The active phase prepares a leakage-isolated 0.6B/0.8B
 task-specific cleanup experiment for the separate training machine. This Mac is used only for data

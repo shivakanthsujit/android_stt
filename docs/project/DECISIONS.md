@@ -175,6 +175,14 @@ Last updated: 2026-08-18
     no-op behavior. Do not train a fourth epoch. Prioritize leakage-safe safety curation and source
     balancing, then run a separately named Qwen3.5-0.8B rank-16 LoRA one/two-epoch comparison.
     Guardrails cannot qualify any failed raw checkpoint, and blind-v2 remains sealed.
+36. Reject the public Sotto LFM2.5-350M production checkpoint at revision
+    `6df6f019170b8b55333c047b901886a51750a965` for direct Android conversion. Its native-prompt BF16
+    screen is promising on basic cleanup and never answers dictated content, but it changes a
+    currency and a protected name, corrupts command syntax, changes one statement into a question,
+    and leaves seven superseded corrections. Do not reject future candidates solely for harmless
+    punctuation/contraction differences or deletion of disposable conversational lead-ins such as
+    “Yeah” and “Well”; keep strict exactness as a comparison metric while basing deployment on
+    product-relevant semantic, protected-text, and core-operation behavior.
 
 ## Android/toolchain
 

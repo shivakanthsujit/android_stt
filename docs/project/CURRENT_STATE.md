@@ -240,6 +240,18 @@ Last updated: 2026-08-18
   selection rationale are in
   `docs/evaluation/results/2026-08-18-direct-combined-qwen3-learning-curve.json`; raw artifacts and
   review queues remain under the run's `/data/.../evaluation/epoch-*` directories.
+- The publisher's finished Sotto LFM2.5-350M checkpoint was pinned at
+  `6df6f019170b8b55333c047b901886a51750a965`, downloaded, hash-verified, and evaluated in BF16 with
+  its native prompt/decoder on all 69 retired diagnostics. It reached 42/69 exact, 147/163 anchors,
+  and 2/10 exact self-corrections; all 17 dictated questions/commands remained text rather than
+  being answered. Ignoring harmless conversational and punctuation differences, it still made six
+  clear meaning/protected-text errors and retained seven superseded corrections. It is rejected
+  for direct Android conversion; see
+  `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`.
+- Manual audits no longer treat removal of disposable conversational lead-ins such as “Yeah” or
+  “Well” as a deployment blocker by itself. Exact scores remain unchanged for reproducibility;
+  rejection focuses on actual intent/fact/protected-text errors, unsafe answering, and failures of
+  core cleanup operations such as explicit correction handling.
 
 ## Toolchain
 
