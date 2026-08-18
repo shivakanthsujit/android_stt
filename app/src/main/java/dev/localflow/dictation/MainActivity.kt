@@ -25,6 +25,7 @@ class MainActivity : Activity() {
     private lateinit var statusText: TextView
     private lateinit var transcriptText: EditText
     private lateinit var cleanupStatusText: TextView
+    private lateinit var cleanupModelInputText: TextView
     private lateinit var modelOutputText: TextView
     private lateinit var cleanedText: TextView
     private lateinit var metricsText: TextView
@@ -71,6 +72,7 @@ class MainActivity : Activity() {
         statusText = findViewById(R.id.statusText)
         transcriptText = findViewById(R.id.transcriptText)
         cleanupStatusText = findViewById(R.id.cleanupStatusText)
+        cleanupModelInputText = findViewById(R.id.cleanupModelInputText)
         modelOutputText = findViewById(R.id.modelOutputText)
         cleanedText = findViewById(R.id.cleanedText)
         metricsText = findViewById(R.id.metricsText)
@@ -163,6 +165,7 @@ class MainActivity : Activity() {
     private fun beginDictation() {
         transcriptText.setText("")
         cleanedText.setText(R.string.cleaned_transcript_placeholder)
+        cleanupModelInputText.setText(R.string.cleanup_model_input_placeholder)
         modelOutputText.setText(R.string.model_output_placeholder)
         recordingDurationMs = null
         sttTailMs = null
@@ -250,6 +253,7 @@ class MainActivity : Activity() {
         }
 
         cleanupStatusText.setText(R.string.status_cleanup_generating)
+        cleanupModelInputText.setText(R.string.cleanup_model_input_preparing)
         modelOutputText.text = ""
         cleanedText.text = ""
         renderCleanupState(CleanupState.GENERATING)
@@ -262,17 +266,25 @@ class MainActivity : Activity() {
                     pipelineTailMs = pipelineStopPressedAtNs?.let { stoppedAtNs ->
                         (result.completedAtNs - stoppedAtNs).coerceAtLeast(0L) / 1_000_000L
                     }
+                    cleanupModelInputText.text = result.modelInputText.ifBlank {
+                        getString(R.string.cleanup_model_input_empty)
+                    }
                     modelOutputText.text = result.modelText.ifBlank {
-                        getString(R.string.model_output_empty)
+                        if (result.modelWasRun) {
+                            getString(R.string.model_output_empty)
+                        } else {
+                            getString(R.string.model_skipped_after_preprocessing)
+                        }
                     }
                     cleanedText.text = result.cleanedText
-                    cleanupStatusText.text = if (result.usedFallback) {
-                        getString(
+                    cleanupStatusText.text = when {
+                        result.usedFallback -> getString(
                             R.string.status_cleanup_fallback,
                             result.fallbackReason ?: "guardrail",
                         )
-                    } else {
-                        getString(R.string.status_cleanup_finished)
+                        !result.modelWasRun ->
+                            getString(R.string.status_cleanup_preprocessing_only)
+                        else -> getString(R.string.status_cleanup_finished)
                     }
                     renderCleanupState(CleanupState.READY)
                     renderMetrics()
@@ -374,6 +386,14 @@ class MainActivity : Activity() {
             pipelineTailMs?.let { add(getString(R.string.metric_pipeline_tail, it)) }
             cleanupLoadDurationMs?.let { add(getString(R.string.metric_cleanup_load, it)) }
             lastCleanupResult?.let { result ->
+                if (result.removedFillers.isNotEmpty()) {
+                    add(
+                        getString(
+                            R.string.metric_fillers_removed,
+                            result.removedFillers.size,
+                        ),
+                    )
+                }
                 result.timeToFirstTokenMs?.let {
                     add(getString(R.string.metric_cleanup_ttft, it))
                 }

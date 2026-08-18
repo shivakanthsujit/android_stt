@@ -16,9 +16,14 @@
     <string name="status_evaluation_starting">Starting direct-text cleanup evaluation…</string>
     <string name="status_evaluation_progress">Run %1$d/%2$d · %3$s · %4$s</string>
     <string name="status_evaluation_finished">Finished %1$d runs: %2$d exact, %3$d fallbacks, %4$d ms. Saved %5$s</string>
+    <string name="cleanup_model_input">Cleanup model input (after conservative filler removal)</string>
+    <string name="cleanup_model_input_placeholder">The exact text sent to Sotto will appear here.</string>
+    <string name="cleanup_model_input_preparing">Preparing deterministic model input…</string>
+    <string name="cleanup_model_input_empty">Empty after conservative filler removal.</string>
     <string name="raw_model_output">Raw model output (before guardrails)</string>
     <string name="model_output_placeholder">The model’s unfiltered local output will appear here for evaluation.</string>
     <string name="model_output_empty">Model returned no text.</string>
+    <string name="model_skipped_after_preprocessing">Sotto was skipped because deterministic preprocessing removed the entire filler-only input.</string>
     <string name="cleaned_transcript">Cleaned transcript</string>
     <string name="cleaned_transcript_placeholder">Cleaned local text will appear here.</string>
     <string name="latency_metrics">Latency metrics</string>
@@ -41,7 +46,8 @@
     <string name="status_cleanup_load_for_pipeline">Raw Parakeet text is ready. Load Sotto to run the joined cleanup stage.</string>
     <string name="status_cleanup_generating">Cleaning text locally…</string>
     <string name="status_cleanup_finished">Cleanup finished locally.</string>
-    <string name="status_cleanup_fallback">Cleanup rejected (%1$s); showing raw text.</string>
+    <string name="status_cleanup_fallback">Cleanup rejected (%1$s); showing deterministic pre-clean text.</string>
+    <string name="status_cleanup_preprocessing_only">Only low-ambiguity fillers remained; Sotto was not run.</string>
     <string name="status_cleanup_empty_input">Enter or dictate raw text before cleaning.</string>
     <string name="status_cleanup_error">Cleanup error: %1$s</string>
     <string name="retry_model_load">Retry model load</string>
@@ -54,6 +60,7 @@
     <string name="metric_stt_tail">STT tail: %1$d ms</string>
     <string name="metric_pipeline_tail">End-to-end tail: %1$d ms</string>
     <string name="metric_cleanup_load">Cleanup load: %1$d ms</string>
+    <string name="metric_fillers_removed">Pre-model fillers removed: %1$d</string>
     <string name="metric_cleanup_ttft">Cleanup TTFT: %1$d ms</string>
     <string name="metric_cleanup_total">Cleanup total: %1$d ms</string>
     <string name="metric_cleanup_rate">Cleanup rate: %1$.1f tokens/s</string>

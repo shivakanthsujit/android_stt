@@ -146,6 +146,29 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:text="@string/cleanup_model_input"
+            android:textColor="@color/local_flow_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/cleanupModelInputText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@color/local_flow_surface"
+            android:gravity="top|start"
+            android:minHeight="80dp"
+            android:padding="16dp"
+            android:text="@string/cleanup_model_input_placeholder"
+            android:textColor="@color/local_flow_muted"
+            android:textIsSelectable="true"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="@string/raw_model_output"
             android:textColor="@color/local_flow_text"
             android:textSize="16sp"

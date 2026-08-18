@@ -1,5 +1,20 @@
 # Test log
 
+## 2026-08-18 — Conservative filler pre-pass
+
+- Added eight focused JVM cases for the deterministic `um`/`uh`/`erm` pass. All pass, including
+  preservation checks for ambiguous discourse words, quoted/code-like text, uppercase acronyms,
+  a title-cased name-like token, hyphenated text, paths, and paragraph breaks.
+- Full `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`
+  verification passed with no lint errors. The suite has 35 passing JVM tests: 8 filler, 22
+  guardrail, 3 artifact-identity, and 2 STT-metric tests.
+- The final 88,044,124-byte APK has SHA-256
+  `a00353b6b1975f6a016878fdd694f33e9668eb25f8a3eaed2a67938b55239865` and installed successfully
+  on the connected Pixel 7 without clearing its staged models. Interactive filler-path
+  verification could not proceed because the device returned to a secure lock screen; no
+  credential bypass was attempted. Host logic/build verification is complete, but this entry does
+  not claim a new on-device inference result.
+
 ## 2026-08-18 — Joined Parakeet/Sotto Pixel integration
 
 - Full Android gate passed:

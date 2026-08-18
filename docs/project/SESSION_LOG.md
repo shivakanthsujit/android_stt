@@ -447,3 +447,20 @@
   `docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json`. No evaluation corpus,
   blind reference, raw personal transcript, model weight, or checkpoint was used as training data
   or added to Git.
+
+## 2026-08-18 — Conservative pre-model filler removal
+
+- Added a deterministic Sotto input pass that removes only standalone `um`, `uh`, and `erm` before
+  inference. It leaves ambiguous discourse/uncertainty words untouched and preserves uppercase
+  acronyms, likely title-cased names without filler punctuation, quoted text, `uh-oh`, paths,
+  identifiers, and paragraph breaks.
+- Extended cleanup results and batch JSON with original raw text, exact model input, removed filler
+  tokens, and a model-executed flag. The Activity now displays the exact text sent to Sotto and the
+  removal count while keeping the Parakeet transcript unchanged.
+- Guardrails evaluate Sotto against the deterministic model input. A rejected generation falls back
+  to that visible pre-cleaned text; filler-only input skips Sotto rather than prompting it with an
+  empty payload.
+- Added focused JVM coverage for punctuation, unpunctuated fillers, ambiguous words, quoted/code-
+  like text, acronyms, likely names, paragraph preservation, and filler-only input. The complete
+  Android lint/unit/assembly gate passes. The updated APK installed successfully on Pixel 7; the
+  interactive UI smoke remained pending because the phone re-entered its secure lock screen.

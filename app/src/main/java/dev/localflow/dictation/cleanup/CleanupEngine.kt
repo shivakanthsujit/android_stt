@@ -89,6 +89,9 @@ data class CleanupResult(
     val tokensPerSecond: Float?,
     val finishReason: String?,
     val maxOutputTokens: Int,
+    val modelInputText: String = rawText,
+    val removedFillers: List<String> = emptyList(),
+    val modelWasRun: Boolean = true,
 ) {
     val timeToFirstTokenMs: Long?
         get() = firstTokenAtNs?.let { nanosToMillis(it - startedAtNs) }

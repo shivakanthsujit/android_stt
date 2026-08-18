@@ -44,6 +44,8 @@ Implemented:
   staging into app-scoped device storage
 - joined Parakeet → Sotto integration flow with automatic cleanup, raw/guarded output, STT tail,
   cleanup TTFT/total, and Stop-to-cleanup end-to-end tail
+- deterministic pre-model removal of only standalone `um`, `uh`, and `erm`, with protections for
+  uppercase acronyms, likely names, quoted text, hyphenated words, paths, and identifiers
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
@@ -221,13 +223,21 @@ In the app:
 1. Tap **Load staged Parakeet** and **Load staged Sotto**.
 2. Tap **Start dictation**, grant microphone permission, speak, and tap **Stop dictation**.
 3. Parakeet transcribes the completed local capture, then Sotto cleanup runs automatically.
-4. Inspect the raw transcript, complete unguarded Sotto output, guarded output, and stage metrics.
+4. Inspect the raw transcript, exact post-filler model input, complete unguarded Sotto output,
+   guarded output, and stage metrics.
 
 The models remain warm between utterances. The microphone does not: the app creates and starts
 `AudioRecord` only after **Start dictation** and stops it synchronously at the Stop tap. The current
 Parakeet model processes the already captured utterance as one offline batch and therefore exposes
 no partial transcript. `STT tail` measures Stop-to-final transcript; `End-to-end tail` measures
 Stop-to-cleanup completion. All timing uses `SystemClock.elapsedRealtimeNanos()`.
+
+Before Sotto runs, a deterministic pass removes only low-ambiguity standalone `um`, `uh`, and
+`erm` tokens. It deliberately does not remove `like`, `well`, `you know`, `hmm`, or other terms
+that may carry tone or meaning. Uppercase acronyms, likely title-cased names without filler
+punctuation, quoted text, hyphenated words, paths, identifiers, and paragraph breaks are preserved.
+If Sotto fails a guardrail, the fallback is this visible deterministic model input; the original
+Parakeet transcript remains unchanged above it.
 
 This flow is for integration testing, not model qualification. Public Sotto scored 42/69 strict
 exact and 59/69 user-acceptable in its frozen screen, with ten relevant failures. Guardrail

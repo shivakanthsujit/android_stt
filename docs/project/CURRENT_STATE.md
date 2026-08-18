@@ -46,6 +46,11 @@ Last updated: 2026-08-18
   to a 229,310,304-byte Q4_K_M GGUF. The native Sotto prompt/parser and decoder settings are fixed.
 - Joined Parakeet → Sotto execution after every non-empty final transcript. The UI preserves raw
   STT, complete raw model output, guarded output, STT tail, cleanup timing, and end-to-end tail.
+- A deterministic pre-model pass removes only standalone `um`, `uh`, and `erm`. Result metadata and
+  cleanup JSON preserve the original transcript, exact model input, removed-token list, and whether
+  Sotto ran; the UI exposes the model input and removal count. Ambiguous discourse words,
+  uncertainty markers, acronyms, likely names, quotes, paths, identifiers, hyphenated words, and
+  paragraph breaks are excluded from removal.
 - LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` were exercised on-device; their raw static-corpus
   results and summaries are preserved under `docs/evaluation/`. All three are cleanup no-go results.
 - A deterministic baseline plus Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B, and Gemma 1B
@@ -104,6 +109,9 @@ Last updated: 2026-08-18
 - The cleanup harness has stricter lexical/intent fallback checks, but a safety fallback cannot
   compensate for inadequate raw cleanup quality. The joined UI shows fallback selection for
   diagnosis; no failed model is qualified by that behavior.
+- Guardrail fallback now returns the visible deterministic post-filler input rather than restoring
+  removed fillers. This is a declared mechanical transformation; Sotto's raw output still must
+  pass semantic safety independently.
 - Gemma 3 1B was the closest generic candidate at 32/45 raw exact and 94.1% anchor preservation,
   but it retained a superseded command and obeyed two embedded instructions. It is rejected.
 - Historical host screens remain Apple M2 measurements. Public Sotto now also has Pixel 7 runtime

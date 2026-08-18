@@ -212,6 +212,14 @@ Last updated: 2026-08-18
     replaceable cleanup placeholder. Preserve raw STT, complete raw model output, guarded output,
     and per-stage/end-to-end timing. This exception does not reverse Sotto's no-go result, weaken
     the raw semantic-safety gate, or make a guardrail fallback a passing deployment result.
+39. Reduce cleanup-model workload with a deterministic pre-model pass limited to standalone `um`,
+    `uh`, and `erm`. Preserve the original transcript and expose the exact post-filter model input.
+    Do not remove ambiguous discourse or uncertainty terms such as `like`, `well`, `you know`, or
+    `hmm`; preserve uppercase acronyms, likely title-cased names without filler punctuation,
+    quoted text, hyphenated words, paths, identifiers, and paragraph structure. Apply semantic
+    guardrails to Sotto relative to the deterministic model input, and return that visible input on
+    fallback. This mechanical removal is product behavior, not evidence that failed raw model
+    output is safe.
 
 ## Android/toolchain
 

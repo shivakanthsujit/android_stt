@@ -98,7 +98,18 @@ class SottoCleanupEngine(
         val rawText = text.trim()
         val startedAtNs = SystemClock.elapsedRealtimeNanos()
         if (rawText.isEmpty()) {
-            return@withLock fallbackResult(rawText, startedAtNs, "Input was empty")
+            return@withLock fallbackResult(
+                rawText = rawText,
+                modelInputText = rawText,
+                removedFillers = emptyList(),
+                startedAtNs = startedAtNs,
+                reason = "Input was empty",
+            )
+        }
+        val preprocessing = ConservativeFillerPreprocessor.prepare(rawText)
+        val modelInputText = preprocessing.modelInputText
+        if (modelInputText.isEmpty()) {
+            return@withLock preprocessingOnlyResult(rawText, preprocessing, startedAtNs)
         }
 
         state = CleanupState.GENERATING
@@ -110,7 +121,7 @@ class SottoCleanupEngine(
         try {
             val conversation = runner.createConversation(systemPrompt = null)
             conversation.generateResponse(
-                userTextMessage = nativePrompt(rawText),
+                userTextMessage = nativePrompt(modelInputText),
                 generationOptions = GenerationOptions(
                     temperature = 0f,
                     repetitionPenalty = REPETITION_PENALTY,
@@ -148,7 +159,7 @@ class SottoCleanupEngine(
                 it >= MAX_OUTPUT_TOKENS
             } == true
             val fallbackReason = CleanupGuardrails.fallbackReason(
-                rawText = rawText,
+                rawText = modelInputText,
                 candidate = candidate,
                 hitOutputTokenLimit = hitOutputTokenLimit,
             )
@@ -158,7 +169,7 @@ class SottoCleanupEngine(
                 rawText = rawText,
                 promptVariantId = CleanupPromptVariant.SOTTO_NATIVE.id,
                 modelText = unfilteredModelText,
-                cleanedText = if (fallbackReason == null) candidate else rawText,
+                cleanedText = if (fallbackReason == null) candidate else modelInputText,
                 startedAtNs = startedAtNs,
                 firstTokenAtNs = firstTokenAtNs,
                 completedAtNs = SystemClock.elapsedRealtimeNanos(),
@@ -169,6 +180,9 @@ class SottoCleanupEngine(
                 tokensPerSecond = stats?.tokenPerSecond,
                 finishReason = finishReason?.name,
                 maxOutputTokens = MAX_OUTPUT_TOKENS,
+                modelInputText = modelInputText,
+                removedFillers = preprocessing.removedFillers,
+                modelWasRun = true,
             )
             LocalFlowLog.info(
                 "Sotto cleanup completed: ttftMs=${result.timeToFirstTokenMs}, " +
@@ -211,6 +225,8 @@ class SottoCleanupEngine(
 
     private fun fallbackResult(
         rawText: String,
+        modelInputText: String,
+        removedFillers: List<String>,
         startedAtNs: Long,
         reason: String,
     ): CleanupResult = CleanupResult(
@@ -219,7 +235,7 @@ class SottoCleanupEngine(
         rawText = rawText,
         promptVariantId = CleanupPromptVariant.SOTTO_NATIVE.id,
         modelText = "",
-        cleanedText = rawText,
+        cleanedText = modelInputText,
         startedAtNs = startedAtNs,
         firstTokenAtNs = null,
         completedAtNs = SystemClock.elapsedRealtimeNanos(),
@@ -230,6 +246,35 @@ class SottoCleanupEngine(
         tokensPerSecond = null,
         finishReason = null,
         maxOutputTokens = MAX_OUTPUT_TOKENS,
+        modelInputText = modelInputText,
+        removedFillers = removedFillers,
+        modelWasRun = false,
+    )
+
+    private fun preprocessingOnlyResult(
+        rawText: String,
+        preprocessing: FillerPreprocessingResult,
+        startedAtNs: Long,
+    ): CleanupResult = CleanupResult(
+        modelName = MODEL_NAME,
+        quantization = QUANTIZATION,
+        rawText = rawText,
+        promptVariantId = CleanupPromptVariant.SOTTO_NATIVE.id,
+        modelText = "",
+        cleanedText = preprocessing.modelInputText,
+        startedAtNs = startedAtNs,
+        firstTokenAtNs = null,
+        completedAtNs = SystemClock.elapsedRealtimeNanos(),
+        usedFallback = false,
+        fallbackReason = null,
+        promptTokens = null,
+        completionTokens = null,
+        tokensPerSecond = null,
+        finishReason = PREPROCESSING_ONLY_FINISH_REASON,
+        maxOutputTokens = MAX_OUTPUT_TOKENS,
+        modelInputText = preprocessing.modelInputText,
+        removedFillers = preprocessing.removedFillers,
+        modelWasRun = false,
     )
 
     private companion object {
@@ -240,6 +285,7 @@ class SottoCleanupEngine(
         const val DETERMINISTIC_SEED = 23L
         const val REPETITION_PENALTY = 1.05f
         const val OUTPUT_DELIMITER = "###"
+        const val PREPROCESSING_ONLY_FINISH_REASON = "PREPROCESSING_ONLY"
 
         // LEAP's conversation API normally applies a chat template. Sotto was trained and screened
         // as a raw completion model, so this template emits BOS plus the user content verbatim.

@@ -244,6 +244,8 @@ This remains required before final product selection, but it is not the current 
 - [x] Convert and sideload the pinned public Sotto LFM2.5-350M checkpoint as Q4_K_M without
   committing model artifacts.
 - [x] Display raw STT, complete unguarded model output, and guarded cleanup simultaneously.
+- [x] Add conservative pre-model filler removal for standalone `um`, `uh`, and `erm`; expose the
+  exact model input and retain original raw STT and removal metadata for diagnosis.
 - [x] Report STT tail, cleanup TTFT, cleanup total, and end-to-end tail.
 - [x] Keep both models warm between utterances while releasing the microphone at Stop.
 - [x] Run one real Pixel microphone → Parakeet → Sotto smoke test and preserve sanitized timing and
