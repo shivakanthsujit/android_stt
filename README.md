@@ -46,6 +46,9 @@ Implemented:
   cleanup TTFT/total, and Stop-to-cleanup end-to-end tail
 - deterministic pre-model removal of only standalone `um`, `uh`, and `erm`, with protections for
   uppercase acronyms, likely names, quoted text, hyphenated words, paths, and identifiers
+- completed acoustic run of all 20 project-authored Qwen3-TTS dictation stress cases through the
+  Pixel microphone and joined pipeline; lifecycle passed, but protected-name/technical STT errors,
+  15 cleanup fallbacks, and one accepted unsafe technical edit keep the build integration-only
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
@@ -307,6 +310,8 @@ reproduction instructions in [the STT benchmark guide](docs/evaluation/STT_BENCH
 
 See [the test log](docs/project/TEST_LOG.md) and
 [static result summaries](docs/evaluation/results/) for the durable evidence.
+The full synthetic acoustic integration report is
+[here](docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md).
 
 ## RTX A6000 vLLM evaluation
 

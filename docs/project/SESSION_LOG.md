@@ -492,3 +492,23 @@
   `docs/evaluation/results/2026-08-18-mac-qwen3-tts-fixture-corpus.json`. The 10 TTS tests pass;
   the repository suite is 126/127 with only the existing macOS `/var` versus `/private/var`
   temporary-path assertion failing. Listening review and real-speaker qualification remain open.
+
+## 2026-08-18 — Acoustic TTS joined-pipeline regression
+
+- Loaded the hash-pinned Parakeet Q4_K and public Sotto Q4_K_M models once in the installed Pixel
+  Activity, then played all 20 project-authored synthetic dictation stress fixtures from the Mac
+  speakers through the Pixel microphone. UI automation captured every raw transcript, exact
+  post-filler model input, unguarded Sotto output, guarded result, and stage timing.
+- The app completed 20/20 cases without a crash, recorder leak, failed model state, or missing
+  result. Median Stop-to-STT was 934 ms, median cleanup total 565 ms, and median Stop-to-cleanup
+  1,466 ms. The 35-second long-form case completed at 3,350 ms STT tail and 5,484 ms end to end;
+  final thermal status was 0.
+- Parakeet reached 4/20 strict and 11/20 normalized exact on the uncontrolled speaker-to-microphone
+  path. Names, spelled letters, URL/path surfaces, and the long-form `Ravi` name were weak.
+- Sotto fell back on 15/20 cases. It correctly resolved the beta-to-canary correction in case 011,
+  but the guardrail falsely rejected it. More seriously, case 014 changed a dictated technical
+  command and the guardrail accepted the unsafe edit. This confirms that public Sotto remains an
+  integration-only no-go and that guardrail fallback cannot establish raw semantic safety.
+- Added the complete sanitized report at
+  `docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md`; the synthetic
+  fixtures remain ignored regression evidence and were not used as training data.

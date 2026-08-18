@@ -256,6 +256,10 @@ This remains required before final product selection, but it is not the current 
 - [x] Keep both models warm between utterances while releasing the microphone at Stop.
 - [x] Run one real Pixel microphone → Parakeet → Sotto smoke test and preserve sanitized timing and
   fallback evidence.
+- [x] Play all 20 project-authored Qwen3-TTS dictation stress fixtures through the Mac speakers into
+  the Pixel microphone and review every joined result. The lifecycle passed 20/20, but case 014
+  exposed an accepted unsafe technical edit and case 011 exposed a correction-related false
+  fallback. Keep this as synthetic regression evidence, not qualification.
 - [ ] Replace the public Sotto model identity with the best correction-repair checkpoint only after
   its raw output passes the independent quality/safety gates.
 - [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized

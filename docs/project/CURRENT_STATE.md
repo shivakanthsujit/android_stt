@@ -34,7 +34,8 @@ Last updated: 2026-08-18
   Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined debug APK; current verified APK is 88,043,862 bytes.
+- ARM64-only joined debug APK; current verified APK is 88,044,124 bytes with SHA-256
+  `a00353b6b1975f6a016878fdd694f33e9668eb25f8a3eaed2a67938b55239865`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -49,6 +50,9 @@ Last updated: 2026-08-18
   to a 229,310,304-byte Q4_K_M GGUF. The native Sotto prompt/parser and decoder settings are fixed.
 - Joined Parakeet → Sotto execution after every non-empty final transcript. The UI preserves raw
   STT, complete raw model output, guarded output, STT tail, cleanup timing, and end-to-end tail.
+- All 20 project-authored Qwen3-TTS dictation stress fixtures have now run acoustically from the
+  MacBook Air speakers through the physical Pixel microphone and joined Activity. Every case
+  completed and released the microphone; the synthetic run remains regression evidence only.
 - A deterministic pre-model pass removes only standalone `um`, `uh`, and `erm`. Result metadata and
   cleanup JSON preserve the original transcript, exact model input, removed-token list, and whether
   Sotto ran; the UI exposes the model input and removal count. Ambiguous discourse words,
@@ -78,6 +82,11 @@ Last updated: 2026-08-18
   Stop-to-STT final; Sotto total 456 ms; 2,029 ms Stop-to-cleanup. Sotto deleted protected negation,
   and the guardrail correctly returned the raw STT text. This is useful integration evidence and a
   direct reminder that the placeholder cleanup model remains unqualified.
+- Twenty-case acoustic synthetic run: 4/20 strict and 11/20 normalized STT exact; 934 ms median
+  Stop-to-STT final; 565 ms median cleanup total; 1,466 ms median Stop-to-cleanup. Sotto fell back
+  on 15/20 cases. Case 014 changed a dictated technical command and passed the guardrail; case 011
+  correctly resolved a beta-to-canary correction but was rejected by the guardrail. The 35-second
+  long case completed at 3,350 ms STT tail and 5,484 ms end to end. Thermal status remained 0.
 - Pixel `stay_on_while_plugged_in` was restored to its original `0`; airplane mode is disabled.
 - The cleanup harness and all three Liquid evaluations are committed in `8dce7ab`.
 
@@ -94,7 +103,10 @@ Last updated: 2026-08-18
   `10a06cdece044e4c0383eb5719461fdba3b74cb6638efd9d5c238cf7728964cf`; all WAV/header/hash,
   silence, clipping, offline-cache, and resume checks pass. Audio remains ignored under
   `.cache/stt-eval/`. This clean single-speaker synthetic corpus validates plumbing and lexical
-  regressions, not real dictation quality; listening review is still pending.
+  regressions, not real dictation quality. The 20 project-authored cases have now completed one
+  uncontrolled acoustic Pixel integration run; listening review and controlled/human-speaker
+  qualification remain pending. Full evidence is in
+  `docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md`.
 - Q4_K's only normalized difference from F16 was `Hidalgo` → `Hadalgo`. In matched power runs it
   used 23.8% less process CPU time, 23.3% less inference compute-rail energy, 8.6% less average
   compute power, and 25.5% less peak PSS. Q4_K is the provisional deployment candidate; F16 is the

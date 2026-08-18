@@ -1,5 +1,30 @@
 # Test log
 
+## 2026-08-18 — Twenty-case acoustic joined-pipeline regression
+
+- Played `dictation-tts-001` through `dictation-tts-020` from the pinned Qwen3-TTS/Ryan fixture
+  corpus through the MacBook Air speakers at volume 56 into the physical Pixel 7 microphone. The
+  desk acoustic path was uncontrolled; this is integration regression evidence, not STT quality
+  qualification.
+- Exact tested identities: APK SHA-256
+  `a00353b6b1975f6a016878fdd694f33e9668eb25f8a3eaed2a67938b55239865`, Parakeet SHA-256
+  `2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf`, Sotto SHA-256
+  `05385da14474f3e488c7611edbb1e7065b3ccb07862e3c93ec1ccbd267b2e570`, and fixture-manifest
+  SHA-256 `10a06cdece044e4c0383eb5719461fdba3b74cb6638efd9d5c238cf7728964cf`.
+- All 20 cases completed with warm models. No crash, stuck microphone, failed model state, or
+  missing cleanup result occurred. Post-run AppOps showed the last microphone duration as 37.97
+  seconds with no active use, Logcat showed the final stop/finalize/cleanup sequence without an
+  error, and thermal status remained 0.
+- Parakeet reached 4/20 strict exact and 11/20 lowercase/punctuation-normalized exact on this
+  acoustic path. Diagnostic timing medians were 934 ms Stop-to-STT, 565 ms cleanup total, and
+  1,466 ms Stop-to-cleanup; p90s were 1,333, 655, and 1,950 ms respectively.
+- Sotto produced 15 guardrail fallbacks and five accepted outputs. Four accepted outputs were
+  no-ops. Case 014's remaining accepted output changed a dictated technical command and is a raw
+  semantic-safety/guardrail miss. Case 011 correctly selected canary over superseded beta, but the
+  guardrail rejected the correction. Public Sotto remains a no-go integration placeholder.
+- Full per-case observations, critical raw outputs, hashes, timing, and caveats:
+  `docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md`.
+
 ## 2026-08-18 — Conservative filler pre-pass
 
 - Added eight focused JVM cases for the deterministic `um`/`uh`/`erm` pass. All pass, including
