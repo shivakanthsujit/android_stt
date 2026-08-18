@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "purpose": "Synthetic evaluation-only audio for end-to-end plumbing and lexical regression testing",
+  "host": {
+    "chip": "Apple M2",
+    "memory_gib": 16,
+    "architecture": "arm64"
+  },
+  "runtime": {
+    "package": "mlx-audio",
+    "version": "0.4.6",
+    "repository": "https://github.com/Blaizzy/mlx-audio",
+    "revision": "d28d68c6ac4e28f7d2d66007f640b06cf3fd8ceb",
+    "license": "MIT",
+    "uv_lock_sha256": "92ec93d36a981744a5b42c4665e27324f09749b1b0ec7d81969606de267d0630"
+  },
+  "model": {
+    "repository": "mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit",
+    "revision": "41d3337e8b7f2843a75841595fc14e4b9a7a4b96",
+    "license": "Apache-2.0",
+    "voice": "Ryan",
+    "language": "English",
+    "voice_cloning_used": false
+  },
+  "generation": {
+    "profile_sha256": "1f2d8fd208d70fb565116f4b3ada18c6ed989c5681e24e524ffb5b6bc08be1b4",
+    "generator_sha256": "4ad11fe4f242cfb035bc417b6fe927ff19394cec7cdafda130352f363c8ee467",
+    "base_seed": 23,
+    "temperature": 0.9,
+    "top_k": 50,
+    "top_p": 1.0,
+    "repetition_penalty": 1.05,
+    "max_tokens": 1200,
+    "strict_offline_batch": true,
+    "offline_smoke_manifest_sha256": "c77b8490b40a2dd0695a34bfc66bf2fe310eb3f7e5c7e9306305d6f4d968d720"
+  },
+  "sources": [
+    {
+      "path": "docs/evaluation/cleanup_cases_heldout_v1.jsonl",
+      "sha256": "cc1dfb4033b0336bface23f56e993fef894c5db87c57d137ffee188ce6ea2d71",
+      "case_count": 45,
+      "classification": "retired regression, not blind"
+    },
+    {
+      "path": "docs/evaluation/stt_dictation_tts_cases_v1.jsonl",
+      "sha256": "b4378bf83d4e7fa32df75438de9d4e67cbf6fee87100d20a4ccf8d9c7c0de761",
+      "case_count": 20,
+      "classification": "project-authored regression, not blind"
+    }
+  ],
+  "isolation": {
+    "source_text_field": "spoken",
+    "tts_plan_fields": [
+      "case_id",
+      "categories",
+      "seed",
+      "source_corpus",
+      "source_path",
+      "source_text_field",
+      "text",
+      "text_sha256"
+    ],
+    "excluded_from_tts_context": [
+      "raw simulated STT transcript",
+      "expected cleanup output",
+      "must-preserve anchors",
+      "cleanup prompts",
+      "captured model results",
+      "VoiceInk material",
+      "blind-v2"
+    ]
+  },
+  "output": {
+    "ignored_local_path": ".cache/stt-eval/cleanup-heldout-v1-plus-dictation-tts-v1-qwen3-ryan",
+    "case_count": 65,
+    "total_duration_seconds": 401.28,
+    "minimum_duration_seconds": 2.32,
+    "maximum_duration_seconds": 35.12,
+    "master_format": "24 kHz mono signed PCM16 WAV",
+    "master_file_count": 65,
+    "master_bytes": 19264300,
+    "canonical_format": "16 kHz mono signed PCM16 WAV",
+    "canonical_file_count": 65,
+    "canonical_bytes": 12846030,
+    "ffmpeg_version": "8.0.1",
+    "manifest_sha256": "10a06cdece044e4c0383eb5719461fdba3b74cb6638efd9d5c238cf7728964cf",
+    "plan_sha256": "af09b61a58f707dda849c4c58d68cf9ad7eaca773a175ec4a28a6e5fa77e2e94",
+    "run_identity_sha256": "ede026c2428cbed5a0d829d458e109ce13556a9279ffcd9e6c1482e90b180a11",
+    "maximum_clipping_ratio": 0.0,
+    "minimum_rms_pcm16": 1303.969,
+    "maximum_peak_pcm16": 25929,
+    "resume_manifest_stable": true
+  },
+  "verification": {
+    "tts_tests": "10/10 passed",
+    "shell_syntax": "passed",
+    "json_and_nfc_validation": "passed",
+    "git_diff_check": "passed",
+    "repository_test_suite": "126/127 passed; one pre-existing /var versus /private/var temp-path assertion failed",
+    "audio_content_human_review": "pending"
+  },
+  "limitations": [
+    "Synthetic single-voice clean speech cannot qualify real speakers, microphones, accents, noise, streaming, or endpointing.",
+    "Seeded sampling and frozen hashes identify these artifacts, but byte-identical regeneration is not promised across runtime, Metal, macOS, or hardware changes.",
+    "Technical, Unicode, correction, and identifier cases still require listening review for TTS pronunciation, omissions, or insertions.",
+    "Literal WER requires complementary protected-token and numeric-equivalence scoring for dictated numbers and symbols."
+  ]
+}

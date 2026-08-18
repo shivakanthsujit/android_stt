@@ -26,6 +26,9 @@ Last updated: 2026-08-18
 - Debug-only, microphone-free STT benchmark Activity that accepts checksum-verified 16 kHz PCM16
   WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
   native heap, and thermal status.
+- Mac-local, locked Qwen3-TTS/MLX-Audio fixture pipeline that converts literal text or bounded
+  regression suites into resumable, hash-addressed 24 kHz masters and Pixel-compatible 16 kHz
+  mono PCM16 WAV corpora without putting model weights or generated audio in Git.
 - Pinned Android ARM64 `parakeet.cpp` 0.5.0 JNI/C API integration for file-fed and live-captured
   TDT/CTC 110M Q4_K GGUF inference. Its ggml dependency is statically isolated from
   Moonshine/LEAP's packaged ggml.
@@ -85,6 +88,13 @@ Last updated: 2026-08-18
 - On the clean 24-clip read-speech probe, Moonshine scored 3.54% WER, Parakeet F16 1.69%, and
   Parakeet Q4_K 1.85%. Q4_K was the fastest untraced path (0.72 s median, 1.80 s p90), with zero
   output instability across repeats.
+- The pinned Qwen3-TTS 1.7B CustomVoice 8-bit pipeline generated 45 retired held-out-v1 cleanup
+  regression clips plus 20 project-authored dictation stress clips with the built-in Ryan voice.
+  The 65 canonical files total 401.28 seconds and have manifest SHA-256
+  `10a06cdece044e4c0383eb5719461fdba3b74cb6638efd9d5c238cf7728964cf`; all WAV/header/hash,
+  silence, clipping, offline-cache, and resume checks pass. Audio remains ignored under
+  `.cache/stt-eval/`. This clean single-speaker synthetic corpus validates plumbing and lexical
+  regressions, not real dictation quality; listening review is still pending.
 - Q4_K's only normalized difference from F16 was `Hidalgo` → `Hadalgo`. In matched power runs it
   used 23.8% less process CPU time, 23.3% less inference compute-rail energy, 8.6% less average
   compute power, and 25.5% less peak PSS. Q4_K is the provisional deployment candidate; F16 is the

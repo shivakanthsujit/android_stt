@@ -10,6 +10,7 @@ Start here when resuming Local Flow in a new session.
 | [TEST_LOG.md](TEST_LOG.md) | Physical-device and build verification evidence |
 | [SESSION_LOG.md](SESSION_LOG.md) | Append-only summary of completed work by date |
 | [Pixel STT benchmark](../evaluation/STT_BENCHMARK.md) | File-fed corpus preparation, Pixel execution, WER, latency, CPU, memory, thermal, and power procedure |
+| [Mac-local TTS fixtures](../evaluation/TTS_PIPELINE.md) | Pinned text-to-WAV setup, heldout regression generation, hashes, resume, offline cache, and Pixel handoff |
 | [Pixel Parakeet report](../evaluation/results/2026-08-18-pixel-parakeet-stt-probe.md) | F16/Q4_K/Moonshine measurements, decision, caveats, and reproducibility hashes |
 | [Training-machine handoff](../../TRAINING_MACHINE_HANDOFF.md) | Complete RTX A6000 data/training/evaluation workflow |
 | [Direct-source experiment plan](../training/DIRECT_SOURCE_EXPERIMENT_PLAN.md) | Immediate four-adapter Sotto/Disfl-QA/Nyra experiment and evaluation handoff |

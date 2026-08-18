@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "profile_id": "qwen3-tts-1.7b-customvoice-8bit-ryan-v1",
+  "runtime": {
+    "package": "mlx-audio",
+    "version": "0.4.6",
+    "license": "MIT",
+    "repository": "https://github.com/Blaizzy/mlx-audio",
+    "revision": "d28d68c6ac4e28f7d2d66007f640b06cf3fd8ceb"
+  },
+  "model": {
+    "repository": "mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit",
+    "revision": "41d3337e8b7f2843a75841595fc14e4b9a7a4b96",
+    "license": "Apache-2.0"
+  },
+  "voice": "Ryan",
+  "language": "English",
+  "instruct": null,
+  "generation": {
+    "base_seed": 23,
+    "temperature": 0.9,
+    "top_k": 50,
+    "top_p": 1.0,
+    "repetition_penalty": 1.05,
+    "max_tokens": 1200
+  },
+  "output": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "sample_width_bits": 16,
+    "codec": "pcm_s16le"
+  }
+}

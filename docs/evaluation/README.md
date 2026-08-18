@@ -5,6 +5,11 @@ This directory contains two independent evaluation tracks:
 - transcript cleanup quality and semantic safety, using the committed evaluation-only text corpora;
 - speech-to-text quality and Pixel performance, using file-fed public audio kept outside Git.
 
+It also contains a [Mac-local TTS fixture pipeline](TTS_PIPELINE.md) that turns the retired cleanup
+regression inputs and project-authored dictation stress cases into ignored, Android-compatible
+synthetic WAV corpora. Synthetic speech validates plumbing and lexical regressions; it is not a
+replacement for real-speaker dictation qualification.
+
 Do not use the committed cleanup evaluation corpora, expected outputs, or captured model results as
 training data or generator examples.
 

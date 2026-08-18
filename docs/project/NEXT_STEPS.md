@@ -225,9 +225,15 @@ deterministic cleanup while generative corrections remain disabled.
   model bytes. Keep F16 as the non-quantized quality reference.
 - [x] Integrate project-owned 16 kHz microphone capture with the selected Parakeet Q4_K model and
   run final offline inference after Stop. Record the lack of partial/streaming output explicitly.
+- [x] Add a pinned, Mac-local Qwen3-TTS/MLX-Audio fixture pipeline and generate an ignored,
+  Android-compatible 65-clip corpus from heldout-v1's `spoken` inputs plus 20 project-authored
+  dictation stress cases. Preserve native/canonical hashes and keep the suite classified as
+  retired synthetic regression evidence rather than blind or real-speaker qualification.
 - [ ] Define a fixed, repeatable dictation corpus covering conversational speech, protected names,
   numbers, corrections, technical terms, paths/versions, pauses, commands/questions, and longer
-  utterances. Score protected-token preservation and numeric equivalence separately from WER.
+  utterances. Use the synthetic suite for early plumbing, add human/multi-speaker recordings for
+  qualification, and score protected-token preservation and numeric equivalence separately from
+  WER.
 - [ ] Integrate Parakeet Q4_K streaming/end-of-utterance behind `SpeechToTextEngine` without
   weakening the project-owned microphone lifecycle; measure partial responsiveness and
   Stop-to-final latency.

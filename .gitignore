@@ -18,5 +18,6 @@ training/models/
 .cache/huggingface/
 .cache/integration/
 .cache/stt-eval/
+.cache/tts-eval/
 app/src/debug/jniLibs/arm64-v8a/*.so
 wandb/

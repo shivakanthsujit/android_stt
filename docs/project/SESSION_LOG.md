@@ -464,3 +464,31 @@
   like text, acronyms, likely names, paragraph preservation, and filler-only input. The complete
   Android lint/unit/assembly gate passes. The updated APK installed successfully on Pixel 7; the
   interactive UI smoke remained pending because the phone re-entered its secure lock screen.
+
+## 2026-08-18 — Mac-local Qwen3-TTS fixture pipeline
+
+- Added a locked Python 3.12 environment for MLX-Audio 0.4.6 and pinned
+  `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit` at revision
+  `41d3337e8b7f2843a75841595fc14e4b9a7a4b96`. Kept the inspected MLX-Audio checkout under
+  `~/Documents/projects/mlx-audio` at release commit
+  `d28d68c6ac4e28f7d2d66007f640b06cf3fd8ceb` as requested.
+- Added generic literal-text and bounded cleanup-regression entry points, stable per-case seeds,
+  strict source allowlists, resumable generation, atomic progress, 24 kHz master retention,
+  deterministic ffmpeg conversion, WAV/silence/clipping validation, and Android-compatible
+  manifests. All dependencies, model files, masters, and canonical WAVs remain ignored locally.
+- Projected only the `spoken` input field from the retired cleanup suites. The TTS generation plan
+  contains no simulated `raw` transcript, cleanup `expected`, must-preserve anchors, prompt,
+  captured model output, VoiceInk material, or blind-v2 data.
+- Added 20 project-authored regression utterances spanning protected names/Unicode, numbers,
+  times/dates/currency/phone strings, versions, paths/URLs/identifiers, corrections, negation,
+  uncertainty, questions/commands-as-data, formatting directives, homophones, repetition, and a
+  35-second long-form case.
+- Verified the cached model with network disabled, then generated 45 heldout-v1 retired-regression
+  clips plus the 20 additional cases entirely offline. All 65 native and canonical WAVs pass
+  hashes and format checks, contain 401.28 seconds of audio, show no clipped samples, and retain a
+  byte-stable manifest across resume. Manifest SHA-256 is
+  `10a06cdece044e4c0383eb5719461fdba3b74cb6638efd9d5c238cf7728964cf`.
+- Added sanitized evidence at
+  `docs/evaluation/results/2026-08-18-mac-qwen3-tts-fixture-corpus.json`. The 10 TTS tests pass;
+  the repository suite is 126/127 with only the existing macOS `/var` versus `/private/var`
+  temporary-path assertion failing. Listening review and real-speaker qualification remain open.

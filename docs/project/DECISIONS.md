@@ -36,6 +36,14 @@ Last updated: 2026-08-18
    battery current/charge counter is charger-confounded; hardware rails are downstream of the
    battery. The present Parakeet build is CPU-only, and negligible GPU rail energy is not a GPU
    acceleration claim.
+10. Use pinned MLX-Audio 0.4.6 and Qwen3-TTS 1.7B CustomVoice 8-bit with built-in voice Ryan as the
+    first Mac-local synthetic fixture generator. Feed only each evaluation record's `spoken`
+    field to TTS; never expose simulated STT `raw`, cleanup `expected`, prompts, model results,
+    VoiceInk material, or blind-v2 to the generator. Retain hashed 24 kHz masters, derive strict
+    16 kHz mono PCM16 files for the existing Pixel harness, and keep caches/audio ignored. Treat
+    this as deterministic plumbing and lexical-regression evidence only: a clean single synthetic
+    voice cannot qualify real dictation, and technical/Unicode/correction clips require listening
+    review.
 
 ## Cleanup
 
