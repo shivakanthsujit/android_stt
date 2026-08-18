@@ -1,0 +1,60 @@
+{
+  "config_version": "sotto-lfm-natural-mixture-data-v1",
+  "source_config_path": "training/config/sotto-lfm-sources-v1.json",
+  "frozen_evaluation_paths": [
+    "docs/evaluation/cleanup_cases.jsonl",
+    "docs/evaluation/cleanup_cases_heldout_v1.jsonl"
+  ],
+  "mixture_strategy": "shuffled-single-pass-all-eligible-rows",
+  "sources": {
+    "sotto": {
+      "train_files": ["data/train-00000-of-00001.parquet"],
+      "dev_files": ["data/validation-00000-of-00001.parquet"],
+      "excluded_files": ["train.jsonl", "val.jsonl"],
+      "raw_field": "input",
+      "expected_field": "output",
+      "train_records": 135503,
+      "dev_records": 6921
+    },
+    "disfl_qa": {
+      "train_files": ["train.json"],
+      "dev_files": ["dev.json"],
+      "excluded_files": ["test.json"],
+      "raw_field": "disfluent",
+      "expected_field": "original",
+      "publisher_train_records": 7182,
+      "train_records": 7181,
+      "dev_records": 1000,
+      "declared_invalid_train_records": 1
+    },
+    "disco": {
+      "workbook": "data/labeled-data/English.xlsx",
+      "worksheet": "Sheet2",
+      "raw_column": "Disfluent Sentence",
+      "expected_column": "Fluent Sentence",
+      "type_column": "Disfluency Type",
+      "allowed_types": ["C", "F", "FL", "FS", "R"],
+      "publisher_records": 3478,
+      "split_method": "normalized-expected-group-seeded-fractional",
+      "split_fractions": {
+        "train": 0.8,
+        "dev": 0.1,
+        "test": 0.1
+      }
+    },
+    "nyra": {
+      "train_files": ["data/train-00000-of-00002.parquet", "data/train-00001-of-00002.parquet"],
+      "dev_files": ["data/validation-00000-of-00001.parquet"],
+      "excluded_files": ["data/test-00000-of-00001.parquet"],
+      "raw_field": "verbatim_transcript",
+      "expected_field": "intended_transcript",
+      "train_records": 4458,
+      "dev_records": 250
+    }
+  },
+  "frozen_near_duplicate": {
+    "token_3gram_jaccard": 0.82,
+    "character_5gram_jaccard": 0.88,
+    "normalized_edit_similarity": 0.90
+  }
+}

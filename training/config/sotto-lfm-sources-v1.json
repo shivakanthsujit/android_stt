@@ -1,0 +1,54 @@
+{
+  "manifest_version": "cleanup-source-config-v1",
+  "sources": [
+    {
+      "id": "sotto",
+      "kind": "huggingface_dataset",
+      "repository": "juanquivilla/sotto-transcript-cleanup",
+      "url": "https://huggingface.co/datasets/juanquivilla/sotto-transcript-cleanup",
+      "revision": "183cc8fd58532f13fa192980185214de1bcd5acc",
+      "license": "MIT",
+      "include": ["README.md", "LICENSE*", "data/**/*.parquet", "*.parquet", "*.jsonl"],
+      "candidate_include": ["data/train-*.parquet"],
+      "holdout_include": ["val*.jsonl", "validation*.jsonl", "test*.jsonl", "**/val*.parquet", "**/validation*.parquet", "**/test*.parquet"]
+    },
+    {
+      "id": "disfl_qa",
+      "kind": "github_archive",
+      "repository": "google-research-datasets/Disfl-QA",
+      "url": "https://github.com/google-research-datasets/Disfl-QA",
+      "revision": "1f0c16171c77b3d3408be92c485f11b8998a9189",
+      "license": "CC-BY-4.0",
+      "include": ["README*", "LICENSE*", "*.json", "**/*.json", "*.jsonl", "**/*.jsonl"],
+      "candidate_include": ["train.json", "**/train.json"],
+      "holdout_include": ["dev.json", "test.json", "**/dev.json", "**/test.json"]
+    },
+    {
+      "id": "disco",
+      "kind": "github_archive",
+      "repository": "vineet2104/DISCO",
+      "url": "https://github.com/vineet2104/DISCO",
+      "revision": "b91a9e8d43cbfbefb9d7b0ff836c18d9a676943d",
+      "license": "CC-BY-4.0-lineage-user-approved",
+      "include": ["README.md", "data/labeled-data/English.xlsx", "transformer-training.ipynb"],
+      "candidate_include": ["data/labeled-data/English.xlsx"],
+      "holdout_include": [],
+      "expected_files": {
+        "README.md": "2248337343a1e473f7acacda92bbb29006c338e01d918e3e9dc1e8a8cdd42a62",
+        "data/labeled-data/English.xlsx": "c280f4461c12415c1908e4db759e3e2d1ace9278222989c6add43698608800cc",
+        "transformer-training.ipynb": "2aee0f58e03836969dcc30964e583384555bfd81e25343e00d2489afa28d6bcb"
+      }
+    },
+    {
+      "id": "nyra",
+      "kind": "huggingface_dataset",
+      "repository": "nyralabs/disfluency_speech_english",
+      "url": "https://huggingface.co/datasets/nyralabs/disfluency_speech_english",
+      "revision": "723e9e69bfbdc8214a9b8ce8815985e90afcbaa3",
+      "license": "Apache-2.0",
+      "include": ["README.md", "LICENSE*", "data/**/*.parquet", "*.parquet", "*.jsonl"],
+      "candidate_include": ["train*.jsonl", "**/train*.parquet", "**/*train*.parquet"],
+      "holdout_include": ["val*.jsonl", "validation*.jsonl", "test*.jsonl", "**/val*.parquet", "**/validation*.parquet", "**/test*.parquet"]
+    }
+  ]
+}

@@ -390,3 +390,26 @@
   pinned LFM2.5-350M base using the same mixture and disclosed publisher settings.
 - Added the self-contained next-session plan at
   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md` and updated the training-machine handoff.
+
+## 2026-08-18 — Sotto LFM campaign audit and data preparation
+
+- Audited the existing trainers and rejected reuse of the Qwen LoRA/chat-template path for LFM:
+  the campaign requires full-parameter SFT and the Sotto-native `### Input` / `### Output`
+  completion format. Confirmed source-field mappings and publisher holdouts.
+- Audited Transformers 5.14.1's LFM2 implementation and added explicit packed-example boundaries:
+  reset `position_ids`, pass `seq_idx`, omit the ordinary attention mask, append EOS, supervise only
+  the target, and fail rather than truncate. A real packed BF16 A6000 forward pass succeeded.
+- Moved the pinned Sotto and Nyra snapshots into the global Hugging Face hub cache and verified
+  offline resolution. Preserved DISCO English at its pinned `/data` path, stopped the redundant
+  Nyra transfer, and deleted the inspected 449 MB duplicate staging tree.
+- Initially prepared an exact 55/25/10/10 stream, then rejected it because it replayed Disfl-QA and
+  DISCO more than five times per epoch. Prior Qwen evidence showed that the natural 92/5/3 combined
+  mixture essentially matched source-specific Disfl-QA/Nyra performance after two epochs. Replaced
+  the superseded artifact with a shuffled single-pass stream containing all 149,922 eligible train
+  and 8,519 dev rows exactly once. Natural train shares are 90.38/4.79/1.86/2.97 for
+  Sotto/Disfl-QA/DISCO/Nyra. The runtime seed is `5612273261405755832`; DISCO test remains excluded,
+  and frozen-corpus screening removed two Sotto train rows. Manifest SHA-256 is
+  `5a08a5692d82bff9b3f7556ca4933fd4554fef724257c4dd7a4ae25d36126080`.
+- Added preparation, canonical-cache, full-SFT, packed-boundary, resume, and generalized LFM
+  inference code plus focused unit tests. GPU smoke tests and Experiment A remain pending until the
+  repository checkpoint is fully tested and committed.

@@ -77,14 +77,18 @@ Implemented in the current Phase 0 checkpoint:
 - completed Qwen3-0.6B Sotto, Disfl-QA, Nyra, and combined source experiments with preserved
   checkpoints/evaluations under `/data` and sanitized reports in Git; and
 - pinned, hash-verified public Sotto LFM2.5-350M BF16 inference plus the complete user-calibrated
-  69-case diagnostic screen.
+  69-case diagnostic screen;
+- pinned DISCO English plus a seeded grouped holdout, canonical Hugging Face snapshots, and a
+  frozen-overlap-filtered natural single-pass correction-repair mixture under `/data`; and
+- an audited LFM full-parameter SFT path with native completion masking and explicit packed
+  attention/convolution-state boundaries.
 
 Not implemented yet:
 
 - accepted train/dev rows or blind-v2 rows;
 - completed human decisions, attestations, or a passing Gate A report;
-- an immutable `LFM2.5-350M-Base` pin/snapshot and verified DISCO source;
-- the deterministic 55/25/10/10 correction-repair mixture and LFM full-SFT trainer/config;
+- an immutable local `LFM2.5-350M-Base` snapshot and weight hash;
+- completed LFM formatting/overfit/longest/resume/saved-inference GPU smokes;
 - either approved LFM training arm or its checkpoint-selection report;
 - an LFM merge and Q4/export path; or
 - Android conversion/integration for a trained model.

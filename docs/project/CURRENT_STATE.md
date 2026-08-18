@@ -254,10 +254,22 @@ Last updated: 2026-08-18
   but correct version wording, currency/non-Latin-name normalization, brackets, or technical/code
   literals such as the malformed Gradle case. Strict metrics remain unchanged for reproducibility.
 - The approved next work is `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`: first continue the
-  public Sotto checkpoint for two full-SFT epochs at `2e-6` on a deterministic 55/25/10/10
+  public Sotto checkpoint for two full-SFT epochs at `2e-6` on the shuffled natural
   Sotto/Disfl-QA/DISCO-English/Nyra mixture, then—after complete evaluation—run a clean three-epoch
   `3e-5` full-SFT reproduction from pinned `LFM2.5-350M-Base` using the same mixture and the
   publisher's disclosed batch/schedule/packing settings.
+- Training-code and data preflight for that campaign is in progress on the RTX A6000 host. Sotto
+  and Nyra now resolve offline from the global Hugging Face hub cache, pinned DISCO English is
+  preserved separately under `/data`, and the interrupted duplicate staging tree was removed.
+  The prepared 149,922/8,519 train/dev streams use generated-and-recorded seed
+  `5612273261405755832`, include every eligible row exactly once per epoch, contain no DISCO test
+  rows, and exclude two Sotto train rows that overlapped frozen diagnostics. Natural train shares
+  are 90.38% Sotto, 4.79% Disfl-QA, 1.86% DISCO, and 2.97% Nyra. The text-free mixture manifest
+  SHA-256 is `5a08a5692d82bff9b3f7556ca4933fd4554fef724257c4dd7a4ae25d36126080`.
+- The new LFM path is full-parameter SFT, not LoRA. It uses the publisher-native completion prompt,
+  assistant-only labels, EOS termination, no truncation, ordered greedy 4,096-token packing, and
+  microbatch one. Packed examples reset both `position_ids` (attention isolation) and `seq_idx`
+  (LFM convolution-state isolation); a real BF16 A6000 forward pass accepted those tensors.
 
 ## Toolchain
 

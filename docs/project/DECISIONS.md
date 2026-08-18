@@ -184,13 +184,28 @@ Last updated: 2026-08-18
     strict mismatches—including the malformed Gradle command—are outside this experiment's gate.
 37. Make the two-stage LFM correction-repair study the next training work, superseding the planned
     immediate Qwen3.5 follow-up. First continue the pinned public Sotto checkpoint with
-    full-parameter SFT for two epochs at `2e-6` on a deterministic 55/25/10/10
-    Sotto/Disfl-QA/DISCO-English/Nyra mixture. After preserving and evaluating that arm, train the
+    full-parameter SFT for two epochs at `2e-6` on a shuffled natural
+    Sotto/Disfl-QA/DISCO-English/Nyra mixture. Use every eligible row once per epoch without
+    replaying the smaller sources. After preserving and evaluating that arm, train the
     same ordered mixture from a pinned `LFM2.5-350M-Base` for three epochs at `3e-5`. Use the
     publisher-disclosed microbatch 1, accumulation 8, cosine/50-step warmup, AdamW beta2 0.95,
-    weight decay 0.01, BF16+TF32, packed 4,096 context, seed 42, and native prompt where applicable.
+    weight decay 0.01, BF16+TF32, packed 4,096 context, a generated-and-recorded run seed, and the
+    native prompt where applicable. Do not hardcode or gate the campaign on seed 42.
     Do not claim exact reproduction of the unpublished GRPO/refinement/soup lineage, and never use
     the committed diagnostics or blind-v2 as training or checkpoint-selection data.
+38. For packed LFM2.5 training, reset `position_ids` at every example boundary and omit the ordinary
+    2-D attention mask so Transformers constructs packed causal isolation. Also pass per-token
+    `seq_idx` because LFM's short-convolution layers otherwise carry recurrent state across packed
+    examples. Keep microbatch one, append EOS, mask native-prompt tokens from loss, never split or
+    silently truncate an example, and verify these invariants before any evidence-bearing run.
+    Store Hugging Face dataset snapshots in the machine-wide `HF_HOME` hub cache so other projects
+    resolve them normally; keep non-HF DISCO at its pinned external artifact path.
+39. Do not enforce the earlier proposed 55/25/10/10 LFM sampling weights. The Qwen natural-combined
+    experiment was 92.1% Sotto, 4.9% Disfl-QA, and 3.0% Nyra, yet at epoch 2 it reached 769/1,000
+    Disfl-QA and 147/250 Nyra versus 765/1,000 and 150/250 for the corresponding one-epoch
+    source-specific adapters. Those small deltas are within the practical evaluation-variance
+    boundary and do not justify replaying the small datasets roughly five times per epoch. Use a
+    globally shuffled single pass over all eligible Sotto, Disfl-QA, DISCO, and Nyra rows instead.
 
 ## Android/toolchain
 

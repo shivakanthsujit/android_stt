@@ -157,11 +157,16 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   Pixel-integration effort on this revision.
 - [ ] Run the approved Sotto LFM correction-repair experiment in
   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. First continue the pinned public checkpoint
-  with full SFT for two epochs at `2e-6` on the deterministic source-balanced correction mixture;
+  with full SFT for two epochs at `2e-6` on the shuffled natural correction mixture;
   evaluate both epochs before starting the clean-base arm. Then full-SFT a pinned
   `LFM2.5-350M-Base` for three epochs at `3e-5` with the same ordered mixture and disclosed
   publisher settings. Save/evaluate every epoch, target only the ten relevant failures, and never
   use either committed diagnostic corpus as training data.
+  Data preparation is complete under `/data`: every eligible source row is used once per epoch,
+  canonical HF snapshots are used, DISCO is pinned, its test partition is excluded, and two
+  frozen-diagnostic overlaps were removed. Next complete
+  the repository test/commit checkpoint, formatting audit, 32-row overfit, longest-row memory
+  smoke, checkpoint-resume smoke, and saved-checkpoint inference before launching Experiment A.
 
 Prepare all data and training inputs portably in this repository, but run training only on the
 separate training machine when it is available. Do not start training on this Mac.

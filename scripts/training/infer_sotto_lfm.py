@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate the pinned public Sotto LFM cleanup model on non-blind project cases."""
+"""Evaluate a public or locally fine-tuned Sotto LFM model on non-blind cases."""
 
 from __future__ import annotations
 
@@ -69,6 +69,12 @@ def parse_publisher_output(generated_text: str) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", required=True, type=Path)
+    parser.add_argument("--model-id", default=MODEL_ID)
+    parser.add_argument("--model-revision", default=MODEL_REVISION)
+    parser.add_argument(
+        "--expected-weight-sha256",
+        help="optional expected local model.safetensors hash; the public default remains pinned",
+    )
     parser.add_argument("--cases", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--limit", type=int)
@@ -86,8 +92,17 @@ def main() -> int:
     if not model_dir.is_dir():
         raise RuntimeError(f"model directory does not exist: {model_dir}")
     weights = model_dir / "model.safetensors"
-    if not weights.is_file() or sha256_file(weights) != MODEL_WEIGHT_SHA256:
-        raise RuntimeError("model.safetensors is missing or does not match the pinned SHA-256")
+    if not weights.is_file():
+        raise RuntimeError("model.safetensors is missing")
+    actual_weight_sha256 = sha256_file(weights)
+    expected_weight_sha256 = args.expected_weight_sha256
+    if (
+        expected_weight_sha256 is None
+        and args.model_id == MODEL_ID and args.model_revision == MODEL_REVISION
+    ):
+        expected_weight_sha256 = MODEL_WEIGHT_SHA256
+    if expected_weight_sha256 is not None and actual_weight_sha256 != expected_weight_sha256:
+        raise RuntimeError("model.safetensors does not match the expected SHA-256")
 
     rows = read_jsonl(cases_path)
     reject_blind_input(cases_path, rows)
@@ -119,11 +134,12 @@ def main() -> int:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     provenance = {
-        "schema_version": "sotto-lfm-public-inference-v1",
+        "schema_version": "sotto-lfm-inference-v2",
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "model_id": MODEL_ID,
-        "model_revision": MODEL_REVISION,
-        "model_weight_sha256": MODEL_WEIGHT_SHA256,
+        "model_id": args.model_id,
+        "model_revision": args.model_revision,
+        "model_weight_sha256": actual_weight_sha256,
+        "expected_model_weight_sha256": expected_weight_sha256,
         "model_config_sha256": sha256_file(model_dir / "config.json"),
         "tokenizer_sha256": sha256_file(model_dir / "tokenizer.json"),
         "cases_path": str(cases_path),
@@ -204,8 +220,8 @@ def main() -> int:
             total_ms = (finished - started) / 1_000_000
             record = {
                 "case_id": row["id"],
-                "model_name": MODEL_ID,
-                "model_revision": MODEL_REVISION,
+                "model_name": args.model_id,
+                "model_revision": args.model_revision,
                 "quantization": "bf16",
                 "prompt_variant": "sotto_native_v1",
                 "temperature": 0.0,

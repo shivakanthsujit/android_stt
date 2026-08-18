@@ -1,6 +1,6 @@
 # Sotto LFM2.5-350M correction-repair experiment
 
-Status: approved next experiment; implementation and runs not started
+Status: data/trainer implementation complete; GPU smoke sequence and runs pending
 
 ## Objective
 
@@ -33,7 +33,8 @@ experiment to those dismissed cases.
 The publisher's main SFT stage is reproducible in design, not bit-for-bit. The clearest disclosed
 recipe is full-parameter SFT of `LiquidAI/LFM2.5-350M-Base` for three epochs at learning rate
 `3e-5`, microbatch 1, gradient accumulation 8, cosine decay, 50 warmup steps, AdamW beta2 0.95,
-weight decay 0.01, BF16+TF32, packed 4,096-token sequences, and seed 42. Use the publisher-native
+weight decay 0.01, BF16+TF32, packed 4,096-token sequences, and a generated-and-recorded run seed.
+Use the publisher-native
 `### Input:\n...\n\n### Output:\n` format.
 
 The final public model cannot be reproduced exactly: its evolving SFT data do not match the
@@ -43,20 +44,26 @@ claim an exact reproduction and do not add an improvised GRPO stage to this expe
 
 ## Data mixture
 
-Build a deterministic source-balanced sampler rather than concatenating source rows. Start with
-these example-level sampling proportions:
+Use every eligible source row exactly once per epoch. Globally shuffle the combined stream with a
+generated-and-recorded preparation seed; bit-for-bit replay is optional. Do not replay smaller
+sources to enforce artificial proportions. The prepared natural composition is:
 
-| Source | Share | Role |
-|---|---:|---|
-| Pinned Sotto train | 55% | broad cleanup, no-op replay, punctuation, fillers, corrections |
-| Pinned Disfl-QA train | 25% | human-authored contextual corrections and restarts |
-| DISCO English train | 10% | human-annotated corrections, repetitions, false starts, fillers |
-| Pinned Nyra/DisfluencySpeech train | 10% | speech-backed repetitions and conversational disfluency |
+| Source | Rows | Share | Role |
+|---|---:|---:|---|
+| Pinned Sotto train | 135,501 | 90.38% | broad cleanup, no-op replay, punctuation, fillers, corrections |
+| Pinned Disfl-QA train | 7,181 | 4.79% | human-authored contextual corrections and restarts |
+| DISCO English train | 2,782 | 1.86% | human-annotated corrections, repetitions, false starts, fillers |
+| Pinned Nyra/DisfluencySpeech train | 4,458 | 2.97% | speech-backed repetitions and conversational disfluency |
 
-Before using DISCO, locate its authoritative released dataset, record an immutable revision and
-payload hashes, verify its CC BY 4.0 lineage/attribution, map only the English pairs, and keep its
-native holdout isolated. If that cannot be established, stop or redistribute its 10% share across
-the other approved sources explicitly; do not use an unverified mirror.
+This choice is supported by the earlier Qwen comparison. Its natural combined data were about
+92.1% Sotto, 4.9% Disfl-QA, and 3.0% Nyra. At epoch 2 the combined checkpoint scored 769/1,000 on
+Disfl-QA and 147/250 on Nyra, essentially matching the one-epoch source-specific adapters at
+765/1,000 and 150/250. The untouched Qwen base was not measured on these publisher splits, so do
+not invent a base row or overstate transfer of this trend to LFM.
+
+Use DISCO directly from the pinned official repository workbook and record its immutable revision
+and payload hashes. Map only the authoritative English worksheet and keep the project-defined test
+partition isolated. Per explicit user direction, licensing review is not a campaign gate.
 
 Use only the already approved source-training surfaces. Keep Sotto validation, Disfl-QA dev/test,
 Nyra validation/test, project dev, blind-v2, and both committed diagnostic corpora out of training.
@@ -75,7 +82,8 @@ This is the first and cheapest test.
    resumable checkpoints at the end of each epoch. This matches the disclosed learning rate and
    duration of the publisher's late refinement stage without claiming to recreate that stage.
 3. Hold the disclosed settings fixed where applicable: microbatch 1, accumulation 8, cosine,
-   50-step warmup, AdamW beta2 0.95, weight decay 0.01, BF16+TF32, packed 4,096 context, seed 42,
+   50-step warmup, AdamW beta2 0.95, weight decay 0.01, BF16+TF32, packed 4,096 context, a recorded
+   runtime seed,
    and the native prompt format.
 4. Evaluate the starting checkpoint and both new epochs through one fixed sequential Transformers
    backend and decoder before selecting an epoch. Do not compare these counts with the earlier
@@ -88,7 +96,7 @@ Run this only after Experiment A is fully evaluated and preserved.
 1. Pin an immutable revision of `LiquidAI/LFM2.5-350M-Base` and record all model/tokenizer hashes.
 2. Train the identical ordered mixture from the base for three epochs using the disclosed SFT
    recipe: full parameters, `3e-5`, microbatch 1, accumulation 8, cosine, 50 warmup steps, AdamW
-   beta2 0.95, weight decay 0.01, BF16+TF32, packed 4,096 context, and seed 42.
+   beta2 0.95, weight decay 0.01, BF16+TF32, packed 4,096 context, and a recorded runtime seed.
 3. Save and evaluate every epoch. Treat this as a project reproduction of the public SFT design,
    not the unpublished GRPO/refinement/soup lineage.
 
@@ -100,7 +108,7 @@ Before either full run:
 2. Audit every formatted row and prove no truncation under the packed 4,096-token policy.
 3. Run a 32-row overfit, a two-step longest-row memory smoke, checkpoint resume, and direct
    inference from the saved checkpoint.
-4. Record exact optimizer-step expectations from the deterministic sampled stream.
+4. Record exact optimizer-step expectations from the prepared sampled stream.
 5. Commit and push code/config/manifests before launch.
 6. Use an immutable run directory, persistent supervisor, telemetry, resumable checkpoints,
    terminal status, and the repository's normal failure-reporting rules.
