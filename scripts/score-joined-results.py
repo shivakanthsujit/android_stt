@@ -82,6 +82,28 @@ def summarize(rows: list[dict], expected: dict[str, str] | None = None) -> dict:
         "cleanup_total": timing([float(row["cleanup_total_ms"]) for row in rows]),
         "pipeline_total": timing([float(row["pipeline_total_ms"]) for row in rows]),
     }
+    optional_timings = {
+        "stt_process_cpu": "stt_process_cpu_ms",
+        "cleanup_process_cpu": "cleanup_process_cpu_ms",
+        "cleanup_ttft": "cleanup_ttft_ms",
+        "cleanup_tokens_per_second": "cleanup_tokens_per_second",
+    }
+    for summary_name, field in optional_timings.items():
+        values = [float(row[field]) for row in rows if row.get(field) is not None]
+        if values:
+            summary[summary_name] = timing(values)
+    if all("process_pss_kb_after_pipeline" in row for row in rows):
+        summary["peak_process_pss_kb"] = max(
+            int(row["process_pss_kb_after_pipeline"]) for row in rows
+        )
+    if all("native_heap_bytes_after_pipeline" in row for row in rows):
+        summary["peak_native_heap_bytes"] = max(
+            int(row["native_heap_bytes_after_pipeline"]) for row in rows
+        )
+    if all("thermal_status_after_pipeline" in row for row in rows):
+        summary["max_thermal_status"] = max(
+            int(row["thermal_status_after_pipeline"]) for row in rows
+        )
     if expected is not None:
         result_ids = {row["case_id"] for row in rows}
         missing = result_ids - set(expected)

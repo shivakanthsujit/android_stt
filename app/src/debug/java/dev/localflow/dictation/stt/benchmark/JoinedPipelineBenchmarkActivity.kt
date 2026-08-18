@@ -1,8 +1,12 @@
 package dev.localflow.dictation.stt.benchmark
 
 import android.app.Activity
+import android.os.Debug
 import android.os.Bundle
+import android.os.PowerManager
+import android.os.Process
 import android.os.SystemClock
+import android.os.Trace
 import android.view.WindowManager
 import android.widget.TextView
 import dev.localflow.dictation.IntegrationModels
@@ -41,8 +45,8 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     private val cleanupLazy = lazy {
         SottoCleanupEngine(
             context = applicationContext,
-            modelFile = IntegrationModels.sottoFile(applicationContext),
-            expectedModelSha256 = IntegrationModels.SOTTO_SHA256,
+            modelFile = IntegrationModels.modelDirectory(applicationContext).resolve(sottoFileName),
+            expectedModelSha256 = sottoSha256,
         )
     }
     private val parakeet by parakeetLazy
@@ -55,6 +59,9 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     private var writer: BufferedWriter? = null
     private var parakeetLoadMs = 0L
     private var cleanupLoadMs = 0L
+    private lateinit var sottoFileName: String
+    private lateinit var sottoSha256: String
+    private var benchmarkTraceActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +78,7 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     }
 
     override fun onDestroy() {
+        endBenchmarkTrace()
         runCatching { writer?.close() }
         if (parakeetLazy.isInitialized()) parakeetLazy.value.close()
         if (cleanupLazy.isInitialized()) {
@@ -92,6 +100,12 @@ class JoinedPipelineBenchmarkActivity : Activity() {
         }
         runId = intent.getStringExtra(EXTRA_RUN_ID).orEmpty()
         require(SAFE_NAME.matches(runId)) { "Invalid or missing run_id" }
+        sottoFileName = intent.getStringExtra(EXTRA_SOTTO_FILE_NAME)
+            ?: IntegrationModels.SOTTO_FILE_NAME
+        require(SAFE_GGUF_NAME.matches(sottoFileName)) { "Invalid Sotto model filename" }
+        sottoSha256 = (intent.getStringExtra(EXTRA_SOTTO_SHA256)
+            ?: IntegrationModels.SOTTO_SHA256).lowercase()
+        require(SHA256.matches(sottoSha256)) { "Invalid Sotto SHA-256" }
         partialResult = childFile("results-$runId.jsonl.partial")
         finalResult = childFile("results-$runId.jsonl")
         require(!partialResult.exists() && !finalResult.exists()) {
@@ -134,7 +148,11 @@ class JoinedPipelineBenchmarkActivity : Activity() {
                 .onSuccess {
                     cleanupLoadMs = elapsedMs(startedAtNs)
                     runCatching { writer = BufferedWriter(FileWriter(partialResult, false)) }
-                        .onSuccess { runCase(cases, 0) }
+                        .onSuccess {
+                            Trace.beginAsyncSection(TRACE_SECTION_NAME, TRACE_COOKIE)
+                            benchmarkTraceActive = true
+                            runCase(cases, 0)
+                        }
                         .onFailure(::fail)
                 }
                 .onFailure(::fail)
@@ -169,11 +187,21 @@ class JoinedPipelineBenchmarkActivity : Activity() {
         audio: PcmAudio,
     ) {
         val pipelineStartedAtNs = SystemClock.elapsedRealtimeNanos()
+        Trace.beginAsyncSection(TRACE_STT_SECTION_NAME, index)
         parakeet.transcribePcm(audio.samples, audio.sampleRate) { sttResult ->
+            Trace.endAsyncSection(TRACE_STT_SECTION_NAME, index)
             sttResult.onSuccess { stt ->
                 uiScope.launch {
                     runCatching {
-                        val cleanupResult = cleanup.clean(stt.text, CleanupPromptVariant.SOTTO_NATIVE)
+                        val cleanupCpuStartedAtMs = Process.getElapsedCpuTime()
+                        Trace.beginAsyncSection(TRACE_CLEANUP_SECTION_NAME, index)
+                        val cleanupResult = try {
+                            cleanup.clean(stt.text, CleanupPromptVariant.SOTTO_NATIVE)
+                        } finally {
+                            Trace.endAsyncSection(TRACE_CLEANUP_SECTION_NAME, index)
+                        }
+                        val cleanupProcessCpuMs =
+                            (Process.getElapsedCpuTime() - cleanupCpuStartedAtMs).coerceAtLeast(0L)
                         val pipelineCompletedAtNs = SystemClock.elapsedRealtimeNanos()
                         JSONObject()
                             .put("schema_version", SCHEMA_VERSION)
@@ -185,7 +213,10 @@ class JoinedPipelineBenchmarkActivity : Activity() {
                             .put("audio_duration_ms", audio.durationMs)
                             .put("parakeet_model_load_ms", parakeetLoadMs)
                             .put("sotto_model_load_ms", cleanupLoadMs)
+                            .put("sotto_model_file", sottoFileName)
+                            .put("sotto_model_sha256", sottoSha256)
                             .put("stt_inference_ms", stt.inferenceDurationMs)
+                            .put("stt_process_cpu_ms", stt.processCpuDurationMs)
                             .put("raw_stt", stt.text)
                             .put("model_input", cleanupResult.modelInputText)
                             .put("removed_fillers", JSONArray(cleanupResult.removedFillers))
@@ -201,10 +232,32 @@ class JoinedPipelineBenchmarkActivity : Activity() {
                                 cleanupResult.timeToFirstTokenMs ?: JSONObject.NULL,
                             )
                             .put("cleanup_total_ms", cleanupResult.totalLatencyMs)
+                            .put("cleanup_process_cpu_ms", cleanupProcessCpuMs)
+                            .put(
+                                "cleanup_prompt_tokens",
+                                cleanupResult.promptTokens ?: JSONObject.NULL,
+                            )
+                            .put(
+                                "cleanup_completion_tokens",
+                                cleanupResult.completionTokens ?: JSONObject.NULL,
+                            )
+                            .put(
+                                "cleanup_tokens_per_second",
+                                cleanupResult.tokensPerSecond ?: JSONObject.NULL,
+                            )
                             .put(
                                 "pipeline_total_ms",
                                 (pipelineCompletedAtNs - pipelineStartedAtNs)
                                     .coerceAtLeast(0L) / 1_000_000L,
+                            )
+                            .put("process_pss_kb_after_pipeline", Debug.getPss())
+                            .put(
+                                "native_heap_bytes_after_pipeline",
+                                Debug.getNativeHeapAllocatedSize(),
+                            )
+                            .put(
+                                "thermal_status_after_pipeline",
+                                getSystemService(PowerManager::class.java).currentThermalStatus,
                             )
                             .put("created_at_utc", Instant.now().toString())
                     }.onSuccess { record ->
@@ -229,6 +282,7 @@ class JoinedPipelineBenchmarkActivity : Activity() {
             requireNotNull(writer).close()
             writer = null
             require(partialResult.renameTo(finalResult)) { "Could not finalize result file" }
+            endBenchmarkTrace()
         }.onSuccess {
             status.text = "Finished $caseCount joined cases\n${finalResult.name}"
             LocalFlowLog.info(
@@ -239,6 +293,7 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     }
 
     private fun fail(error: Throwable) {
+        endBenchmarkTrace()
         LocalFlowLog.error("Joined file benchmark failed", error)
         status.text = "Joined benchmark failed: ${error.message ?: error.javaClass.simpleName}"
         runCatching { writer?.close() }
@@ -313,6 +368,13 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     private fun elapsedMs(startedAtNs: Long): Long =
         (SystemClock.elapsedRealtimeNanos() - startedAtNs).coerceAtLeast(0L) / 1_000_000L
 
+    private fun endBenchmarkTrace() {
+        if (benchmarkTraceActive) {
+            Trace.endAsyncSection(TRACE_SECTION_NAME, TRACE_COOKIE)
+            benchmarkTraceActive = false
+        }
+    }
+
     private data class JoinedCase(
         val caseId: String,
         val audioFile: String,
@@ -322,11 +384,18 @@ class JoinedPipelineBenchmarkActivity : Activity() {
 
     private companion object {
         const val EXTRA_RUN_ID = "run_id"
+        const val EXTRA_SOTTO_FILE_NAME = "sotto_file_name"
+        const val EXTRA_SOTTO_SHA256 = "sotto_sha256"
         const val BENCHMARK_DIRECTORY = "joined-eval"
         const val MANIFEST_FILE = "manifest.jsonl"
         const val PARAKEET_VARIANT = "q4-k"
         const val SCHEMA_VERSION = 1
+        const val TRACE_SECTION_NAME = "localflow_joined_benchmark"
+        const val TRACE_STT_SECTION_NAME = "localflow_joined_stt_inference"
+        const val TRACE_CLEANUP_SECTION_NAME = "localflow_joined_cleanup_inference"
+        const val TRACE_COOKIE = 1
         val SAFE_NAME = Regex("[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
+        val SAFE_GGUF_NAME = Regex("[A-Za-z0-9][A-Za-z0-9._-]{0,127}\\.gguf")
         val SAFE_AUDIO_PATH = Regex("audio/[A-Za-z0-9][A-Za-z0-9._-]{0,127}\\.wav")
         val SHA256 = Regex("[0-9a-f]{64}")
     }

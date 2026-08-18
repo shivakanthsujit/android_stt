@@ -37,8 +37,8 @@ Last updated: 2026-08-18
   Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined debug APK; current verified APK is 88,044,777 bytes with SHA-256
-  `22719570e435a379ecbaa2d91e823fb0b5b846f93a761d9021f86524d5b40ae3`.
+- ARM64-only joined debug APK; current verified APK is 88,045,558 bytes with SHA-256
+  `7d5ab0ef6ebc0c4ece8b8885b2a0aca19730ae05a619f727a762ee22fada2bc4`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -414,6 +414,24 @@ Last updated: 2026-08-18
   `/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542` (weight
   SHA-256 `5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6`). This is an
   integration-test candidate, not a deployment-qualified checkpoint.
+- The local half of that comparison is now complete. Only inference files were copied from
+  `dante`; optimizer state was not transferred. The reproducible B epoch-2 Q4_K_M is 229,310,336
+  bytes with SHA-256 `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`.
+  On direct personal-v3 cleanup it remains 15/20 acceptable, 8/20 strict, 46/61 literal anchors,
+  1/3 corrections, and 0/3 formatting directives. Three-repeat Pixel timing is 159 ms median
+  TTFT and 481 ms median total; attributed compute is 2.69 J/call at 3.84 W, peak PSS is 669,140
+  KiB, and thermal status stays 0. Raw failures keep it out of deployment.
+- The B epoch-2 Parakeet-fed run completes all 20 v3 synthetic clips. Parakeet reaches 15/20
+  normalized STT exact; cleanup reaches 8/20 normalized intended-target exact and about 13/20
+  manually acceptable. Median STT/cleanup/pipeline times are 764/784/1,552 ms. The attributed STT
+  and cleanup stages total 7.18 J per utterance; peak joined PSS is 920,517 KiB and thermal status
+  remains 0. The exact post-filler Parakeet inputs are projected for Luna without including local
+  output as context.
+- The hosted joined half remains pending because `OPENAI_API_KEY` is unset. A historical key was
+  found only in macOS Trash and was neither restored nor used without explicit authorization.
+  Existing Luna direct evidence remains 20/20 acceptable at 649 ms median service latency. The
+  interim report is
+  `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md`.
 
 ## Toolchain
 

@@ -53,12 +53,15 @@ Implemented:
   and four 3–5 sentence latency cases; phone-number and technical synthetic cases are excluded
 - command-line build, install, log, and toolchain-check scripts
 
-The current experimental cleanup comparison candidates are hosted `gpt-5.6-luna` and local Sotto
-B epoch 2. The local checkpoint is stored outside Git on `dante` at
-`/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`; copy it from
-that host for Pixel integration. See the
-[personal-v3 relaxed cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md)
-for the quality result and safety limitations.
+The current experimental cleanup comparison is hosted `gpt-5.6-luna` versus local Sotto B epoch 2.
+The checkpoint has now been copied from `dante`, reproducibly converted to a 229,310,336-byte
+Q4_K_M artifact, and measured on Pixel 7. It remains a no-go at 15/20 acceptable direct cleanup,
+1/3 corrections, and 0/3 formatting directives despite a 481 ms median local cleanup time. The
+Parakeet-fed local run is also complete; the exact Luna-on-Parakeet-output run is pending an
+authorized API credential. See the
+[interim Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md)
+and the earlier
+[personal-v3 cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md).
 
 Not implemented yet:
 
@@ -340,6 +343,14 @@ HF/publisher source-dev evaluation was not. The default product metric is now se
 acceptability, with strict exactness retained as secondary evidence. See the
 [cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md)
 and [acceptance policy](docs/evaluation/PERSONAL_CLEANUP_ACCEPTANCE.md).
+
+The local side of the follow-up Pixel experiment is complete. Sotto B epoch-2 Q4_K_M reaches
+15/20 acceptable on direct text at 481 ms median total, using 2.69 J per measured cleanup call on
+the attributed Pixel compute rails. With Parakeet resident, cleanup is 784 ms median and the two
+measured inference stages use 7.18 J per utterance. Luna still needs to be run on those exact
+Parakeet outputs before the E2E comparison is complete; cloud-server energy is not exposed and
+must not be inferred from Pixel power. See the
+[interim Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md).
 
 ## File-fed STT probe status
 

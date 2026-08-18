@@ -779,3 +779,32 @@
   integration handoff for Luna plus local B epoch 2. The local checkpoint stays on `dante` at
   `/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`; no weights
   are included in Git.
+
+## 2026-08-18 — Luna versus B epoch-2 Pixel comparison, local half
+
+- Read the project/training handoffs and recent comparison commit, verified the Pixel 7 connection,
+  and confirmed B epoch 2 on `dante`. Copied only inference files, not the 1.42 GB optimizer state;
+  the 708,984,464-byte source weight hash remains
+  `5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6`.
+- Added a reproducible export for the current Transformers checkpoint shape. The compatibility
+  aliases are applied only in an ignored export copy. The final 229,310,336-byte Q4_K_M hash is
+  `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`;
+  weights and GGUFs remain outside Git.
+- Added a debug-only direct cleanup benchmark and extended the joined runner with selectable Sotto
+  identity, process CPU, tokens/s, PSS/heap/thermal data, and separate Perfetto STT/cleanup trace
+  slices. Added projected hosted-E2E input and timing-combination tools. No transcript is written
+  to Logcat.
+- Direct B Q4_K_M completed 60 measured Pixel calls after one model warmup: 15/20 manually
+  acceptable, 8/20 strict, 46/61 literal anchors, 1/3 corrections, and 0/3 formatting. Median
+  TTFT/total are 159/481 ms, decode is 38.0 tokens/s, peak PSS is 669,140 KiB, and attributed
+  cleanup compute is 161.62 J total or 2.69 J/call at 3.84 W. Thermal status stayed 0.
+- The 20-case Parakeet-fed run reached 15/20 normalized STT exact and 8/20 normalized raw cleanup
+  exact. Manual cleanup acceptance is about 13/20; failures separate STT name/number damage from
+  Sotto correction/formatting gaps. Median STT/cleanup/pipeline are 764/784/1,552 ms. Attributed
+  STT plus cleanup energy is 143.69 J, or 7.18 J per utterance; joined peak PSS is 920,517 KiB.
+- Did not run the hosted joined half. `OPENAI_API_KEY` is unset, and the only historical credential
+  found is in macOS Trash. It was not restored or used implicitly. The already projected exact
+  post-filler Parakeet input is ready for a 20-call Luna run once a credential is authorized.
+- Published aggregate-only interim evidence at
+  `docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel-interim.md`. Raw personal output,
+  audio, traces, projected hosted inputs, models, and checkpoint files remain ignored.

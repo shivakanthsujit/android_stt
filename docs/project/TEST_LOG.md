@@ -421,3 +421,29 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   `5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6` from the checkpoint matrix.
 - No checkpoint, raw personal-v3 API result, credential file, or personal transcript is included
   in the Git publication set.
+
+## 2026-08-18 — B epoch-2 Pixel direct and joined benchmark
+
+- Pixel 7 `panther`, serial `33040DLH20004E`; all direct and joined cases completed with maximum
+  Android thermal status 0.
+- Direct result/summary/power SHA-256:
+  `828a945c94f1c8b9a17ab21d44ce3d17d133c2f3eaa67dfd531d2c8ab7a22e90`,
+  `1053d5fe0341da89bc463f3dcb6a60241e1a7ac36157c0d60f3c5a25e32d5d18`, and
+  `aa67b7bb757b8c756ec4bb7e54e7ac3b24fa456ecae274f9962065c7ddfa90f4`.
+- Joined result/summary/STT-power/cleanup-power SHA-256:
+  `0471a0083e291b7e974563c0479300ca2177f67198314474c41a0c0e3bf78d78`,
+  `c355f398c18f76ea44ca0ba82a36150506707c1beb8eea76041eddfb9bfa93e1`,
+  `06288157ef45928767749d950fae7733861e6d2ae0d663bc55e27a30b31b0cf3`, and
+  `4e5006a7cd0622b47da001e65b5eeb7c652507331f5747d3fa52dc9ef0ff44cc`.
+- `python3 -m unittest scripts.tests.test_cleanup_pixel_benchmark
+  scripts.tests.test_score_joined_results scripts.tests.test_run_cleanup_openai -v` passes after
+  adding direct, projection, power-name, and hosted-joined timing coverage.
+- Full `scripts/tests` discovery currently has 161 passes and one unrelated macOS path-alias
+  failure: the archive-target test expects `/var/folders/...`, while `Path.resolve()` returns the
+  equivalent `/private/var/folders/...` on this host. No training/cleanup behavior failed.
+- `. scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`
+  succeeds: 55 actionable tasks, 12 executed and 43 up-to-date.
+- Verified debug APK: 88,045,558 bytes, SHA-256
+  `7d5ab0ef6ebc0c4ece8b8885b2a0aca19730ae05a619f727a762ee22fada2bc4`.
+- `git diff --check`, Python byte compilation, and shell syntax checks pass for the benchmark
+  publication set.

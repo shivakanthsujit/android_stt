@@ -38,7 +38,20 @@ def query(trace_processor: Path, trace: Path, sql: str) -> list[dict[str, str]]:
     return list(csv.DictReader(io.StringIO("\n".join(lines[header_index:]))))
 
 
-def score(trace_processor: Path, trace: Path) -> dict:
+def _safe_trace_name(value: str, option: str) -> str:
+    if not value or any(character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-" for character in value):
+        raise ValueError(f"{option} must be a non-empty trace-safe identifier")
+    return value
+
+
+def score(
+    trace_processor: Path,
+    trace: Path,
+    trace_section: str = TRACE_SECTION,
+    inference_section: str = TRACE_INFERENCE_SECTION,
+) -> dict:
+    trace_section = _safe_trace_name(trace_section, "trace section")
+    inference_section = _safe_trace_name(inference_section, "inference section")
     rail_rows = query(
         trace_processor,
         trace,
@@ -47,7 +60,7 @@ def score(trace_processor: Path, trace: Path) -> dict:
         WITH benchmark AS (
           SELECT ts, ts + dur AS end_ts, dur
           FROM slice
-          WHERE name = '{TRACE_SECTION}' AND dur > 0
+          WHERE name = '{trace_section}' AND dur > 0
           ORDER BY dur DESC
           LIMIT 1
         )
@@ -68,7 +81,7 @@ def score(trace_processor: Path, trace: Path) -> dict:
         """,
     )
     if not rail_rows:
-        raise ValueError(f"Trace has no complete {TRACE_SECTION} slice with power-rail samples")
+        raise ValueError(f"Trace has no complete {trace_section} slice with power-rail samples")
 
     duration_ns = int(rail_rows[0]["benchmark_duration_ns"])
     if duration_ns <= 0:
@@ -112,7 +125,7 @@ def score(trace_processor: Path, trace: Path) -> dict:
         WITH inference AS (
           SELECT ts, ts + dur AS end_ts, dur
           FROM slice
-          WHERE name = '{TRACE_INFERENCE_SECTION}' AND dur > 0
+          WHERE name = '{inference_section}' AND dur > 0
         )
         SELECT
           (SELECT COUNT(*) FROM inference) AS inference_count,
@@ -137,7 +150,7 @@ def score(trace_processor: Path, trace: Path) -> dict:
         """,
     )
     if not inference_rows:
-        raise ValueError(f"Trace has no complete {TRACE_INFERENCE_SECTION} slices")
+        raise ValueError(f"Trace has no complete {inference_section} slices")
     inference_count = int(inference_rows[0]["inference_count"])
     inference_duration_seconds = int(inference_rows[0]["inference_duration_ns"]) / 1_000_000_000.0
     inference_subsystems: dict[str, float] = defaultdict(float)
@@ -172,7 +185,8 @@ def score(trace_processor: Path, trace: Path) -> dict:
     )
     summary = {
         "schema_version": 1,
-        "trace_section": TRACE_SECTION,
+        "trace_section": trace_section,
+        "inference_trace_section": inference_section,
         "benchmark_duration_seconds": duration_seconds,
         "cpu_energy_joules": cpu_energy_joules,
         "gpu_energy_joules": gpu_energy_joules,
@@ -202,9 +216,16 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("trace", type=Path)
     parser.add_argument("--trace-processor", type=Path, required=True)
+    parser.add_argument("--trace-section", default=TRACE_SECTION)
+    parser.add_argument("--inference-section", default=TRACE_INFERENCE_SECTION)
     parser.add_argument("--json-out", type=Path)
     args = parser.parse_args()
-    summary = score(args.trace_processor.resolve(), args.trace.resolve())
+    summary = score(
+        args.trace_processor.resolve(),
+        args.trace.resolve(),
+        trace_section=args.trace_section,
+        inference_section=args.inference_section,
+    )
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
         args.json_out.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")

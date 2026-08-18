@@ -321,6 +321,13 @@ Last updated: 2026-08-18
     outside Git on `dante` at
     `/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542`; the Pixel
     build machine may copy them directly from that host.
+53. Reject B epoch 2 as a deployment cleanup model after its Pixel Q4_K_M measurement. Its primary
+    direct score remains 15/20 acceptable with only 1/3 corrections and 0/3 formatting directives;
+    raw semantic failures remain after quantization. Keep its new direct and Parakeet-fed Pixel
+    measurements as runtime evidence, but do not let 481 ms median direct latency, 2.69 J/call, or
+    guardrail fallback override raw-model quality. Finish the Luna E2E side only with an explicitly
+    authorized credential and report cloud power as unavailable rather than estimating it from
+    Pixel rails.
 
 ## Hosted API benchmark
 
