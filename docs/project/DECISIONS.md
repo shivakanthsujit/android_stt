@@ -20,8 +20,22 @@ Last updated: 2026-08-18
    stop it synchronously on Stop.
 4. Treat Android's built-in on-device SpeechRecognizer as an empirical A/B candidate, not an
    assumed replacement. Pixel-specific quality and punctuation must be measured.
-5. Defer the formal STT comparison while cleanup is the demonstrated blocker. The current working
-   offline Moonshine path is a provisional input, not the final STT selection.
+5. Cleanup remains the product blocker, but a bounded file-fed STT probe may proceed independently
+   when explicitly prioritized. The current live Moonshine path remains provisional.
+6. Use pinned `parakeet.cpp` 0.5.0 through its C API for the first Parakeet Android comparison.
+   Statically link its pinned ggml into `libparakeet.so` so its generic `libggml.so` names cannot
+   collide with Moonshine/LEAP libraries in the same APK.
+7. Use the 24-clip LibriSpeech subset only as a reproducible read-speech probe. It can reject weak
+   candidates but cannot qualify dictation, names/numbers/technical tokens, streaming, endpointing,
+   or Stop-to-final latency.
+8. Advance Parakeet TDT/CTC 110M Q4_K as the provisional deployment candidate and retain F16 as the
+   non-quantized quality reference. Q4_K added one `Hidalgo`/`Hadalgo` substitution but reduced
+   clean latency, model bytes, CPU time, measured energy, and memory materially. Reopen this choice
+   if the dictation corpus finds systematic protected-token regression.
+9. Treat Perfetto power rails plus per-process CPU time as the energy evidence. The USB-connected
+   battery current/charge counter is charger-confounded; hardware rails are downstream of the
+   battery. The present Parakeet build is CPU-only, and negligible GPU rail energy is not a GPU
+   acceleration claim.
 
 ## Cleanup
 

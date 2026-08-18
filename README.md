@@ -33,11 +33,19 @@ Implemented:
 - completed native-prompt BF16 screen of the public Sotto LFM2.5-350M cleanup checkpoint; it is
   stronger than generic LFM but remains a no-go because it changed protected facts/text and
   frequently retained superseded corrections
+- a debug-only, file-fed Pixel STT harness with deterministic LibriSpeech audio, normalized WER,
+  repeat latency, process CPU, PSS, thermal, and Perfetto CPU/GPU/memory rail energy scoring
+- clean Pixel comparison of Moonshine Small and `parakeet.cpp` 110M F16/Q4_K; Q4_K is the
+  provisional STT candidate at 1.85% probe WER, 0.72 s untraced median, and 235 J measured compute
+  energy across the 72-call workload
 - command-line build, install, log, and toolchain-check scripts
 
 Not implemented yet:
 
 - a cleanup model that has passed the fixed quality/safety bar
+- live microphone/streaming integration of the provisional Parakeet Q4_K candidate
+- a dictation-focused STT qualification corpus; the current 24-clip read-speech probe is not a
+  final product WER claim
 - joined STT → cleanup pipeline
 - Android `InputMethodService`
 
@@ -78,7 +86,8 @@ load in 1.93 seconds.
 | minSdk | 31 |
 | ABI | arm64-v8a |
 | Moonshine Voice | `ai.moonshine:moonshine-voice:0.1.2` |
-| STT model | English Small Streaming, architecture 4 |
+| Live STT model | Moonshine English Small Streaming, architecture 4 (provisional) |
+| File-fed STT candidate | `parakeet.cpp` 0.5.0 TDT/CTC 110M Q4_K; F16 retained as quality reference |
 | Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
 | Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
 | Active cleanup candidate | Sotto LFM2.5-350M correction-repair experiment; public checkpoint not yet deployable |
@@ -215,8 +224,27 @@ See [the full screen](docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public
 
 Cleanup is therefore not joined to STT. The active phase prepares a leakage-isolated 0.6B/0.8B
 task-specific cleanup experiment for the separate training machine. This Mac is used only for data
-tooling, model inference, and evaluation; no training job is run here. Formal STT comparison is
-deferred until cleanup is no longer the demonstrated bottleneck.
+tooling, model inference, and evaluation; no training job is run here.
+
+## File-fed STT probe status
+
+The initial fixed Pixel probe now compares Moonshine Small with `parakeet.cpp` 0.5.0 TDT/CTC 110M
+F16 and Q4_K on 24 LibriSpeech `test-clean` clips, one warm-up, and three measured repeats. This is
+a deterministic multi-speaker probe, not the official full-split score or a dictation
+qualification.
+
+- Moonshine: 3.54% WER, 1.23 s median, 3.03 s p90, 797.7 MiB peak PSS.
+- Parakeet F16: 1.69% WER, 1.03 s median, 2.39 s p90, 513.1 MiB peak PSS.
+- Parakeet Q4_K: 1.85% WER, 0.72 s median, 1.80 s p90, 383.1 MiB peak PSS.
+- Q4_K differed from F16 on one word (`Hidalgo` → `Hadalgo`) but used 23.8% less process CPU time,
+  23.3% less measured inference compute energy, 8.6% less average compute power, and 25.5% less
+  memory in matched power runs. GPU rail use was negligible because the current build is CPU-only.
+
+Q4_K is therefore the provisional deployment candidate; F16 remains the non-quantized quality
+reference. The live app still uses Moonshine until Parakeet's streaming path and protected-token
+dictation quality pass. Full methodology, hashes, caveats, and power results are in
+[the Pixel Parakeet report](docs/evaluation/results/2026-08-18-pixel-parakeet-stt-probe.md), with
+reproduction instructions in [the STT benchmark guide](docs/evaluation/STT_BENCHMARK.md).
 
 See [the test log](docs/project/TEST_LOG.md) and
 [static result summaries](docs/evaluation/results/) for the durable evidence.

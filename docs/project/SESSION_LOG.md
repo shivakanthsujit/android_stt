@@ -390,3 +390,34 @@
   pinned LFM2.5-350M base using the same mixture and disclosed publisher settings.
 - Added the self-contained next-session plan at
   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md` and updated the training-machine handoff.
+
+## 2026-08-18 — File-fed Pixel Parakeet and power evaluation
+
+- Added a debug-only ADB-driven STT benchmark Activity that never opens the microphone. It verifies
+  a JSONL manifest and WAV hashes, decodes strict 16 kHz mono PCM16, warms once, runs three measured
+  repeats, flushes atomic JSONL results, and keeps transcript text out of Logcat.
+- Added a deterministic 24-clip, 12-speaker LibriSpeech `test-clean` probe prepared from pinned
+  Hugging Face revision `71cacbfb7e2354c4226d01e70d77d5fca3d04ba1`; manifest SHA-256
+  `7c90de45a130caf4ceb2f5215be114bd9daaa34e95549958440ccb7a95cc187f`.
+- Pinned and cross-built `parakeet.cpp` v0.5.0 commit
+  `1bfbebfaaf493866f49597cd3b7901959d395c60` with ggml
+  `e705c5fed490514458bdd2eaddc43bd098fcce9b` for Android ARM64. Repaired the incomplete SDK
+  Manager NDK r28 install from Google's checksum-verified archive.
+- Prevented a native-library collision by statically embedding Parakeet's ggml rather than
+  packaging another incompatible `libggml.so` alongside Moonshine/LEAP. Added the pinned C API ABI
+  6 JNI bridge and ARM64 OpenMP runtime.
+- Ran clean, idle, untraced Pixel comparisons. Moonshine scored 3.54% WER; Parakeet F16 1.69%;
+  Parakeet Q4_K 1.85%. Q4_K was fastest at 717 ms median and 1,798 ms p90, used about 383 MiB PSS,
+  and produced stable output across all repeats.
+- Excluded an earlier F16 latency run after learning the phone was in active use; that run contained
+  a 345.8-second outlier. Repeating from thermal 0 with competing Gmail work stopped reduced the
+  maximum to 3.77 seconds without changing F16 output.
+- Added p99/max latency, process CPU time, average core use, post-inference memory/thermal telemetry,
+  and optional Perfetto on-device CPU/GPU/memory rail measurement restricted to measured inference
+  trace slices.
+- In matched power runs, Q4_K used 553.3 process-CPU seconds and 235.1 J compute energy versus F16's
+  725.7 seconds and 306.6 J. Q4_K also used 8.6% lower average compute power and 25.5% less peak PSS.
+  GPU rail energy was negligible because the build is CPU-only.
+- Changed the provisional STT candidate from F16 to Q4_K after the user accepted one extra proper-
+  name substitution in exchange for the measured efficiency gains. F16 remains the quality
+  reference; live streaming and dictation-focused protected-token qualification remain unbuilt.

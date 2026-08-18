@@ -8,6 +8,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.os.SystemClock
 import ai.moonshine.voice.AssetDownloader
 import ai.moonshine.voice.JNI
@@ -34,7 +35,7 @@ class MoonshineSttEngine(
     private val onProgress: (fraction: Float, file: String) -> Unit,
     private val onStateChanged: (SpeechToTextEngine.State) -> Unit,
     private val onError: (Throwable) -> Unit,
-) : SpeechToTextEngine {
+) : SpeechToTextEngine, FileSttBenchmarkEngine {
     private val appContext = context.applicationContext
     private val mainHandler = Handler(Looper.getMainLooper())
     private val worker: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
@@ -58,6 +59,8 @@ class MoonshineSttEngine(
     @Volatile
     override var state: SpeechToTextEngine.State = SpeechToTextEngine.State.UNLOADED
         private set
+
+    override val benchmarkEngineId = "moonshine-small-streaming-en-0.1.2"
 
     private var currentPartial = ""
     private var partialHandler: (String) -> Unit = {}
@@ -166,6 +169,46 @@ class MoonshineSttEngine(
         // capture thread exits its blocking read, and the model worker drains only already-captured
         // audio before forcing Moonshine's final streaming pass.
         stopAudioCapture()
+    }
+
+    override fun transcribePcm(
+        samples: FloatArray,
+        sampleRate: Int,
+        callback: (Result<FileSttBenchmarkResult>) -> Unit,
+    ) {
+        if (state != SpeechToTextEngine.State.READY) {
+            mainHandler.post {
+                callback(Result.failure(IllegalStateException("Model is not ready")))
+            }
+            return
+        }
+        if (samples.isEmpty()) {
+            mainHandler.post {
+                callback(Result.failure(IllegalArgumentException("Audio has no samples")))
+            }
+            return
+        }
+        if (sampleRate <= 0) {
+            mainHandler.post {
+                callback(Result.failure(IllegalArgumentException("Invalid sample rate")))
+            }
+            return
+        }
+
+        worker.execute {
+            runCatching {
+                val cpuStartedAtMs = Process.getElapsedCpuTime()
+                val startedAtNs = SystemClock.elapsedRealtimeNanos()
+                val transcript = transcriber.transcribeWithoutStreaming(samples, sampleRate)
+                val finishedAtNs = SystemClock.elapsedRealtimeNanos()
+                val cpuFinishedAtMs = Process.getElapsedCpuTime()
+                FileSttBenchmarkResult(
+                    text = transcript.text().orEmpty().trim(),
+                    inferenceDurationNs = finishedAtNs - startedAtNs,
+                    processCpuDurationMs = (cpuFinishedAtMs - cpuStartedAtMs).coerceAtLeast(0L),
+                )
+            }.also { result -> mainHandler.post { callback(result) } }
+        }
     }
 
     override fun close() {

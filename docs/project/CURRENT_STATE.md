@@ -12,7 +12,8 @@ Last updated: 2026-08-18
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
   no-go evaluation), 3 (cross-family generic-model quality screen)
 - Active milestone: 4 (task-specific cleanup model qualification/training)
-- Deferred milestone: 5 (formal STT-only evaluation)
+- Partially completed milestone: 5 (standard-corpus STT probe; dictation/streaming qualification
+  remains)
 
 ## Working functionality
 
@@ -20,6 +21,13 @@ Last updated: 2026-08-18
 - Moonshine Voice `0.1.2`, English Small Streaming architecture `4`.
 - Model download, persistent no-backup cache, progress display, and offline cache reuse.
 - Raw provisional/final transcript display and monotonic latency metrics.
+- Debug-only, microphone-free STT benchmark Activity that accepts checksum-verified 16 kHz PCM16
+  WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
+  native heap, and thermal status.
+- Pinned Android ARM64 `parakeet.cpp` 0.5.0 JNI/C API integration for file-fed TDT/CTC 110M GGUF
+  inference. Its ggml dependency is statically isolated from Moonshine/LEAP's packaged ggml.
+- Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
+  calls using app trace slices.
 - ARM64-only debug APK; current cleanup-harness APK is about 61 MiB.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
@@ -45,6 +53,8 @@ Last updated: 2026-08-18
 
 - Google Pixel 7 (`panther`), ARM64, adb serial `33040DLH20004E`.
 - Cached Moonshine model remains installed on the device.
+- F16 and Q4_K Parakeet GGUFs plus the generated LibriSpeech probe remain in ignored local/device
+  evaluation storage; they are not committed app assets.
 - Pixel `stay_on_while_plugged_in` was restored to its original `0`; airplane mode is disabled.
 - The cleanup harness and all three Liquid evaluations are committed in `8dce7ab`.
 
@@ -52,6 +62,19 @@ Last updated: 2026-08-18
 
 - Moonshine Small Streaming handled a 59.6-second utterance without ending microphone capture, but
   it produced overly short line segments and several recognition errors.
+- On the clean 24-clip read-speech probe, Moonshine scored 3.54% WER, Parakeet F16 1.69%, and
+  Parakeet Q4_K 1.85%. Q4_K was the fastest untraced path (0.72 s median, 1.80 s p90), with zero
+  output instability across repeats.
+- Q4_K's only normalized difference from F16 was `Hidalgo` → `Hadalgo`. In matched power runs it
+  used 23.8% less process CPU time, 23.3% less inference compute-rail energy, 8.6% less average
+  compute power, and 25.5% less peak PSS. Q4_K is the provisional deployment candidate; F16 is the
+  quality reference.
+- The current Parakeet build is CPU-only. GPU rail energy was below 0.1% of compute energy. Live
+  microphone/streaming integration and a protected-token dictation corpus remain required before
+  replacing Moonshine.
+- An initial F16 latency run was contaminated by active phone use and excluded. Clean runs start
+  with no competing app and thermal status 0. Perfetto affects wall timing, so untraced runs select
+  latency while traced runs supply CPU/energy evidence.
 - Completed Moonshine lines are currently displayed on separate lines. This makes segmentation
   more visually prominent; the future cleanup stage should receive the whole transcript.
 - Automatic end-of-speech is deliberately not implemented. V1 uses explicit Start/Stop.
@@ -268,6 +291,8 @@ Last updated: 2026-08-18
 - JDK 17
 - compileSdk / targetSdk 36; minSdk 31
 - Android Platform-Tools 37.0.1
+- Android NDK 28.0.13004108 and SDK CMake 3.31.6 for the pinned Parakeet ARM64 build
+- Perfetto trace processor 57.2 for optional Pixel power-rail analysis
 
 ## Resume checklist
 

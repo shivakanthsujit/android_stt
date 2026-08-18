@@ -41,6 +41,37 @@
 All tests below used a physical Google Pixel 7 unless stated otherwise. Raw transcript contents are
 not persisted here; only representative accuracy observations and timing are recorded.
 
+## 2026-08-18 — File-fed STT and power probe
+
+- Device: Pixel 7 `panther`, serial `33040DLH20004E`; debug ARM64 APK; cleanup unloaded; no
+  microphone opened.
+- Corpus: deterministic 24-clip/12-speaker LibriSpeech `test-clean` probe; manifest SHA-256
+  `7c90de45a130caf4ceb2f5215be114bd9daaa34e95549958440ccb7a95cc187f`; one warm-up plus three
+  measured repeats per clip.
+- Clean untraced Moonshine Small: 3.54% WER (21/593), 1,233.7 ms median, 3,033.3 ms p90,
+  4,061.1 ms max, 6.46× realtime, 816,828 KiB peak PSS, thermal status 1, 7 normalized unstable
+  cases.
+- Clean untraced Parakeet F16: 1.69% WER (10/593), 1,034.5 ms median, 2,388.1 ms p90,
+  3,772.7 ms max, 7.94× realtime, 525,408 KiB peak PSS, thermal status 0, no unstable cases.
+- Clean untraced Parakeet Q4_K: 1.85% WER (11/593), 717.0 ms median, 1,798.4 ms p90,
+  2,694.9 ms max, 11.31× realtime, 392,342 KiB peak PSS, thermal status 0, no unstable cases.
+- F16/Q4_K normalized outputs differed only on `Hidalgo` versus `Hadalgo`.
+- Perfetto v57.2 power runs used 72 app-marked measured inference slices and Pixel on-device power
+  rails. Q4_K: 553.3 process-CPU seconds, 205.895 J CPU, 0.097 J GPU, 29.065 J memory/fabric,
+  235.057 J compute total, 2.802 W average compute power, 387,103 KiB peak PSS. F16: 725.7 CPU
+  seconds, 276.313 J CPU, 0.268 J GPU, 29.996 J memory/fabric, 306.577 J compute total, 3.065 W,
+  519,708 KiB PSS. Moonshine: 696.9 CPU seconds, 367.330 J compute total, 811,449 KiB PSS.
+- Power-trace wall latency was perturbed, especially for Moonshine; untraced runs are the latency
+  evidence and traced runs are CPU/energy evidence.
+- STT-session host standard-library tests passed 54/54 before integration; the focused STT scorer
+  tests passed 3/3 afterward. Final offline `lintDebug testDebugUnitTest assembleDebug`
+  verification passed (55 Gradle tasks). The integrated debug APK was 87,964,790 bytes with
+  SHA-256 `da4a8dcddb133690b9b78b392697829bcee5dc5b991ac52c3486d75697cdc122`.
+- After rebasing over concurrent training work, the expanded host suites passed 117/118 script
+  tests and 10/10 general tests. The sole failure is the unrelated training fetcher's macOS
+  temporary-path assertion comparing `/var/...` with its canonical `/private/var/...` form in
+  `test_safe_target_rejects_archive_escape`; the concurrent training code was left unchanged.
+
 ## 2026-08-17 — Training-machine handoff validation (host only)
 
 - Verified `origin` points to `https://github.com/shivakanthsujit/android_stt.git` and `main`

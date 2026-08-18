@@ -207,17 +207,29 @@ pass. The next external step is durable import and pending review selection.
 Decision point: use the public task-tuned model, train a smaller model, or ship conservative
 deterministic cleanup while generative corrections remain disabled.
 
-## Deferred: Milestone 5 — STT-only evaluation
+## Partially complete: Milestone 5 — STT-only evaluation
 
-- Keep cleanup unloaded and do not join the pipeline.
-- Define a fixed, repeatable audio/transcript corpus covering conversational speech, names, numbers,
-  corrections, technical terms, pauses, and longer dictation.
-- Add file-fed audio evaluation so identical recordings can be tested without repeated speaking.
-- Score word error rate, punctuation/case behavior, omissions, and finalization latency.
-- Benchmark Moonshine Small first, then compare Moonshine Tiny and Pixel's on-device
-  `SpeechRecognizer` if its offline path can be made deterministic.
-- Record memory, thermal behavior, model load time, and offline cache behavior for each candidate.
-- Select an STT engine on measured quality rather than the current interactive anecdotes.
+- [x] Keep cleanup unloaded and do not join the pipeline.
+- [x] Add file-fed audio evaluation so identical recordings can be tested without repeated
+  speaking.
+- [x] Prepare a deterministic 24-clip/12-speaker LibriSpeech `test-clean` probe with per-audio and
+  manifest hashes. Do not present its score as official full-split WER.
+- [x] Benchmark Moonshine Small and pinned `parakeet.cpp` 0.5.0 TDT/CTC 110M F16/Q4_K on Pixel 7.
+- [x] Score normalized WER, S/I/D, median/p90/p99/max latency, corpus RTF, repeat stability, model
+  load, PSS, thermal state, process CPU time, and Perfetto CPU/GPU/memory rail energy.
+- [x] Choose Q4_K as the provisional deployment candidate: one additional word error versus F16,
+  but 23.8% less process CPU time, 23.3% less compute energy, 25.5% less PSS, and about half the
+  model bytes. Keep F16 as the non-quantized quality reference.
+- [ ] Define a fixed, repeatable dictation corpus covering conversational speech, protected names,
+  numbers, corrections, technical terms, paths/versions, pauses, commands/questions, and longer
+  utterances. Score protected-token preservation and numeric equivalence separately from WER.
+- [ ] Integrate Parakeet Q4_K streaming/end-of-utterance behind `SpeechToTextEngine` without
+  weakening the project-owned microphone lifecycle; measure partial responsiveness and
+  Stop-to-final latency.
+- [ ] Verify cold load, offline model reuse, sustained thermal behavior, and live dictation memory.
+- [ ] Compare Pixel's on-device `SpeechRecognizer` only if its offline path can be made deterministic.
+- [ ] Make the final STT choice after the dictation/streaming gate; the read-speech probe is not
+  sufficient by itself.
 
 This remains required before final product selection, but it is not the current bottleneck.
 
