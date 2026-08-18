@@ -244,14 +244,20 @@ Last updated: 2026-08-18
   `6df6f019170b8b55333c047b901886a51750a965`, downloaded, hash-verified, and evaluated in BF16 with
   its native prompt/decoder on all 69 retired diagnostics. It reached 42/69 exact, 147/163 anchors,
   and 2/10 exact self-corrections; all 17 dictated questions/commands remained text rather than
-  being answered. Ignoring harmless conversational and punctuation differences, it still made six
-  clear meaning/protected-text errors and retained seven superseded corrections. It is rejected
-  for direct Android conversion; see
+  being answered. User review calibrated 59/69 outputs as acceptable for ordinary conversation.
+  The ten relevant failures are seven retained superseded corrections, two retained direct
+  repetitions, and one statement changed into a question. It is not ready for direct Android
+  conversion; see
   `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`.
-- Manual audits no longer treat removal of disposable conversational lead-ins such as “Yeah” or
-  “Well” as a deployment blocker by itself. Exact scores remain unchanged for reproducibility;
-  rejection focuses on actual intent/fact/protected-text errors, unsafe answering, and failures of
-  core cleanup operations such as explicit correction handling.
+- The user-calibrated everyday-conversation screen does not gate on disposable lead-ins,
+  punctuation/contractions, word-to-digit time conversion, inferred list formatting, redundant
+  but correct version wording, currency/non-Latin-name normalization, brackets, or technical/code
+  literals such as the malformed Gradle case. Strict metrics remain unchanged for reproducibility.
+- The approved next work is `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`: first continue the
+  public Sotto checkpoint for two full-SFT epochs at `2e-6` on a deterministic 55/25/10/10
+  Sotto/Disfl-QA/DISCO-English/Nyra mixture, then—after complete evaluation—run a clean three-epoch
+  `3e-5` full-SFT reproduction from pinned `LFM2.5-350M-Base` using the same mixture and the
+  publisher's disclosed batch/schedule/packing settings.
 
 ## Toolchain
 
@@ -271,9 +277,8 @@ Last updated: 2026-08-18
    preflight. Do not run the Mac/Pixel steps below.
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
-5. Continue active Milestone 4 in `NEXT_STEPS.md`. Preserve all four completed source experiments,
-   the superseded partial run, and the epoch-2 experimental checkpoint. Do not deploy any adapter.
-   The next evidence-bearing work is a safety-curated and source-balanced data repair pass,
-   followed by a separately named Qwen3.5-0.8B rank-16 LoRA comparison at one and two epochs.
-   Preserve the reviewed-pilot Gate A path, never use blind-v2 for iteration, and compare vLLM
-   scores only under the same pinned backend/concurrency profile.
+5. Continue active Milestone 4 with
+   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. Preserve all completed Qwen source
+   experiments, but the next evidence-bearing work is the two-stage LFM correction-repair study.
+   Preserve the reviewed-pilot Gate A path, never use blind-v2 for iteration, and do not compare
+   the LFM sequential-Transformers results directly with the older Qwen vLLM profile.

@@ -1,6 +1,6 @@
 # Cleanup training-machine handoff
 
-Status: RTX Phase 0 and reproducible pipeline implemented; durable import/review/Gate A next
+Status: Sotto LFM correction-repair experiment is the approved immediate next work
 
 This is the entry point for continuing Local Flow cleanup work on the separate training machine.
 It contains the authority, constraints, source pins, execution order, deliverables, and recovery
@@ -20,13 +20,11 @@ Build a conservative, task-specific, sub-1B transcript cleanup model that:
 - applies only the versioned allowlist of explicit transcript-formatting directives; and
 - never answers, performs external actions, summarizes, refuses, or elaborates on dictated content.
 
-The first controlled experiment compares matching adapters for:
-
-- `Qwen/Qwen3-0.6B`
-- `Qwen/Qwen3.5-0.8B`
-
-Use the 5,000-train/500-dev pilot to select the base. Do not expand to the full dataset until the
-complete pilot pipeline, provenance, evaluation, checkpoint resumption, and failure analysis work.
+The completed Qwen3-0.6B direct-source experiments are preserved research evidence. The immediate
+next experiment is the two-stage Sotto LFM2.5-350M correction-repair study in
+`docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`: targeted continuation of the public checkpoint,
+then a clean full-SFT reproduction from `LFM2.5-350M-Base`. The reviewed 5,000/500 pilot and
+Qwen3.5 comparison remain valid later paths; do not run them ahead of this newly selected study.
 
 The RTX A6000 has ample capacity for this pilot, but do not assume CUDA, driver, Python, disk, or
 thermal state. Inspect and record the actual machine before selecting package versions or batch
@@ -38,17 +36,25 @@ sizes.
 2. `docs/project/CURRENT_STATE.md`
 3. `docs/project/NEXT_STEPS.md`
 4. `docs/project/DECISIONS.md`
-5. `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
-6. `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
-7. `docs/training/DATASET_SCHEMA_V2.md`
-8. `docs/training/cleanup_training_record_v2.schema.json`
-9. `docs/evaluation/README.md`
-10. `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`
-11. `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`
+5. `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`
+6. `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`
+7. `docs/research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md`
+8. `docs/research/TASK_SPECIFIC_CLEANUP_TRAINING_PLAN_2026-08-17.md`
+9. `docs/research/CLEANUP_TRAINING_DATA_SOURCES_2026-08-17.md`
+10. `docs/training/DATASET_SCHEMA_V2.md`
+11. `docs/training/cleanup_training_record_v2.schema.json`
+12. `docs/evaluation/README.md`
+13. `docs/evaluation/results/2026-08-17-cross-family-cleanup-screen.md`
+14. `docs/evaluation/results/2026-08-17-voiceink-qwen35-2b-q4km.md`
 
 The detailed research plan controls quality gates and category balance. This handoff controls the
 machine workflow and resolves the newly discovered public-data path. If the two conflict, stop and
 update both documents explicitly before training.
+
+For the immediate LFM study, `SOTTO_LFM_CORRECTION_REPAIR_PLAN.md` controls the starting
+checkpoints, source proportions, native prompt, full-SFT settings, experiment order, and
+user-calibrated comparison. The reviewed-pilot sections below remain authoritative for that later
+path and must not be misreported as completed Gate A work.
 
 ## Current repository boundary
 
@@ -68,20 +74,26 @@ Implemented in the current Phase 0 checkpoint:
 - family/near-duplicate split grouping, quota-aware pilot selection, human-review tooling, and
   Gate A validation; and
 - matched LoRA train/resume/inference/scoring and read-only run-monitoring tools.
+- completed Qwen3-0.6B Sotto, Disfl-QA, Nyra, and combined source experiments with preserved
+  checkpoints/evaluations under `/data` and sanitized reports in Git; and
+- pinned, hash-verified public Sotto LFM2.5-350M BF16 inference plus the complete user-calibrated
+  69-case diagnostic screen.
 
 Not implemented yet:
 
 - accepted train/dev rows or blind-v2 rows;
 - completed human decisions, attestations, or a passing Gate A report;
-- downloaded pinned base-model snapshots or any GPU smoke/pilot run;
-- checkpoint evaluation/selection report;
-- adapter merge and Q4 export; or
+- an immutable `LFM2.5-350M-Base` pin/snapshot and verified DISCO source;
+- the deterministic 55/25/10/10 correction-repair mixture and LFM full-SFT trainer/config;
+- either approved LFM training arm or its checkpoint-selection report;
+- an LFM merge and Q4/export path; or
 - Android conversion/integration for a trained model.
 
-The new session is authorized to build these missing training-machine pieces, prepare the data,
-run the pilot, monitor and resume it, and evaluate its checkpoints. It is not authorized to weaken
-quality gates, leak evaluation references into training, publish artifacts, or integrate a model
-into Android before qualification.
+The new session is authorized to implement the LFM full-SFT/mixing path, pin and audit the added
+DISCO source, run both approved experiment arms in their documented order, monitor/resume them,
+and evaluate every epoch. It is not authorized to feed evaluation references into training,
+publish artifacts, improvise an undocumented GRPO stage, or integrate a model into Android before
+qualification.
 
 ## Phase 0: machine and repository preflight
 

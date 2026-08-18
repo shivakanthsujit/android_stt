@@ -177,12 +177,20 @@ Last updated: 2026-08-18
     Guardrails cannot qualify any failed raw checkpoint, and blind-v2 remains sealed.
 36. Reject the public Sotto LFM2.5-350M production checkpoint at revision
     `6df6f019170b8b55333c047b901886a51750a965` for direct Android conversion. Its native-prompt BF16
-    screen is promising on basic cleanup and never answers dictated content, but it changes a
-    currency and a protected name, corrupts command syntax, changes one statement into a question,
-    and leaves seven superseded corrections. Do not reject future candidates solely for harmless
-    punctuation/contraction differences or deletion of disposable conversational lead-ins such as
-    “Yeah” and “Well”; keep strict exactness as a comparison metric while basing deployment on
-    product-relevant semantic, protected-text, and core-operation behavior.
+    screen is promising on basic cleanup and never answers dictated content. Keep 42/69 strict
+    exact for immutable comparison, but use the user's ordinary-conversation calibration of 59/69
+    acceptable for product iteration. The ten relevant failures are seven retained superseded
+    corrections, two retained repetitions, and one statement changed into a question. The other
+    strict mismatches—including the malformed Gradle command—are outside this experiment's gate.
+37. Make the two-stage LFM correction-repair study the next training work, superseding the planned
+    immediate Qwen3.5 follow-up. First continue the pinned public Sotto checkpoint with
+    full-parameter SFT for two epochs at `2e-6` on a deterministic 55/25/10/10
+    Sotto/Disfl-QA/DISCO-English/Nyra mixture. After preserving and evaluating that arm, train the
+    same ordered mixture from a pinned `LFM2.5-350M-Base` for three epochs at `3e-5`. Use the
+    publisher-disclosed microbatch 1, accumulation 8, cosine/50-step warmup, AdamW beta2 0.95,
+    weight decay 0.01, BF16+TF32, packed 4,096 context, seed 42, and native prompt where applicable.
+    Do not claim exact reproduction of the unpublished GRPO/refinement/soup lineage, and never use
+    the committed diagnostics or blind-v2 as training or checkpoint-selection data.
 
 ## Android/toolchain
 

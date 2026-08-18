@@ -13,6 +13,7 @@ Start here when resuming Local Flow in a new session.
 | [Direct-source experiment plan](../training/DIRECT_SOURCE_EXPERIMENT_PLAN.md) | Immediate four-adapter Sotto/Disfl-QA/Nyra experiment and evaluation handoff |
 | [Sotto recipe reference](../research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md) | Publisher model-card hyperparameters and comparison with the active Qwen LoRA run |
 | [Public Sotto LFM screen](../evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md) | Native-prompt quality screen of the publisher's finished 350M checkpoint |
+| [Sotto LFM correction-repair plan](../training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md) | Approved next-session continuation and clean-base experiments |
 
 Maintenance rule: update `CURRENT_STATE.md`, `NEXT_STEPS.md`, and `SESSION_LOG.md` at the end of
 every meaningful work session. Add stable decisions to `DECISIONS.md` and device evidence to

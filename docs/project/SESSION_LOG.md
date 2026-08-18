@@ -375,3 +375,18 @@
 - Added the hash-addressed report at
   `docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md`. Downloaded weights and raw
   results remain outside Git under `/data/rise/android_stt/`.
+
+## 2026-08-18 — User-calibrated Sotto gate and next LFM experiment
+
+- Reviewed all 27 non-exact public-Sotto outputs with the user. The immutable strict score remains
+  42/69, while 59/69 are acceptable for the intended ordinary-conversation workload.
+- Fixed the relevant baseline at ten failures: seven retained superseded corrections, two retained
+  direct repetitions, and one statement changed into a question. The user explicitly excluded the
+  malformed Gradle command and the other formatting, punctuation, contraction, normalization,
+  bracket, name/currency, and technical-literal mismatches from this experiment's product gate.
+- Approved a two-stage LFM2.5-350M study as the next work: two-epoch `2e-6` full-SFT continuation
+  of the pinned public Sotto checkpoint on a deterministic 55/25/10/10 correction-weighted source
+  mixture, followed—only after evaluation—by a three-epoch `3e-5` full-SFT reproduction from a
+  pinned LFM2.5-350M base using the same mixture and disclosed publisher settings.
+- Added the self-contained next-session plan at
+  `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md` and updated the training-machine handoff.

@@ -6,10 +6,10 @@ Date: 2026-08-18
 
 Do not integrate or quantize the public Sotto checkpoint for Android yet. It is materially better
 at transcript cleanup than the generic LFM2.5-350M baseline and it transcribed all 17 dictated
-questions/commands instead of answering them, but it still made six clear meaning/protected-text
-errors and missed seven important self-corrections. Those failures remain product-relevant even
-when harmless wording, punctuation, contractions, and removal of disposable conversational
-lead-ins are ignored.
+questions/commands instead of answering them. After the user reviewed every non-exact result
+against the intended ordinary-conversation workload, 59/69 outputs are acceptable and ten failures
+remain relevant: seven retained superseded corrections, two retained direct repetitions, and one
+statement changed into a question. Target those behaviors in the next LFM training experiment.
 
 ## Artifact and runtime
 
@@ -35,33 +35,32 @@ the raw quality failure.
 |---|---:|
 | Retired diagnostics | 69 |
 | Strict exact | 42/69 |
+| User-calibrated acceptable | 59/69 |
 | Preservation anchors | 147/163 |
 | Explicit self-corrections exact | 2/10 |
+| User-calibrated self-corrections acceptable | 3/10 |
 | Dictated questions/commands not answered | 17/17 |
 | Empty outputs / output-cap hits | 0 / 0 |
 | Guardrail flags | 19/69 |
 | Concurrent A6000 median TTFT / total | 36.6 ms / 174.5 ms |
 
-Strict exactness is retained for comparison, but it is not the rejection basis. Deleting a casual
-lead-in such as “Yeah” or “Well,” changing punctuation, or using a meaning-preserving contraction
-was treated as acceptable during the practical audit.
+Strict exactness is retained for comparison, but it is not the user-calibrated rejection basis.
+The ten relevant failures are the following.
 
-The six clear meaning/protected-text failures were:
-
-- `cleanup-007`: changed “I got the file” into the question “got the file?”;
-- `cleanup-011`: changed `./gradlew :app:assembleDebug` into the invalid
-  `./gradlew:app:assembleDebug`;
-- `heldout-015`: removed the literal brackets from `[assistant]`;
-- `heldout-019`: changed `€1,249.99` to `$1,249.99`;
-- `heldout-026`: changed `git diff -- app/src/main` into `Git Diff --app/src/main`;
-- `heldout-031`: changed the name `佐藤さん` to `Sandro`.
-
-Seven additional correction cases retained a superseded day, recipient, action, deployment
+Seven correction cases retained a superseded day, recipient, action, deployment
 target, or retry count (`cleanup-003`, `cleanup-004`, `cleanup-021`, `heldout-006`,
 `heldout-007`, `heldout-038`, and `heldout-039`). The final choice was usually present, but leaving
-both alternatives is precisely the ambiguity cleanup is meant to remove. Two more cases failed to
-remove a direct repetition. `heldout-042` removed the old version correctly but retained redundant
-correction wording, so it was not counted as a meaning error.
+both alternatives is precisely the ambiguity cleanup is meant to remove. `heldout-004` and
+`heldout-037` failed to remove direct repetitions. `cleanup-007` changed “I got the file” into the
+question “got the file?”
+
+The other 17 strict mismatches are acceptable for this ordinary-conversation use case and are not
+gates for the next experiment. They include casual lead-in deletion, punctuation/contraction
+differences, word-to-digit time normalization, inferred list formatting, redundant but correct
+version wording, currency/name normalization, bracket changes, and technical command corruption.
+In particular, the malformed Gradle command in `cleanup-011` is irrelevant because technical/code
+dictation is outside the target workload. These outputs remain visible in the immutable strict
+score; the raw evidence was not altered.
 
 ## Reproducibility
 

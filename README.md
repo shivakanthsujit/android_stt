@@ -81,7 +81,7 @@ load in 1.93 seconds.
 | STT model | English Small Streaming, architecture 4 |
 | Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
 | Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
-| Active cleanup candidate | None; VoiceInk and public Sotto LFM probes rejected, safety-curated task-specific training next |
+| Active cleanup candidate | Sotto LFM2.5-350M correction-repair experiment; public checkpoint not yet deployable |
 
 AGP 8.13.2 and target API 36 are kept intentionally because they match the current Moonshine sample
 and Liquid LEAP 0.10.9 Android requirements.
@@ -206,10 +206,11 @@ one answered dictated instruction. It is not an automatic training-label source.
 
 The publisher's task-tuned Sotto LFM2.5-350M checkpoint was also tested directly with its native
 prompt and recommended greedy decoder. It reached 42/69 strict exact and 147/163 anchors and never
-answered any of the 17 dictated questions/commands. Harmless punctuation, contraction, and casual
-lead-in differences were ignored in the manual decision. The checkpoint still changed a currency
-symbol and a name, broke two command strings, changed one statement into a question, and retained
-seven superseded corrections. It is therefore not ready for Android conversion or integration.
+answered any of the 17 dictated questions/commands. User review found 59/69 acceptable for the
+intended ordinary-conversation workload. The ten relevant failures are seven retained superseded
+corrections, two retained repetitions, and one statement changed into a question. The next
+experiment repairs those behaviors with a correction-weighted LFM training mixture before any
+Android conversion or integration.
 See [the full screen](docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md).
 
 Cleanup is therefore not joined to STT. The active phase prepares a leakage-isolated 0.6B/0.8B

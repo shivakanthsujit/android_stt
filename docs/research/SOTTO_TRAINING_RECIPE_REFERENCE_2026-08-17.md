@@ -85,3 +85,13 @@ active run mid-flight.
 - Keep exact-match, protected-literal preservation, correction behavior, no-op behavior, and raw
   semantic review as the project decision metrics. Sotto's reported ROUGE-L and filler-free scores
   are useful context but are not interchangeable with these gates.
+
+## Selected follow-up
+
+After directly screening the publisher's finished checkpoint and calibrating every non-exact
+output with the user, the approved next work is
+`docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. First continue the pinned public checkpoint
+for two full-SFT epochs at `2e-6` on a deterministic correction-weighted source mixture; then,
+after evaluating that arm, reproduce the disclosed three-epoch `3e-5` full-SFT design from a
+pinned `LFM2.5-350M-Base`. This does not authorize copying the unpublished GRPO/reward/model-soup
+lineage or using any evaluation-only case as training data.

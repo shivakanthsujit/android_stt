@@ -151,9 +151,17 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   epoch on the current run and do not use blind-v2 during iteration.
 - [x] Pin and directly screen the publisher's completed Sotto LFM2.5-350M checkpoint before doing
   more training. Native-prompt BF16 inference reached 42/69 strict exact, preserved 147/163
-  anchors, and did not answer any dictated question/command, but it made six clear
-  meaning/protected-text errors and retained seven superseded corrections. Do not spend Android
-  conversion or Pixel-integration effort on this revision.
+  anchors, and did not answer any dictated question/command. User review accepts 59/69 for ordinary
+  conversation; the ten relevant failures are seven retained superseded corrections, two retained
+  repetitions, and one statement changed into a question. Do not spend Android conversion or
+  Pixel-integration effort on this revision.
+- [ ] Run the approved Sotto LFM correction-repair experiment in
+  `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. First continue the pinned public checkpoint
+  with full SFT for two epochs at `2e-6` on the deterministic source-balanced correction mixture;
+  evaluate both epochs before starting the clean-base arm. Then full-SFT a pinned
+  `LFM2.5-350M-Base` for three epochs at `3e-5` with the same ordered mixture and disclosed
+  publisher settings. Save/evaluate every epoch, target only the ten relevant failures, and never
+  use either committed diagnostic corpus as training data.
 
 Prepare all data and training inputs portably in this repository, but run training only on the
 separate training machine when it is available. Do not start training on this Mac.
@@ -173,9 +181,8 @@ separate training machine when it is available. Do not start training on this Ma
 - [ ] Prepare the blind evaluator contract early. After training templates stabilize, have an
   independent context author/double-review and seal blind v2 outside the training job's readable
   path; do not use it for checkpoint or prompt selection.
-- [ ] Fine-tune the smallest practical base first (Qwen3 0.6B or Qwen3.5 0.8B), using the stronger
-  task-tuned model as a teacher only when outputs pass deterministic preservation checks and human
-  review.
+- [ ] Complete the approved LFM2.5-350M correction-repair and clean-base comparison before
+  returning to the deferred Qwen3.5-0.8B alternative.
 - [ ] Quantize the best checkpoint and re-run seed, regression, and blind-v2 quality gates with the
   same short output bound and non-thinking behavior.
 
