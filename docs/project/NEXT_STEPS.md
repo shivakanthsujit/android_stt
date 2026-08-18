@@ -62,7 +62,9 @@ Do not join cleanup to STT during this milestone.
 ## Active: Milestone 4 — task-specific cleanup
 
 Cleanup is the blocking stage. The current offline STT path is provisionally good enough to supply
-raw transcripts while cleanup quality is solved. Keep the stages unjoined until cleanup passes.
+raw transcripts while cleanup quality is solved. A clearly labeled diagnostic join now exercises
+the Android boundary with public Sotto; keep it separate from checkpoint qualification and never
+treat guardrail fallback as a passing raw model result.
 
 Working references:
 
@@ -153,8 +155,9 @@ to evaluation before completing the stricter balanced/reviewed corpus.
   more training. Native-prompt BF16 inference reached 42/69 strict exact, preserved 147/163
   anchors, and did not answer any dictated question/command. User review accepts 59/69 for ordinary
   conversation; the ten relevant failures are seven retained superseded corrections, two retained
-  repetitions, and one statement changed into a question. Do not spend Android conversion or
-  Pixel-integration effort on this revision.
+  repetitions, and one statement changed into a question. It is now converted and integrated only
+  as the user's temporary pipeline placeholder, not as a reversal of the no-go deployment
+  decision.
 - [ ] Run the approved Sotto LFM correction-repair experiment in
   `docs/training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md`. First continue the pinned public checkpoint
   with full SFT for two epochs at `2e-6` on the shuffled natural correction mixture;
@@ -212,28 +215,71 @@ pass. The next external step is durable import and pending review selection.
 Decision point: use the public task-tuned model, train a smaller model, or ship conservative
 deterministic cleanup while generative corrections remain disabled.
 
-## Deferred: Milestone 5 — STT-only evaluation
+## Partially complete: Milestone 5 — STT-only evaluation
 
-- Keep cleanup unloaded and do not join the pipeline.
-- Define a fixed, repeatable audio/transcript corpus covering conversational speech, names, numbers,
-  corrections, technical terms, pauses, and longer dictation.
-- Add file-fed audio evaluation so identical recordings can be tested without repeated speaking.
-- Score word error rate, punctuation/case behavior, omissions, and finalization latency.
-- Benchmark Moonshine Small first, then compare Moonshine Tiny and Pixel's on-device
-  `SpeechRecognizer` if its offline path can be made deterministic.
-- Record memory, thermal behavior, model load time, and offline cache behavior for each candidate.
-- Select an STT engine on measured quality rather than the current interactive anecdotes.
+- [x] Keep cleanup unloaded during the controlled file-fed STT comparison.
+- [x] Add file-fed audio evaluation so identical recordings can be tested without repeated
+  speaking.
+- [x] Prepare a deterministic 24-clip/12-speaker LibriSpeech `test-clean` probe with per-audio and
+  manifest hashes. Do not present its score as official full-split WER.
+- [x] Benchmark Moonshine Small and pinned `parakeet.cpp` 0.5.0 TDT/CTC 110M F16/Q4_K on Pixel 7.
+- [x] Score normalized WER, S/I/D, median/p90/p99/max latency, corpus RTF, repeat stability, model
+  load, PSS, thermal state, process CPU time, and Perfetto CPU/GPU/memory rail energy.
+- [x] Choose Q4_K as the provisional deployment candidate: one additional word error versus F16,
+  but 23.8% less process CPU time, 23.3% less compute energy, 25.5% less PSS, and about half the
+  model bytes. Keep F16 as the non-quantized quality reference.
+- [x] Integrate project-owned 16 kHz microphone capture with the selected Parakeet Q4_K model and
+  run final offline inference after Stop. Record the lack of partial/streaming output explicitly.
+- [x] Add a pinned, Mac-local Qwen3-TTS/MLX-Audio fixture pipeline and generate an ignored,
+  Android-compatible 65-clip corpus from heldout-v1's `spoken` inputs plus 20 project-authored
+  dictation stress cases. Preserve native/canonical hashes; that technical v1 set is now historical
+  synthetic evidence rather than the active product workload.
+- [x] Version the active 20-case personal-conversation suite to v3: remove phone-number dictation,
+  retain messages/journals/lists/names/numbers/uncertainty/repetition/formatting/corrections, and add
+  four 3–5 sentence cases for long-form quality and latency. Exclude technical stress text.
+- [ ] Add human/multi-speaker personal dictation recordings for qualification, and score protected
+  names, numeric equivalence, correction success, and formatting separately from literal WER.
+- [ ] Integrate Parakeet Q4_K streaming/end-of-utterance behind `SpeechToTextEngine` without
+  weakening the project-owned microphone lifecycle; measure partial responsiveness and
+  Stop-to-final latency.
+- [ ] Verify cold load, offline model reuse, sustained thermal behavior, and live dictation memory.
+- [ ] Compare Pixel's on-device `SpeechRecognizer` only if its offline path can be made deterministic.
+- [ ] Make the final STT choice after the dictation/streaming gate; the read-speech probe is not
+  sufficient by itself.
 
 This remains required before final product selection, but it is not the current bottleneck.
 
-## Later: joined pipeline
+## Diagnostic joined pipeline
 
-- Begin only after both an STT engine and a cleanup model pass their independent fixed evaluations.
-- Feed the completed Moonshine transcript into the cleanup engine.
-- Display raw and cleaned text simultaneously.
-- Report STT tail, cleanup TTFT, cleanup total, and end-to-end tail.
-- Keep both models warm between utterances.
-- Run the go/no-go cleanup evaluation set on the physical Pixel.
+- [x] Feed the completed Parakeet transcript into a swappable cleanup engine automatically.
+- [x] Convert and sideload the pinned public Sotto LFM2.5-350M checkpoint as Q4_K_M without
+  committing model artifacts.
+- [x] Display raw STT, complete unguarded model output, and guarded cleanup simultaneously.
+- [x] Add conservative pre-model filler removal for standalone `um`, `uh`, and `erm`; expose the
+  exact model input and retain original raw STT and removal metadata for diagnosis.
+- [x] Report STT tail, cleanup TTFT, cleanup total, and end-to-end tail.
+- [x] Keep both models warm between utterances while releasing the microphone at Stop.
+- [x] Run one real Pixel microphone → Parakeet → Sotto smoke test and preserve sanitized timing and
+  fallback evidence.
+- [x] Play all 20 project-authored Qwen3-TTS dictation stress fixtures through the Mac speakers into
+  the Pixel microphone and review every joined result. The lifecycle passed 20/20, but case 014
+  exposed an accepted unsafe technical edit and case 011 exposed a correction-related false
+  fallback. Keep this as synthetic regression evidence, not qualification.
+- [x] Add a debug-only WAV/MP3/corpus-fed Parakeet → Sotto runner that never opens the microphone,
+  verifies audio/model hashes, records complete stage output, and scores spoken STT separately from
+  intended cleanup. Run personal v3 on Pixel: 15/20 normalized STT exact, 10/20 normalized cleanup
+  exact, three genuine correction fallbacks, and 2.54–4.75 s joined tails on long-form cases.
+- [x] Add the scorer-compatible `cleanup_personal_conversation_v3.jsonl` direct-text corpus and
+  hash-pinned checkpoint options to `infer_sotto_lfm.py`. Require the A6000 to evaluate the public
+  start plus every Experiment A/B epoch on v3, preserve raw output, and report long-form latency.
+- [x] Reduce guardrail false rejection by accepting only bounded discourse deletion, explicit
+  correction replacement, deterministic identical-value number rendering, and consumed explicit
+  list/paragraph directives. Keep Android and host behavior aligned and retain strict protection
+  for changed facts, names, values, negation, uncertainty, and answered content.
+- [ ] Replace the public Sotto model identity with the best correction-repair checkpoint only after
+  its raw output passes the independent quality/safety gates.
+- [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized
+  checkpoint before calling the joined pipeline deployable.
 
 ## After the joined pipeline
 

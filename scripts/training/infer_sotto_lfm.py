@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate a public or locally fine-tuned Sotto LFM model on non-blind cases."""
+"""Evaluate a hash-pinned public or locally fine-tuned Sotto LFM checkpoint."""
 
 from __future__ import annotations
 
@@ -69,21 +69,28 @@ def parse_publisher_output(generated_text: str) -> str:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", required=True, type=Path)
+    parser.add_argument(
+        "--tokenizer-dir", type=Path,
+        help="optional tokenizer directory for Trainer epoch checkpoints that contain only model state",
+    )
     parser.add_argument("--model-id", default=MODEL_ID)
     parser.add_argument("--model-revision", default=MODEL_REVISION)
     parser.add_argument(
-        "--expected-weight-sha256",
+        "--expected-model-sha256", "--expected-weight-sha256",
+        dest="expected_model_sha256",
         help="optional expected local model.safetensors hash; the public default remains pinned",
     )
     parser.add_argument("--cases", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--input-field", choices=("raw", "spoken"), default="raw")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     model_dir = args.model_dir.resolve()
+    tokenizer_dir = (args.tokenizer_dir or args.model_dir).resolve()
     cases_path = args.cases.resolve()
     output_path = args.output.resolve()
     provenance_path = output_path.with_suffix(output_path.suffix + ".provenance.json")
@@ -91,16 +98,26 @@ def main() -> int:
         raise RuntimeError("refusing to overwrite output or provenance")
     if not model_dir.is_dir():
         raise RuntimeError(f"model directory does not exist: {model_dir}")
+    if not tokenizer_dir.is_dir():
+        raise RuntimeError(f"tokenizer directory does not exist: {tokenizer_dir}")
+    if not args.model_id.strip() or not args.model_revision.strip():
+        raise RuntimeError("--model-id and --model-revision must be non-empty")
     weights = model_dir / "model.safetensors"
     if not weights.is_file():
         raise RuntimeError("model.safetensors is missing")
     actual_weight_sha256 = sha256_file(weights)
-    expected_weight_sha256 = args.expected_weight_sha256
+    expected_weight_sha256 = args.expected_model_sha256
     if (
         expected_weight_sha256 is None
         and args.model_id == MODEL_ID and args.model_revision == MODEL_REVISION
     ):
         expected_weight_sha256 = MODEL_WEIGHT_SHA256
+    if expected_weight_sha256 is None:
+        raise RuntimeError("a non-public checkpoint requires --expected-model-sha256")
+    if len(expected_weight_sha256) != 64 or any(
+        character not in "0123456789abcdef" for character in expected_weight_sha256
+    ):
+        raise RuntimeError("--expected-model-sha256 must be 64 lowercase hexadecimal characters")
     if expected_weight_sha256 is not None and actual_weight_sha256 != expected_weight_sha256:
         raise RuntimeError("model.safetensors does not match the expected SHA-256")
 
@@ -111,7 +128,7 @@ def main() -> int:
             raise RuntimeError("--limit must be positive")
         rows = rows[: args.limit]
     for index, row in enumerate(rows, 1):
-        for field in ("id", "raw", "expected", "categories", "must_preserve"):
+        for field in ("id", args.input_field, "expected", "categories", "must_preserve"):
             if field not in row:
                 raise RuntimeError(f"{cases_path}:{index}: missing {field}")
 
@@ -121,7 +138,7 @@ def main() -> int:
 
     if not torch.cuda.is_available() or not torch.cuda.is_bf16_supported():
         raise RuntimeError("Sotto evaluation requires CUDA with bfloat16 support")
-    tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir, local_files_only=True)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
@@ -141,10 +158,13 @@ def main() -> int:
         "model_weight_sha256": actual_weight_sha256,
         "expected_model_weight_sha256": expected_weight_sha256,
         "model_config_sha256": sha256_file(model_dir / "config.json"),
-        "tokenizer_sha256": sha256_file(model_dir / "tokenizer.json"),
+        "tokenizer_dir": str(tokenizer_dir),
+        "tokenizer_sha256": sha256_file(tokenizer_dir / "tokenizer.json"),
+        "runner_sha256": sha256_file(Path(__file__).resolve()),
         "cases_path": str(cases_path),
         "cases_sha256": sha256_file(cases_path),
         "case_count": len(rows),
+        "input_field": args.input_field,
         "prompt_template": PROMPT_TEMPLATE,
         "decoding": {
             "do_sample": False,
@@ -167,10 +187,11 @@ def main() -> int:
 
     with output_path.open("x", encoding="utf-8", newline="\n") as handle:
         for ordinal, row in enumerate(rows, 1):
-            prompt = PROMPT_TEMPLATE.format(raw=row["raw"])
+            raw = row[args.input_field]
+            prompt = PROMPT_TEMPLATE.format(raw=raw)
             encoded = tokenizer(prompt, return_tensors="pt")
             inputs = {key: value.to("cuda:0") for key, value in encoded.items()}
-            cap = publisher_output_cap(row["raw"])
+            cap = publisher_output_cap(raw)
             streamer = TextIteratorStreamer(
                 tokenizer,
                 skip_prompt=True,
@@ -216,7 +237,7 @@ def main() -> int:
             model_text = parse_publisher_output(generated_text)
             completion_tokens = len(output_ids)
             cap_hit = completion_tokens >= cap
-            fallback_reason = cleanup_fallback_reason(row["raw"], model_text, cap_hit)
+            fallback_reason = cleanup_fallback_reason(raw, model_text, cap_hit)
             total_ms = (finished - started) / 1_000_000
             record = {
                 "case_id": row["id"],
@@ -225,7 +246,7 @@ def main() -> int:
                 "quantization": "bf16",
                 "prompt_variant": "sotto_native_v1",
                 "temperature": 0.0,
-                "raw": row["raw"],
+                "raw": raw,
                 "expected": row["expected"],
                 "categories": row["categories"],
                 "must_preserve": row["must_preserve"],
@@ -238,7 +259,7 @@ def main() -> int:
                 "fallback_reason": None,
                 "guardrail_would_fallback": fallback_reason is not None,
                 "guardrail_fallback_reason": fallback_reason,
-                "guardrail_selected_text": row["raw"] if fallback_reason else model_text,
+                "guardrail_selected_text": raw if fallback_reason else model_text,
                 "timings": {
                     "ttft_ms": (
                         (first_text_ns - started) / 1_000_000 if first_text_ns else None

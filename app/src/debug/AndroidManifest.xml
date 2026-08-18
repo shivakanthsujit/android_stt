@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".stt.benchmark.SttBenchmarkActivity"
+            android:exported="true"
+            android:label="Local Flow STT benchmark" />
+        <activity
+            android:name=".stt.benchmark.JoinedPipelineBenchmarkActivity"
+            android:exported="true"
+            android:label="Local Flow joined file benchmark" />
+    </application>
+</manifest>

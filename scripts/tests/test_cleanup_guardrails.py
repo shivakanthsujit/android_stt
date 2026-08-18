@@ -137,6 +137,76 @@ class CleanupGuardrailsParityTest(unittest.TestCase):
                 False,
             )
         )
+
+    def test_permits_removing_sentence_initial_well(self) -> None:
+        self.assertIsNone(
+            fallback_reason(
+                "Well, I think dinner at your place sounds better.",
+                "I think dinner at your place sounds better.",
+                False,
+            )
+        )
+
+    def test_permits_equivalent_spoken_number_rendering(self) -> None:
+        for raw, candidate in (
+            ("The reservation is for twenty six people.", "The reservation is for 26 people."),
+            ("Meet me before six twenty.", "Meet me before 6:20."),
+            ("My number is zero seven zero four one eight six.", "My number is 0704186."),
+        ):
+            with self.subTest(raw=raw):
+                self.assertIsNone(fallback_reason(raw, candidate, False))
+
+    def test_rejects_changed_numeric_value(self) -> None:
+        self.assertEqual(
+            "Model introduced new lexical content: 25",
+            fallback_reason(
+                "The reservation is for twenty six people.",
+                "The reservation is for 25 people.",
+                False,
+            ),
+        )
+
+    def test_permits_repeated_imperative_sorry_correction(self) -> None:
+        self.assertIsNone(
+            fallback_reason(
+                "send this to the family group sorry send it only to Maya after lunch",
+                "Send this only to Maya after lunch.",
+                False,
+            )
+        )
+        self.assertEqual(
+            "Model retained superseded self-correction content",
+            fallback_reason(
+                "send this to the family group sorry send it only to Maya after lunch",
+                "Send this to the family group and send it only to Maya after lunch.",
+                False,
+            ),
+        )
+
+    def test_permits_explicit_formatting_directive_to_be_consumed(self) -> None:
+        self.assertIsNone(
+            fallback_reason(
+                "make a bullet list buy groceries call Mom and water the plants",
+                "Buy groceries. Call Mom. Water the plants.",
+                False,
+            )
+        )
+        self.assertIsNone(
+            fallback_reason(
+                "Today was exhausting new paragraph I want to remember the rain",
+                "Today was exhausting. I want to remember the rain.",
+                False,
+            )
+        )
+
+    def test_permits_bounded_abandoned_journal_lead_in(self) -> None:
+        self.assertIsNone(
+            fallback_reason(
+                "I was going to I wanted to write that today felt strangely quiet",
+                "Today felt strangely quiet.",
+                False,
+            )
+        )
         self.assertIsNone(
             fallback_reason(
                 "the the model loaded in in two seconds",

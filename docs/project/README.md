@@ -9,10 +9,15 @@ Start here when resuming Local Flow in a new session.
 | [DECISIONS.md](DECISIONS.md) | Durable technical/product decisions and their rationale |
 | [TEST_LOG.md](TEST_LOG.md) | Physical-device and build verification evidence |
 | [SESSION_LOG.md](SESSION_LOG.md) | Append-only summary of completed work by date |
+| [Pixel STT benchmark](../evaluation/STT_BENCHMARK.md) | File-fed corpus preparation, Pixel execution, WER, latency, CPU, memory, thermal, and power procedure |
+| [Mac-local TTS fixtures](../evaluation/TTS_PIPELINE.md) | Pinned text-to-WAV setup, active personal-conversation suite, fast joined WAV/MP3 runner, hashes, resume, and offline cache |
+| [Pixel Parakeet report](../evaluation/results/2026-08-18-pixel-parakeet-stt-probe.md) | F16/Q4_K/Moonshine measurements, decision, caveats, and reproducibility hashes |
 | [Training-machine handoff](../../TRAINING_MACHINE_HANDOFF.md) | Complete RTX A6000 data/training/evaluation workflow |
 | [Direct-source experiment plan](../training/DIRECT_SOURCE_EXPERIMENT_PLAN.md) | Immediate four-adapter Sotto/Disfl-QA/Nyra experiment and evaluation handoff |
 | [Sotto recipe reference](../research/SOTTO_TRAINING_RECIPE_REFERENCE_2026-08-17.md) | Publisher model-card hyperparameters and comparison with the active Qwen LoRA run |
 | [Public Sotto LFM screen](../evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md) | Native-prompt quality screen of the publisher's finished 350M checkpoint |
+| [Joined integration evidence](../evaluation/results/2026-08-18-parakeet-sotto-integration-build.json) | Reproducible model/APK hashes and sanitized Pixel pipeline smoke evidence |
+| [Personal-v3 joined regression](../evaluation/results/2026-08-18-personal-v3-long-form-file-fed-integration.md) | Active no-phone 20-case workload, long-form latency, file-fed Pixel results, and checkpoint handoff |
 | [Sotto LFM correction-repair plan](../training/SOTTO_LFM_CORRECTION_REPAIR_PLAN.md) | Approved next-session continuation and clean-base experiments |
 
 Maintenance rule: update `CURRENT_STATE.md`, `NEXT_STEPS.md`, and `SESSION_LOG.md` at the end of

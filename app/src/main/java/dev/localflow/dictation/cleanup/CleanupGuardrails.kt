@@ -57,7 +57,9 @@ internal object CleanupGuardrails {
 
         val rawWords = rawTokens.mapTo(mutableSetOf()) { it.normalized }
         val novelToken = candidateTokens.firstOrNull { token ->
-            token.normalized !in rawWords && token.normalized !in ALLOWED_GRAMMAR_ADDITIONS
+            token.normalized !in rawWords &&
+                token.normalized !in ALLOWED_GRAMMAR_ADDITIONS &&
+                !isEquivalentNumericCandidate(token, rawTokens)
         }
         if (novelToken != null) {
             return "Model introduced new lexical content: ${novelToken.surface}"
@@ -66,32 +68,50 @@ internal object CleanupGuardrails {
         val correction = findExplicitCorrection(rawTokens)
         val optionalRawIndices = buildSet {
             correction?.markerIndices?.let(::addAll)
-            correction?.supersededTokenIndex?.let(::add)
+            correction?.supersededTokenIndices?.let(::addAll)
+            addAll(formattingDirectiveIndices(rawTokens))
+            addAll(abandonedLeadInIndices(rawTokens))
         }
         val candidateWords = candidateTokens.mapTo(mutableSetOf()) { it.normalized }
 
         rawTokens.forEachIndexed { index, token ->
             if (index !in optionalRawIndices && isProtected(token, index)) {
-                if (!candidateContainsProtectedToken(candidateTokens, token, index)) {
+                if (!candidateContainsProtectedToken(candidateTokens, token, index, rawTokens)) {
                     return "Model dropped protected lexical content: ${token.surface}"
                 }
             }
         }
 
         correction?.let {
-            val superseded = it.supersededTokenIndex?.let(rawTokens::get)
+            val supersededIndex = it.supersededComparisonTokenIndex
+            val superseded = supersededIndex?.let(rawTokens::get)
             val replacement = it.replacementTokenIndex?.let(rawTokens::get)
             if (it.replacementMustBeRetained &&
                 replacement != null &&
-                replacement.normalized !in candidateWords
+                !candidateContainsProtectedToken(
+                    candidateTokens,
+                    replacement,
+                    it.replacementTokenIndex,
+                    rawTokens,
+                )
             ) {
                 return "Model did not preserve self-correction replacement"
             }
             if (superseded != null &&
                 replacement != null &&
                 superseded.normalized != replacement.normalized &&
-                superseded.normalized in candidateWords &&
-                replacement.normalized in candidateWords
+                candidateContainsProtectedToken(
+                    candidateTokens,
+                    superseded,
+                    supersededIndex,
+                    rawTokens,
+                ) &&
+                candidateContainsProtectedToken(
+                    candidateTokens,
+                    replacement,
+                    it.replacementTokenIndex,
+                    rawTokens,
+                )
             ) {
                 return "Model retained superseded self-correction content"
             }
@@ -112,9 +132,15 @@ internal object CleanupGuardrails {
 
     private data class CorrectionInfo(
         val markerIndices: Set<Int>,
-        val supersededTokenIndex: Int?,
+        val supersededTokenIndices: Set<Int>,
+        val supersededComparisonTokenIndex: Int?,
         val replacementTokenIndex: Int?,
         val replacementMustBeRetained: Boolean = false,
+    )
+
+    private data class NumberSpan(
+        val indices: IntRange,
+        val canonicalForms: Set<String>,
     )
 
     private enum class ProtectedKind {
@@ -171,8 +197,18 @@ internal object CleanupGuardrails {
         candidateTokens: List<LexicalToken>,
         rawToken: LexicalToken,
         rawIndex: Int,
+        rawTokens: List<LexicalToken>? = null,
     ): Boolean {
         val kinds = protectedKinds(rawToken, rawIndex)
+        if (ProtectedKind.NUMBER in kinds && rawTokens != null) {
+            val rawNumber = numberSpanContaining(rawTokens, rawIndex)
+            if (rawNumber != null && candidateTokens.any { candidate ->
+                    numericDigits(candidate)?.let(rawNumber.canonicalForms::contains) == true
+                }
+            ) {
+                return true
+            }
+        }
         return if (ProtectedKind.CAPITALIZED in kinds || ProtectedKind.TECHNICAL in kinds) {
             candidateTokens.any { candidate -> candidate.surface == rawToken.surface }
         } else {
@@ -195,8 +231,100 @@ internal object CleanupGuardrails {
         }
     }
 
+    private fun isEquivalentNumericCandidate(
+        candidate: LexicalToken,
+        rawTokens: List<LexicalToken>,
+    ): Boolean {
+        val digits = numericDigits(candidate) ?: return false
+        return numberSpans(rawTokens).any { digits in it.canonicalForms }
+    }
+
+    private fun numericDigits(token: LexicalToken): String? {
+        if (token.surface.none(Char::isDigit) || token.surface.any(Char::isLetter)) return null
+        return token.surface.filter(Char::isDigit).ifEmpty { null }
+    }
+
+    private fun numberSpanContaining(tokens: List<LexicalToken>, index: Int): NumberSpan? =
+        numberSpans(tokens).firstOrNull { index in it.indices }
+
+    private fun numberSpans(tokens: List<LexicalToken>): List<NumberSpan> {
+        val spans = mutableListOf<NumberSpan>()
+        var start = 0
+        while (start < tokens.size) {
+            if (tokens[start].normalized !in NUMBER_WORDS) {
+                start += 1
+                continue
+            }
+            var end = start
+            while (end + 1 < tokens.size && tokens[end + 1].normalized in NUMBER_WORDS) end += 1
+            val words = (start..end).map { tokens[it].normalized }
+            val canonical = canonicalNumberForms(
+                words = words,
+                hasRecentTimeCue = tokens
+                    .subList(maxOf(0, start - TIME_CUE_LOOKBACK_TOKENS), start)
+                    .any { it.normalized in TIME_CUE_WORDS },
+                followingWord = tokens.getOrNull(end + 1)?.normalized,
+            )
+            if (canonical.isNotEmpty()) spans += NumberSpan(start..end, canonical)
+            start = end + 1
+        }
+        return spans
+    }
+
+    private fun canonicalNumberForms(
+        words: List<String>,
+        hasRecentTimeCue: Boolean,
+        followingWord: String?,
+    ): Set<String> {
+        val values = words.mapNotNull(NUMBER_WORD_VALUES::get)
+        if (values.size != words.size) return emptySet()
+
+        val isSpokenTime = words.size == 2 &&
+            values[0] in 1..12 &&
+            values[1] in 0..59 &&
+            (hasRecentTimeCue || followingWord in TIME_SUFFIX_WORDS)
+        if (isSpokenTime) {
+            return setOf(values[0].toString() + values[1].toString().padStart(2, '0'))
+        }
+
+        val isDigitSequence = words.size >= 3 && words.all(SINGLE_DIGIT_WORDS::contains)
+        if (isDigitSequence) {
+            return setOf(values.joinToString(separator = ""))
+        }
+
+        val parsed = parseCardinalNumber(words) ?: return emptySet()
+        return setOf(parsed.toString())
+    }
+
+    private fun parseCardinalNumber(words: List<String>): Long? {
+        var total = 0L
+        var current = 0L
+        for (word in words) {
+            val value = NUMBER_WORD_VALUES[word]?.toLong() ?: return null
+            when (word) {
+                "hundred" -> current = maxOf(1L, current) * 100L
+                "thousand" -> {
+                    total += maxOf(1L, current) * 1_000L
+                    current = 0L
+                }
+                "million" -> {
+                    total += maxOf(1L, current) * 1_000_000L
+                    current = 0L
+                }
+                "billion" -> {
+                    total += maxOf(1L, current) * 1_000_000_000L
+                    current = 0L
+                }
+                else -> current += value
+            }
+        }
+        return total + current
+    }
+
     private fun isCapitalizedContent(token: LexicalToken, index: Int): Boolean {
-        if (token.normalized in FILLER_WORDS) return false
+        if (token.normalized in FILLER_WORDS || token.normalized in REMOVABLE_DISCOURSE_WORDS) {
+            return false
+        }
         val letters = token.surface.filter(Char::isLetter)
         if (letters.isEmpty()) return false
         val acronym = letters.length >= 2 && letters.all(Char::isUpperCase)
@@ -206,6 +334,9 @@ internal object CleanupGuardrails {
 
     private fun findExplicitCorrection(tokens: List<LexicalToken>): CorrectionInfo? {
         for (markerStart in tokens.indices.reversed()) {
+            if (tokens[markerStart].normalized == "sorry") {
+                findSorryImperativeCorrection(tokens, markerStart)?.let { return it }
+            }
             val markerEnd: Int
             val unconditionallyExplicit: Boolean
             when {
@@ -253,12 +384,80 @@ internal object CleanupGuardrails {
 
             return CorrectionInfo(
                 markerIndices = (markerStart..markerEnd).toSet(),
-                supersededTokenIndex = imperativeCorrection?.first ?: before,
+                supersededTokenIndices = setOfNotNull(imperativeCorrection?.first ?: before),
+                supersededComparisonTokenIndex = imperativeCorrection?.first ?: before,
                 replacementTokenIndex = imperativeCorrection?.second ?: after,
                 replacementMustBeRetained = imperativeCorrection != null,
             )
         }
         return null
+    }
+
+    private fun formattingDirectiveIndices(tokens: List<LexicalToken>): Set<Int> = buildSet {
+        if (tokens.size >= 4 &&
+            tokens[0].normalized in setOf("make", "start") &&
+            tokens[1].normalized == "a" &&
+            tokens[2].normalized in setOf("bullet", "bulleted", "numbered") &&
+            tokens[3].normalized == "list"
+        ) {
+            addAll(0..3)
+        }
+        for (index in 0 until tokens.lastIndex) {
+            if (tokens[index].normalized == "new" &&
+                tokens[index + 1].normalized == "paragraph"
+            ) {
+                add(index)
+                add(index + 1)
+            }
+        }
+    }
+
+    private fun abandonedLeadInIndices(tokens: List<LexicalToken>): Set<Int> {
+        val words = tokens.map(LexicalToken::normalized)
+        val exactLeadIn = listOf("i", "was", "going", "to", "i", "wanted", "to", "write", "that")
+        return if (words.take(exactLeadIn.size) == exactLeadIn) {
+            exactLeadIn.indices.toSet()
+        } else {
+            emptySet()
+        }
+    }
+
+    private fun findSorryImperativeCorrection(
+        tokens: List<LexicalToken>,
+        markerIndex: Int,
+    ): CorrectionInfo? {
+        val beforeVerb = (0 until markerIndex).firstOrNull { index ->
+            tokens[index].normalized in IMPERATIVE_CORRECTION_WORDS
+        } ?: return null
+        val afterVerb = (markerIndex + 1 until tokens.size).firstOrNull { index ->
+            tokens[index].normalized in IMPERATIVE_CORRECTION_WORDS
+        } ?: return null
+        if (tokens[beforeVerb].normalized != tokens[afterVerb].normalized) return null
+
+        fun correctionTarget(verb: Int, endExclusive: Int): Int? {
+            val toIndex = (verb + 1 until endExclusive).lastOrNull { index ->
+                tokens[index].normalized == "to"
+            }
+            if (toIndex != null) {
+                return (toIndex + 1 until endExclusive).firstOrNull { index ->
+                    tokens[index].normalized !in ALLOWED_GRAMMAR_ADDITIONS &&
+                        tokens[index].normalized !in INTENT_LEADING_WORDS
+                }
+            }
+            return (verb + 1 until endExclusive).lastOrNull { index ->
+                tokens[index].normalized !in ALLOWED_GRAMMAR_ADDITIONS
+            }
+        }
+
+        val supersededTarget = correctionTarget(beforeVerb, markerIndex) ?: beforeVerb
+        val replacementTarget = correctionTarget(afterVerb, tokens.size) ?: afterVerb
+        return CorrectionInfo(
+            markerIndices = setOf(markerIndex),
+            supersededTokenIndices = (beforeVerb until markerIndex).toSet(),
+            supersededComparisonTokenIndex = supersededTarget,
+            replacementTokenIndex = replacementTarget,
+            replacementMustBeRetained = true,
+        )
     }
 
     /**
@@ -320,7 +519,9 @@ internal object CleanupGuardrails {
             else -> null
         } ?: return null
         val intentWord = rawTokens[intentIndex].normalized
-        if (intentWord !in candidateWords) return "Model did not preserve the dictated intent"
+        if (intentIndex !in optionalRawIndices && intentWord !in candidateWords) {
+            return "Model did not preserve the dictated intent"
+        }
 
         val requiredContent = rawTokens.indices.asSequence()
             .filterNot(optionalRawIndices::contains)
@@ -342,6 +543,9 @@ internal object CleanupGuardrails {
         setOf('"', '\'', '“', '”', ')', ']', '}', ',', ';', '!', '?', '.')
 
     private val FILLER_WORDS = setOf("uh", "um", "er", "erm")
+    private val REMOVABLE_DISCOURSE_WORDS = setOf(
+        "well", "okay", "ok", "anyway", "basically",
+    )
     private val NEGATION_WORDS = setOf(
         "no", "not", "never", "neither", "nor", "without", "unless", "cannot", "can't",
         "don't", "doesn't", "didn't", "won't", "wouldn't", "shouldn't", "isn't", "aren't",
@@ -357,6 +561,27 @@ internal object CleanupGuardrails {
         "hundred", "thousand", "million", "billion", "first", "second", "third", "fourth", "fifth",
         "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth",
     )
+    private val NUMBER_WORD_VALUES = mapOf(
+        "zero" to 0, "one" to 1, "two" to 2, "three" to 3, "four" to 4,
+        "five" to 5, "six" to 6, "seven" to 7, "eight" to 8, "nine" to 9,
+        "ten" to 10, "eleven" to 11, "twelve" to 12, "thirteen" to 13,
+        "fourteen" to 14, "fifteen" to 15, "sixteen" to 16, "seventeen" to 17,
+        "eighteen" to 18, "nineteen" to 19, "twenty" to 20, "thirty" to 30,
+        "forty" to 40, "fifty" to 50, "sixty" to 60, "seventy" to 70,
+        "eighty" to 80, "ninety" to 90, "hundred" to 100, "thousand" to 1_000,
+        "million" to 1_000_000, "billion" to 1_000_000_000,
+        "first" to 1, "second" to 2, "third" to 3, "fourth" to 4,
+        "fifth" to 5, "sixth" to 6, "seventh" to 7, "eighth" to 8,
+        "ninth" to 9, "tenth" to 10, "eleventh" to 11, "twelfth" to 12,
+    )
+    private val SINGLE_DIGIT_WORDS = setOf(
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    )
+    private val TIME_CUE_WORDS = setOf(
+        "at", "before", "after", "around", "by", "until", "from", "about",
+    )
+    private const val TIME_CUE_LOOKBACK_TOKENS = 6
+    private val TIME_SUFFIX_WORDS = setOf("am", "pm", "a.m", "p.m")
     private val ALLOWED_GRAMMAR_ADDITIONS = setOf(
         "a", "an", "the", "and", "or", "but", "that", "this", "it", "is", "are", "was", "were",
         "be", "been", "being", "to", "of", "for", "on", "in", "at", "by", "with", "then",
@@ -371,6 +596,7 @@ internal object CleanupGuardrails {
         "send", "write", "explain", "run", "set", "remind", "call", "install", "turn",
         "record", "open", "close", "create", "delete", "make", "schedule", "tell", "show",
         "list", "draft", "email", "text", "output", "archive", "keep",
+        "deploy",
     )
     private val INTENT_LEADING_WORDS = setOf("please", "first", "next", "then")
 

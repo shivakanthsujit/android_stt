@@ -413,3 +413,172 @@
 - Added preparation, canonical-cache, full-SFT, packed-boundary, resume, and generalized LFM
   inference code plus focused unit tests. GPU smoke tests and Experiment A remain pending until the
   repository checkpoint is fully tested and committed.
+## 2026-08-18 — File-fed Pixel Parakeet and power evaluation
+
+- Added a debug-only ADB-driven STT benchmark Activity that never opens the microphone. It verifies
+  a JSONL manifest and WAV hashes, decodes strict 16 kHz mono PCM16, warms once, runs three measured
+  repeats, flushes atomic JSONL results, and keeps transcript text out of Logcat.
+- Added a deterministic 24-clip, 12-speaker LibriSpeech `test-clean` probe prepared from pinned
+  Hugging Face revision `71cacbfb7e2354c4226d01e70d77d5fca3d04ba1`; manifest SHA-256
+  `7c90de45a130caf4ceb2f5215be114bd9daaa34e95549958440ccb7a95cc187f`.
+- Pinned and cross-built `parakeet.cpp` v0.5.0 commit
+  `1bfbebfaaf493866f49597cd3b7901959d395c60` with ggml
+  `e705c5fed490514458bdd2eaddc43bd098fcce9b` for Android ARM64. Repaired the incomplete SDK
+  Manager NDK r28 install from Google's checksum-verified archive.
+- Prevented a native-library collision by statically embedding Parakeet's ggml rather than
+  packaging another incompatible `libggml.so` alongside Moonshine/LEAP. Added the pinned C API ABI
+  6 JNI bridge and ARM64 OpenMP runtime.
+- Ran clean, idle, untraced Pixel comparisons. Moonshine scored 3.54% WER; Parakeet F16 1.69%;
+  Parakeet Q4_K 1.85%. Q4_K was fastest at 717 ms median and 1,798 ms p90, used about 383 MiB PSS,
+  and produced stable output across all repeats.
+- Excluded an earlier F16 latency run after learning the phone was in active use; that run contained
+  a 345.8-second outlier. Repeating from thermal 0 with competing Gmail work stopped reduced the
+  maximum to 3.77 seconds without changing F16 output.
+- Added p99/max latency, process CPU time, average core use, post-inference memory/thermal telemetry,
+  and optional Perfetto on-device CPU/GPU/memory rail measurement restricted to measured inference
+  trace slices.
+- In matched power runs, Q4_K used 553.3 process-CPU seconds and 235.1 J compute energy versus F16's
+  725.7 seconds and 306.6 J. Q4_K also used 8.6% lower average compute power and 25.5% less peak PSS.
+  GPU rail energy was negligible because the build is CPU-only.
+- Changed the provisional STT candidate from F16 to Q4_K after the user accepted one extra proper-
+  name substitution in exchange for the measured efficiency gains. F16 remains the quality
+  reference; live streaming and dictation-focused protected-token qualification remain unbuilt.
+- Added the STT benchmark and result report to the project and evaluation indexes so the new
+  workflow and evidence are discoverable from both documentation entry points.
+
+## 2026-08-18 — Joined Parakeet/Sotto integration build
+
+- Replaced the ordinary Activity's Moonshine/Liquid execution with a swappable joined path using
+  the selected Parakeet TDT/CTC 110M Q4_K artifact and the pinned public Sotto LFM2.5-350M model.
+  Parakeet owns a 16 kHz mono `AudioRecord`, stops it synchronously at Stop, and runs one final
+  offline inference without fabricated partials. Every non-empty final transcript flows to Sotto.
+- Added a sideloaded LEAP Sotto engine with its native completion prompt, greedy decoder, delimiter
+  parser, complete raw-output retention, and the existing semantic guardrail/fallback layer.
+- Pinned and converted the public BF16 checkpoint to F16 GGUF and a 229,310,304-byte Q4_K_M GGUF.
+  Added a source-hash-verifying exporter, scoped LFM2.5 tensor mapping patch, and ADB staging script;
+  all model outputs and conversion checkouts remain ignored outside Git.
+- Added immutable runtime hashes and model-file verification, shared Parakeet JNI loading, joined UI
+  states, automatic cleanup, and end-to-end tail reporting. The Activity labels the public Sotto
+  model as integration-only and keeps raw STT, raw model output, and guarded output visible.
+- Lint, unit tests, assembly, shell syntax, and diff checks pass. Installed and staged both models
+  on Pixel 7. Both loaded, direct cleanup ran, and a real microphone → Parakeet → Sotto smoke
+  completed with a 1,568 ms STT tail and 2,029 ms end-to-end tail. The smoke also reproduced a
+  meaning-affecting Sotto deletion that guardrails rejected, reinforcing that integration success
+  does not qualify this placeholder model.
+- Added the sanitized, hash-addressed evidence manifest at
+  `docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json`. No evaluation corpus,
+  blind reference, raw personal transcript, model weight, or checkpoint was used as training data
+  or added to Git.
+
+## 2026-08-18 — Conservative pre-model filler removal
+
+- Added a deterministic Sotto input pass that removes only standalone `um`, `uh`, and `erm` before
+  inference. It leaves ambiguous discourse/uncertainty words untouched and preserves uppercase
+  acronyms, likely title-cased names without filler punctuation, quoted text, `uh-oh`, paths,
+  identifiers, and paragraph breaks.
+- Extended cleanup results and batch JSON with original raw text, exact model input, removed filler
+  tokens, and a model-executed flag. The Activity now displays the exact text sent to Sotto and the
+  removal count while keeping the Parakeet transcript unchanged.
+- Guardrails evaluate Sotto against the deterministic model input. A rejected generation falls back
+  to that visible pre-cleaned text; filler-only input skips Sotto rather than prompting it with an
+  empty payload.
+- Added focused JVM coverage for punctuation, unpunctuated fillers, ambiguous words, quoted/code-
+  like text, acronyms, likely names, paragraph preservation, and filler-only input. The complete
+  Android lint/unit/assembly gate passes. The updated APK installed successfully on Pixel 7; the
+  interactive UI smoke remained pending because the phone re-entered its secure lock screen.
+
+## 2026-08-18 — Mac-local Qwen3-TTS fixture pipeline
+
+- Added a locked Python 3.12 environment for MLX-Audio 0.4.6 and pinned
+  `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit` at revision
+  `41d3337e8b7f2843a75841595fc14e4b9a7a4b96`. Kept the inspected MLX-Audio checkout under
+  `~/Documents/projects/mlx-audio` at release commit
+  `d28d68c6ac4e28f7d2d66007f640b06cf3fd8ceb` as requested.
+- Added generic literal-text and bounded cleanup-regression entry points, stable per-case seeds,
+  strict source allowlists, resumable generation, atomic progress, 24 kHz master retention,
+  deterministic ffmpeg conversion, WAV/silence/clipping validation, and Android-compatible
+  manifests. All dependencies, model files, masters, and canonical WAVs remain ignored locally.
+- Projected only the `spoken` input field from the retired cleanup suites. The TTS generation plan
+  contains no simulated `raw` transcript, cleanup `expected`, must-preserve anchors, prompt,
+  captured model output, VoiceInk material, or blind-v2 data.
+- Added 20 project-authored regression utterances spanning protected names/Unicode, numbers,
+  times/dates/currency/phone strings, versions, paths/URLs/identifiers, corrections, negation,
+  uncertainty, questions/commands-as-data, formatting directives, homophones, repetition, and a
+  35-second long-form case.
+- Verified the cached model with network disabled, then generated 45 heldout-v1 retired-regression
+  clips plus the 20 additional cases entirely offline. All 65 native and canonical WAVs pass
+  hashes and format checks, contain 401.28 seconds of audio, show no clipped samples, and retain a
+  byte-stable manifest across resume. Manifest SHA-256 is
+  `10a06cdece044e4c0383eb5719461fdba3b74cb6638efd9d5c238cf7728964cf`.
+- Added sanitized evidence at
+  `docs/evaluation/results/2026-08-18-mac-qwen3-tts-fixture-corpus.json`. The 10 TTS tests pass;
+  the repository suite is 126/127 with only the existing macOS `/var` versus `/private/var`
+  temporary-path assertion failing. Listening review and real-speaker qualification remain open.
+
+## 2026-08-18 — Acoustic TTS joined-pipeline regression
+
+- Loaded the hash-pinned Parakeet Q4_K and public Sotto Q4_K_M models once in the installed Pixel
+  Activity, then played all 20 project-authored synthetic dictation stress fixtures from the Mac
+  speakers through the Pixel microphone. UI automation captured every raw transcript, exact
+  post-filler model input, unguarded Sotto output, guarded result, and stage timing.
+- The app completed 20/20 cases without a crash, recorder leak, failed model state, or missing
+  result. Median Stop-to-STT was 934 ms, median cleanup total 565 ms, and median Stop-to-cleanup
+  1,466 ms. The 35-second long-form case completed at 3,350 ms STT tail and 5,484 ms end to end;
+  final thermal status was 0.
+- Parakeet reached 4/20 strict and 11/20 normalized exact on the uncontrolled speaker-to-microphone
+  path. Names, spelled letters, URL/path surfaces, and the long-form `Ravi` name were weak.
+- Sotto fell back on 15/20 cases. It correctly resolved the beta-to-canary correction in case 011,
+  but the guardrail falsely rejected it. More seriously, case 014 changed a dictated technical
+  command and the guardrail accepted the unsafe edit. This confirms that public Sotto remains an
+  integration-only no-go and that guardrail fallback cannot establish raw semantic safety.
+- Added the complete sanitized report at
+  `docs/evaluation/results/2026-08-18-parakeet-sotto-tts-acoustic-integration.md`; the synthetic
+  fixtures remain ignored regression evidence and were not used as training data.
+
+## 2026-08-18 — Personal conversation suite and fast joined file runner
+
+- Retired the technical v1 synthetic cases from the active product workload and replaced them with
+  20 evaluation-only personal-conversation examples: messages, journal entries, lists, common
+  names/numbers, uncertainty, repetition, formatting directives, and natural self-corrections.
+  Explicitly excluded git/URL/checksum/CLI/path/TLS/version stress examples after user calibration.
+- Added a debug-only joined Activity and host launcher accepting a corpus or one WAV/MP3. The host
+  canonicalizes single files; the Activity verifies audio and staged model hashes, never opens the
+  microphone, loads Parakeet and Sotto once, and exports complete per-stage JSONL. The scorer keeps
+  spoken-reference STT metrics separate from intended-cleanup target metrics.
+- Generated all 20 personal v2 Qwen3-TTS clips offline. Manifest SHA-256 is
+  `771d2fff6b1d9bf8c2e9492d483dbe461f07dd7176996ad6f817e9e5f7c62029`; generated audio and manifests
+  remain ignored under `.cache/`.
+- Completed the valid-timing Pixel run in roughly one minute: 20/20 completed, 6/20 strict and
+  16/20 normalized STT exact, 8/20 strict and 10/20 normalized intended-cleanup exact, and three
+  guardrail fallbacks. Final STT/cleanup/joined medians were 499/637/1,135 ms. All three fallbacks
+  were retained explicit corrections in raw Sotto output; guardrail fallback did not make them
+  successful cleanup.
+- Recorded and fixed the guardrail design problem exposed by the earlier run. Literal surface-token
+  protection had falsely rejected sentence-initial `Well` deletion, explicit correction
+  replacement, and word→equivalent-digit/time rendering. Android and host parity code now permits
+  those bounded edits plus consumed explicit list/paragraph directives and one exact abandoned
+  journal lead-in, while changed values/names/negation/uncertainty still fail closed.
+- Updated the root README, TTS guide, training-machine handoff, current state, next steps, decisions,
+  test log, and durable evaluation report. Personal v2 and all captured results remain strictly
+  evaluation-only and are forbidden as training or demonstration material.
+
+## 2026-08-18 — Personal v3 long-form and checkpoint-evaluation handoff
+
+- Preserved v2 as immutable historical evidence and created personal v3 after the user removed
+  phone-number dictation from scope. V3 retains 16 short/medium personal cases and adds four
+  3–5 sentence journal/message/planning cases for longer cleanup latency.
+- Generated all 20 v3 synthetic clips offline. The manifest SHA-256 is
+  `35f43e00b8e2a6fa7d95ae15de96ed75db5af82a62ca95dcd9ce079a6b69794e`; audio remains ignored.
+- Ran v3 through the file-fed Pixel path: 20/20 complete, 15/20 normalized STT exact, 10/20
+  normalized intended-cleanup exact, and three retained-correction fallbacks. Median
+  STT/cleanup/joined latency was 625/645/1,261 ms.
+- The four long cases contain 14.88–25.84 seconds of audio and completed at 2,543–4,746 ms joined.
+  The longest planning/correction case remained the slowest and fell back because Sotto retained
+  both times.
+- Added `cleanup_personal_conversation_v3.jsonl`, a standard scorer-compatible direct-text corpus,
+  plus hash-pinned checkpoint identity options in `infer_sotto_lfm.py`. Updated the LFM experiment
+  plan and training-machine handoff with commands requiring the public start and every Experiment
+  A/B epoch to run v3 with raw review and per-long-case latency.
+- V3 is evaluation-only. Its examples, expected output, results, errors, and phrasings remain
+  forbidden from training, prompt demonstrations, retrieval, preference data, and repair
+  generation.

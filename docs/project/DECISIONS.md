@@ -20,8 +20,30 @@ Last updated: 2026-08-18
    stop it synchronously on Stop.
 4. Treat Android's built-in on-device SpeechRecognizer as an empirical A/B candidate, not an
    assumed replacement. Pixel-specific quality and punctuation must be measured.
-5. Defer the formal STT comparison while cleanup is the demonstrated blocker. The current working
-   offline Moonshine path is a provisional input, not the final STT selection.
+5. Cleanup remains the product blocker, but a bounded file-fed STT probe may proceed independently
+   when explicitly prioritized. The current live Moonshine path remains provisional.
+6. Use pinned `parakeet.cpp` 0.5.0 through its C API for the first Parakeet Android comparison.
+   Statically link its pinned ggml into `libparakeet.so` so its generic `libggml.so` names cannot
+   collide with Moonshine/LEAP libraries in the same APK.
+7. Use the 24-clip LibriSpeech subset only as a reproducible read-speech probe. It can reject weak
+   candidates but cannot qualify dictation, names/numbers/technical tokens, streaming, endpointing,
+   or Stop-to-final latency.
+8. Advance Parakeet TDT/CTC 110M Q4_K as the provisional deployment candidate and retain F16 as the
+   non-quantized quality reference. Q4_K added one `Hidalgo`/`Hadalgo` substitution but reduced
+   clean latency, model bytes, CPU time, measured energy, and memory materially. Reopen this choice
+   if the dictation corpus finds systematic protected-token regression.
+9. Treat Perfetto power rails plus per-process CPU time as the energy evidence. The USB-connected
+   battery current/charge counter is charger-confounded; hardware rails are downstream of the
+   battery. The present Parakeet build is CPU-only, and negligible GPU rail energy is not a GPU
+   acceleration claim.
+10. Use pinned MLX-Audio 0.4.6 and Qwen3-TTS 1.7B CustomVoice 8-bit with built-in voice Ryan as the
+    first Mac-local synthetic fixture generator. Feed only each evaluation record's `spoken`
+    field to TTS; never expose simulated STT `raw`, cleanup `expected`, prompts, model results,
+    VoiceInk material, or blind-v2 to the generator. Retain hashed 24 kHz masters, derive strict
+    16 kHz mono PCM16 files for the existing Pixel harness, and keep caches/audio ignored. Treat
+    this as deterministic plumbing and lexical-regression evidence only: a clean single synthetic
+    voice cannot qualify real dictation, and technical/Unicode/correction clips require listening
+    review.
 
 ## Cleanup
 
@@ -176,7 +198,7 @@ Last updated: 2026-08-18
     balancing, then run a separately named Qwen3.5-0.8B rank-16 LoRA one/two-epoch comparison.
     Guardrails cannot qualify any failed raw checkpoint, and blind-v2 remains sealed.
 36. Reject the public Sotto LFM2.5-350M production checkpoint at revision
-    `6df6f019170b8b55333c047b901886a51750a965` for direct Android conversion. Its native-prompt BF16
+    `6df6f019170b8b55333c047b901886a51750a965` for deployment conversion. Its native-prompt BF16
     screen is promising on basic cleanup and never answers dictated content. Keep 42/69 strict
     exact for immutable comparison, but use the user's ordinary-conversation calibration of 59/69
     acceptable for product iteration. The ten relevant failures are seven retained superseded
@@ -206,6 +228,44 @@ Last updated: 2026-08-18
     source-specific adapters. Those small deltas are within the practical evaluation-variance
     boundary and do not justify replaying the small datasets roughly five times per epoch. Use a
     globally shuffled single pass over all eligible Sotto, Disfl-QA, DISCO, and Nyra rows instead.
+40. Permit a diagnostic joined Android build before cleanup qualification, at the user's explicit
+    request, so integration can progress while the correction-repair model trains. Use the selected
+    Parakeet 110M Q4_K artifact for project-owned microphone capture and offline final inference
+    after Stop. Use a reproducibly converted, hash-pinned public Sotto LFM2.5-350M Q4_K_M only as a
+    replaceable cleanup placeholder. Preserve raw STT, complete raw model output, guarded output,
+    and per-stage/end-to-end timing. This exception does not reverse Sotto's no-go result, weaken
+    the raw semantic-safety gate, or make a guardrail fallback a passing deployment result.
+41. Reduce cleanup-model workload with a deterministic pre-model pass limited to standalone `um`,
+    `uh`, and `erm`. Preserve the original transcript and expose the exact post-filter model input.
+    Do not remove ambiguous discourse or uncertainty terms such as `like`, `well`, `you know`, or
+    `hmm`; preserve uppercase acronyms, likely title-cased names without filler punctuation,
+    quoted text, hyphenated words, paths, identifiers, and paragraph structure. Apply semantic
+    guardrails to Sotto relative to the deterministic model input, and return that visible input on
+    fallback. This mechanical removal is product behavior, not evidence that failed raw model
+    output is safe.
+42. Replace the active technical synthetic dictation cases with the 20-case
+    `stt_personal_conversation_tts_cases_v2.jsonl` suite. Product-facing synthetic regression now
+    represents personal messages, journals, lists, ordinary names/numbers, uncertainty,
+    repetition, formatting directives, and natural self-corrections. Git/URL/checksum/CLI/path/TLS
+    and version stress examples remain outside this active workload; their earlier report is
+    historical only. Treat personal v2 and its outputs as evaluation-only and never use them for
+    training or demonstrations. Use direct WAV/MP3 → Parakeet → Sotto on the debug Activity as the
+    primary fast synthetic pipeline regression, while keeping microphone playback as a separate
+    acoustic/lifecycle check. Revise Android and host guardrails away from literal surface-token
+    protection where equivalence is provable: permit bounded sentence-initial discourse deletion,
+    explicit self-correction replacement, identical-value spoken-number rendering, and consumed
+    explicit list/paragraph directives. Continue to fail closed on changed facts, names, numeric
+    values, negation, uncertainty, unsupported additions, and answered content. Guardrail fallback
+    remains containment and cannot qualify raw model output.
+43. Supersede personal-conversation v2 with v3 without rewriting the recorded v2 evidence. Remove
+    phone-number dictation from the active suite. Add four ordinary 3–5 sentence message/journal
+    cases so cleanup quality and latency are measured at 14.88–25.84 seconds of synthetic speech,
+    while retaining a short/medium mix. Commit a separate scorer-compatible direct-text v3 corpus
+    for the A6000 checkpoint matrix. Evaluate the public start and every saved correction-repair
+    epoch on that fixed corpus with exact checkpoint hashes, raw-output review, and per-long-case
+    latency. V3 is evaluation-only and may inform checkpoint comparison as a declared regression,
+    but its text, targets, outputs, errors, and phrasings must never enter training, prompting,
+    retrieval, preference construction, or repair generation. Create v4 for future product changes.
 
 ## Android/toolchain
 
