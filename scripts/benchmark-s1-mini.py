@@ -127,7 +127,9 @@ def _request_json(url: str, payload: dict[str, Any], timeout: float) -> dict[str
     return value
 
 
-def tokenize_count(base_url: str, text: str, timeout: float) -> int:
+def tokenize_count(
+    base_url: str, text: str, timeout: float, *, allow_empty: bool = False
+) -> int:
     value = _request_json(
         f"{base_url}/tokenize",
         {"content": text, "add_special": False},
@@ -136,7 +138,7 @@ def tokenize_count(base_url: str, text: str, timeout: float) -> int:
     tokens = value.get("tokens")
     if not isinstance(tokens, list) or any(not isinstance(item, int) for item in tokens):
         raise BenchmarkError(f"tokenize endpoint returned invalid tokens: {value!r}")
-    if not tokens:
+    if not tokens and not allow_empty:
         raise BenchmarkError("tokenize endpoint returned no tokens")
     return len(tokens)
 
@@ -377,7 +379,9 @@ def benchmark_model(
                         result = stream_completion(
                             base_url, alias, system_prompt, case.raw, cap, timeout
                         )
-                        output_tokens = tokenize_count(base_url, result["model_text"], timeout)
+                        output_tokens = tokenize_count(
+                            base_url, result["model_text"], timeout, allow_empty=True
+                        )
                         result.update(
                             {
                                 "case_id": case.case_id,

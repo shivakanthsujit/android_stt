@@ -5,21 +5,51 @@ Date: 2026-08-21
 ## Outcome
 
 S1-mini by Superwhisper is fast enough on the Apple M2 host to justify a later Pixel runtime
-probe. Under the publisher's llama.cpp configuration, Q4_K_M completed the 20-case workload in
-167.5 ms median, 1.84× faster than the same-runtime F16 control at 308.9 ms. Its native llama.cpp
-decode median was 139.25 tokens/s versus 62.64 tokens/s for F16, a 2.22× speedup.
+probe. Across the project's 69-case seed + held-out cleanup screen, Q4_K_M completed requests in
+110.2 ms median, 1.87× faster than the same-runtime F16 control at 206.0 ms. Its pooled native
+llama.cpp decode median was 141.17 tokens/s versus 64.85 tokens/s for F16, a 2.18× speedup.
 
 The actual BF16 reference weights were also measured—not mislabeled F16 GGUF. Under the
-publisher's documented Transformers CPU path, BF16 completed requests in 1,720.9 ms median. That
-makes Q4_K_M 10.28× faster in this cross-runtime host comparison. Runtime differences, prompt
-caching, streaming behavior, and memory allocation make this useful product evidence but not an
-isolated quantization microbenchmark.
+publisher's documented Transformers CPU path, BF16 completed the 69-case screen in 2,147.6 ms
+median. That makes Q4_K_M 19.48× faster in this cross-runtime host comparison. Runtime
+differences, prompt caching, streaming behavior, and memory allocation make this useful product
+evidence but not an isolated quantization microbenchmark.
 
 This pass is performance-only. It did not score expected answers, semantic safety, or guardrail
 behavior and therefore does not qualify S1-mini for deployment. The Pixel was not attached, so no
 Android latency, thermal, power, or compatibility claim is made.
 
-## Canonical measurements
+## Project 69-case performance screen
+
+The project screen combines `cleanup_cases.jsonl` (24 cases) and
+`cleanup_cases_heldout_v1.jsonl` (45 cases). Warmup was excluded and every case received three
+sequential measured requests, for 207 requests per artifact.
+
+| Artifact and runtime | Median TTFT | Median total | p90 total | Maximum total | Native decode median |
+|---|---:|---:|---:|---:|---:|
+| Q4_K_M GGUF, llama.cpp | 31.8 ms | 110.2 ms | 140.0 ms | 224.2 ms | 141.17 tok/s |
+| F16 GGUF, llama.cpp | 32.5 ms | 206.0 ms | 264.1 ms | 381.4 ms | 64.85 tok/s |
+| BF16 safetensors, Transformers CPU | 1,703.5 ms | 2,147.6 ms | 2,549.6 ms | 5,130.7 ms | not cross-runtime comparable |
+
+Q4_K_M is 1.87× faster than F16 at median total and 1.89× faster at p90 total in the same
+llama.cpp runtime. It is 19.48× faster than the documented BF16 CPU path at median total. The
+three valid empty completions for `heldout-015` have total latency but no first output text, so
+pooled TTFT uses 204 non-empty requests rather than all 207.
+
+| Suite | Runtime | Median TTFT | Median total | p90 total |
+|---|---|---:|---:|---:|
+| 24-case seed | Q4_K_M | 31.5 ms | 122.8 ms | 156.6 ms |
+| 24-case seed | F16 | 31.9 ms | 231.6 ms | 304.6 ms |
+| 24-case seed | BF16 | 1,384.2 ms | 1,896.6 ms | 2,581.7 ms |
+| 45-case held-out | Q4_K_M | 32.2 ms | 106.9 ms | 128.9 ms |
+| 45-case held-out | F16 | 32.9 ms | 199.8 ms | 242.9 ms |
+| 45-case held-out | BF16 | 1,760.5 ms | 2,193.0 ms | 2,546.8 ms |
+
+Q4_K_M peak sampled llama-server RSS was 4.927 GiB on the seed suite and 4.926 GiB on held-out;
+F16 was 5.880 and 5.887 GiB. BF16 Transformers peaked at 1.549 GiB in each separately launched
+suite. These remain runtime-allocation measurements, not comparable model-only footprints.
+
+## Personal-v3 canonical measurements
 
 Host: MacBook Air `Mac14,2`, Apple M2 (4 performance + 4 efficiency cores), 16 GB RAM, macOS
 26.5.2 build 25F84. Warmup was excluded. Each value below covers 20 raw transcripts × 3 sequential
@@ -57,13 +87,18 @@ memory observation.
 
 ## Raw-output agreement, not quality scoring
 
-Both BF16 and F16 were stable on 20/20 cases across all three repeats, and BF16 matched F16 on
-60/60 requests. Q4_K_M matched BF16/F16 on 48/60 requests (80%). The 12 differing requests were
-the three repeats of four cases: `personal-v3-008`, `personal-v3-013`, `personal-v3-014`, and
-`personal-v3-020`.
+All three variants were stable on all 89 cases across all three repeats. BF16 matched F16 on
+267/267 requests across the 69-case project screen plus personal-v3. Q4_K_M matched BF16/F16 on:
 
-Because this pass deliberately did not inspect expected answers or judge semantics, those four
-deterministic differences are not classified as accuracy loss, improvement, or harmless
+- 72/72 seed requests (24/24 cases);
+- 129/135 held-out requests (43/45 cases), differing on all repeats of `heldout-006` and
+  `heldout-039`;
+- 48/60 personal-v3 requests (16/20 cases), differing on all repeats of `personal-v3-008`,
+  `personal-v3-013`, `personal-v3-014`, and `personal-v3-020`;
+- 201/207 requests (97.1%) on the 69-case project screen and 249/267 (93.3%) across all 89 cases.
+
+Because this pass deliberately did not inspect expected answers or judge semantics, those six
+deterministic case differences are not classified as accuracy loss, improvement, or harmless
 variation. A later quality pass must make that determination before any model-selection claim.
 
 ## Publisher configuration preserved
@@ -94,9 +129,16 @@ kept unchanged because it is the publisher's documented S1-mini v1 configuration
 documented `torch_dtype="auto"` call, and all 311 loaded tensors were verified as
 `torch.bfloat16`.
 
-The corpus was `docs/evaluation/cleanup_personal_conversation_v3.jsonl`, SHA-256
-`667715109afdf2e0e907d25c875ec7a8645f518c8ae690924128bc58a7482ac0`. The harness reads only each
-row's `id` and `raw`; committed reference/expected fields are neither read nor scored.
+The corpora and SHA-256 identities were:
+
+- `cleanup_cases.jsonl`: `1cf4335b7679c81ca55c9d1cd4b9d25ee69a37dcecfff72f3c03740cd53573b9`;
+- `cleanup_cases_heldout_v1.jsonl`:
+  `cc1dfb4033b0336bface23f56e993fef894c5db87c57d137ffee188ce6ea2d71`;
+- `cleanup_personal_conversation_v3.jsonl`:
+  `667715109afdf2e0e907d25c875ec7a8645f518c8ae690924128bc58a7482ac0`.
+
+The harness reads only each row's `id` and `raw`; committed reference/expected fields are neither
+read nor scored. Blind-v2 and the STT/audio suites were not used.
 
 ## Artifact and runtime identity
 
@@ -116,12 +158,24 @@ Canonical ignored evidence:
 - Q4_K_M server log SHA-256: `6c558331211c6c4bd8c03630886dfef2929d0d32af125b82d79cdabab495cd9f`;
 - F16 server log SHA-256: `60e0d01b8924701c9dcd41623149492b25a9dbf50d4bc012048cb9b507cb9f07`;
 - BF16 JSON SHA-256: `fb7519084661c4ec210acb7972fb16202ee0f846f6de769e6f92c3330d8e53a2`;
-- BF16 console log SHA-256: `5e949033418adba5b2b99fc15b53ade230134558327fa83b5c225c12869270e7`.
+- BF16 console log SHA-256: `5e949033418adba5b2b99fc15b53ade230134558327fa83b5c225c12869270e7`;
+- seed GGUF JSON SHA-256: `a462d29d60999667b354a8cb7b0e4fd5d8cdbf7fd71e1347735b7ee5b99b60b7`;
+- seed BF16 JSON SHA-256: `a5bb29abef2c3d385bd2cee575da815f91da43041b58c7dad4b0b13bb31b147f`;
+- held-out GGUF JSON SHA-256: `dbcd1d5c26fdf5dcb5d9d8f8f9f79ed73606d6551189bb6621dec0c1e831158c`;
+- held-out BF16 JSON SHA-256: `00c5d3d5977a6f4cdec898d498752359d32df0928ae9a5a9c5860b3e4cd7e29a`;
+- seed Q4/F16 server-log SHA-256:
+  `a116417ae4c5be2e18d21710b21418aa3ef403c365a29d494807c0529fef7347` /
+  `386290997f72a8a51db787864f4856243cc3e64264fff8267a2e6082ca5844d6`;
+- held-out Q4/F16 server-log SHA-256:
+  `3b981726368924a7dc27cdf4c56a21f67a8c0854dd26fefe88adfaa90d280f8f` /
+  `c79bf5f80bb272e51accb20cc228db9bc9abe6d53940a91aaba782ca326d1175`.
 
 The reproducible harnesses are `scripts/benchmark-s1-mini.py` and
 `scripts/benchmark-s1-mini-bf16.py`. The initial restricted-sandbox attempt could not bind the
 local server or query process RSS and is excluded; the canonical run was repeated unchanged with
-the required local process permissions.
+the required local process permissions. A later interrupted 24-case attempt is also excluded. It
+revealed that filler-only `heldout-015` validly returns an empty string; the harness now retains a
+zero-token completion and has a regression test for the publisher-documented behavior.
 
 ## Next evidence
 
@@ -131,6 +185,6 @@ thermal state, and energy without inferring results from this Mac. BF16 Pixel fe
 open; neither the Transformers host result nor the F16 GGUF control demonstrates an Android BF16
 path.
 
-Semantic comparison of the four differing Q4 cases is intentionally deferred until a quality
+Semantic comparison of the six differing Q4 cases is intentionally deferred until a quality
 benchmark is requested. That later pass must retain raw-output safety review and cannot let a
 guardrail fallback qualify the model.

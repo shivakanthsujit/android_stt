@@ -34,6 +34,18 @@ class BenchmarkS1MiniTest(unittest.TestCase):
         self.assertEqual(45, bench.max_new_tokens(10))
         self.assertEqual(162, bench.max_new_tokens(100))
 
+    def test_empty_output_tokenization_is_allowed(self) -> None:
+        original = bench._request_json
+        bench._request_json = lambda *args, **kwargs: {"tokens": []}
+        try:
+            self.assertEqual(
+                0, bench.tokenize_count("http://local", "", 1, allow_empty=True)
+            )
+            with self.assertRaises(bench.BenchmarkError):
+                bench.tokenize_count("http://local", "", 1)
+        finally:
+            bench._request_json = original
+
     def test_server_command_uses_exact_no_thinking_and_greedy_flags(self) -> None:
         command = bench.server_command(
             Path("/bin/llama-server"), Path("/models/s1.gguf"), "s1", 18081
