@@ -252,7 +252,11 @@ class MainActivity : Activity() {
                     sttResult.text.isNotBlank() &&
                     currentCleanupState() == CleanupState.READY
                 ) {
-                    cleanText(sttResult.text, sttResult.stopPressedAtNs)
+                    cleanText(
+                        rawText = sttResult.text,
+                        pipelineStopPressedAtNs = sttResult.stopPressedAtNs,
+                        preferredBoundaryOffsets = sttResult.preferredCleanupBoundaryOffsets,
+                    )
                 } else if (sttResult.text.isNotBlank()) {
                     cleanupStatusText.setText(R.string.status_cleanup_load_for_pipeline)
                 }
@@ -288,7 +292,11 @@ class MainActivity : Activity() {
         cleanText(rawText, pipelineStopPressedAtNs = null)
     }
 
-    private fun cleanText(rawText: String, pipelineStopPressedAtNs: Long?) {
+    private fun cleanText(
+        rawText: String,
+        pipelineStopPressedAtNs: Long?,
+        preferredBoundaryOffsets: List<Int> = emptyList(),
+    ) {
         if (rawText.isEmpty()) {
             cleanupStatusText.setText(R.string.status_cleanup_empty_input)
             return
@@ -301,7 +309,11 @@ class MainActivity : Activity() {
         renderCleanupState(CleanupState.GENERATING)
         uiScope.launch {
             runCatching {
-                cleanupEngine.clean(rawText, CleanupPromptVariant.S1_MINI_NATIVE)
+                cleanupEngine.cleanTranscript(
+                    text = rawText,
+                    promptVariant = CleanupPromptVariant.S1_MINI_NATIVE,
+                    preferredBoundaryOffsets = preferredBoundaryOffsets,
+                )
             }
                 .onSuccess { result ->
                     lastCleanupResult = result
@@ -440,6 +452,9 @@ class MainActivity : Activity() {
                     add(getString(R.string.metric_cleanup_ttft, it))
                 }
                 add(getString(R.string.metric_cleanup_total, result.totalLatencyMs))
+                if (result.cleanupPassCount > 1) {
+                    add(getString(R.string.metric_cleanup_passes, result.cleanupPassCount))
+                }
                 result.tokensPerSecond?.let {
                     add(getString(R.string.metric_cleanup_rate, it))
                 }

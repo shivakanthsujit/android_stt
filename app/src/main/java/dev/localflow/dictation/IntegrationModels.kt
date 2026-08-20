@@ -6,9 +6,9 @@ import java.security.MessageDigest
 
 /** Immutable model identities used by the ordinary app and joined integration-test build. */
 object IntegrationModels {
-    const val PARAKEET_FILE_NAME = "tdt_ctc-110m-q4_k.gguf"
+    const val PARAKEET_FILE_NAME = "realtime_eou_120m-v1-q4_k.gguf"
     const val PARAKEET_SHA256 =
-        "2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf"
+        "ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c"
 
     const val CLEANUP_FILE_NAME = "s1-mini-q4_k_m.gguf"
     const val CLEANUP_SHA256 =

@@ -10,6 +10,10 @@ object ParakeetNative {
         sampleRate: Int,
         decoder: Int,
     ): String
+    external fun nativeStreamBegin(handle: Long): Long
+    external fun nativeStreamFeedJson(streamHandle: Long, samples: FloatArray): String
+    external fun nativeStreamFinalizeJson(streamHandle: Long): String
+    external fun nativeStreamFree(streamHandle: Long)
     external fun nativeFree(handle: Long)
 
     init {

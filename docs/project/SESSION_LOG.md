@@ -1008,3 +1008,38 @@
   APK with SHA-256 `56da9d81c66dac13839064b5313c9ed4397a56b03b04bdfa7f2b01ddd7d52683`
   on the connected Pixel. Verified package presence, Local Flow still selected as the IME, and both
   app-private Parakeet/S1-mini model files preserved after the in-place update.
+
+## 2026-08-21 — cache-aware streaming STT and final-only chunked cleanup
+
+- Replaced the ordinary live batch-on-Stop Parakeet artifact with the 129,133,984-byte Realtime EOU
+  120M v1 Q4_K GGUF at SHA-256
+  `ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c`. Retained the earlier
+  offline 110M artifacts and evidence as the quality reference rather than rewriting historical
+  benchmarks.
+- Extended the pinned `parakeet.cpp` 0.5.0 JNI bridge to ABI-v6 stream begin/feed/finalize/free.
+  The live engine now captures project-owned 16 kHz `AudioRecord` chunks, transcribes on a separate
+  stateful stream thread, displays newly finalized raw text in the Activity and IME, records EOU
+  offsets, stops the microphone synchronously, and flushes only the stream tail after Stop. Cancel
+  discards the stream without cleanup.
+- Kept cleanup strictly final-only. Added an S1-mini transcript path that counts raw tokens with the
+  loaded LEAP tokenizer, packs passes to at most 1,000 tokens, prefers EOU/punctuation/paragraph
+  boundaries, uses whitespace only for an overlong unpunctuated span, preserves the exact prompt,
+  thinking-off, greedy, and per-input output-cap contract for every pass, and rejoins results in
+  source order.
+- Added seven focused chunker tests plus STT boundary metadata coverage. The full offline unit,
+  lint, and assembly set passes; the pinned ARM64 native libraries rebuild. The final debug APK is
+  88,046,129 bytes at SHA-256
+  `884ef7413d8a338fa3a30332bfbc94ace4ae9076bc17f3e926f5eb40cd4ed7b0`.
+- Downloaded the streaming GGUF into ignored storage and verified its exact hash. Installed the
+  debug APK, staged both app-private models with device-side hash checks, and verified the streaming
+  model loads and creates a native stream session. No microphone capture was started. At the
+  owner's explicit direction, no further phone interaction will occur without first asking in the
+  conversation and receiving explicit agreement; the owner will run the live speech pipeline test.
+  The installed streaming build is the immediately preceding APK at SHA-256
+  `015a408704932b49f1735fa31c8e9a1379fbd2ad9aa1da77555757034a910159`; the final host-only build
+  was not installed.
+- Reviewed the NVIDIA Realtime EOU and pinned S1-mini v1 model cards. Recorded English-only and
+  no-punctuation/capitalization limits, publisher latency/WER context, the unmeasured Realtime EOU
+  Q4 quality caveat, S1's raw-ASR/control/thinking/greedy/chunking requirements, valid empty output,
+  and both models' redistribution caveats in
+  `docs/research/STREAMING_STT_AND_S1_MINI_RUNTIME_CONTRACT_2026-08-21.md`.

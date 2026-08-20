@@ -6,17 +6,17 @@ Last updated: 2026-08-21
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: preferred Parakeet/S1-mini joined pipeline complete on Pixel; minimal
-  voice IME enabled and visually verified through its permission gate, with interactive model-load
-  and cross-app dictation verification in progress
+- Last verified milestone: cache-aware streaming Parakeet integrated behind the shared Activity/IME
+  pipeline; the Realtime EOU Q4 artifact and native stream session load on Pixel without opening
+  the microphone, while user-run live speech/partial-output verification remains open
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: minimal voice IME device verification and daily-driver hardening
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
   no-go evaluation), 3 (cross-family generic-model quality screen)
 - Active product milestone: minimal voice-only `InputMethodService`
 - Parallel model milestone: 4 (task-specific cleanup qualification/training remains open)
-- Partially completed milestone: 5 (standard-corpus STT probe plus batch-on-Stop microphone
-  integration; dictation/streaming qualification remains)
+- Partially completed milestone: 5 (standard-corpus STT probe plus streaming microphone
+  integration; human dictation/streaming qualification remains)
 - Completed integration milestone: the joined path has a pinned, swappable personal-use default
   and supplies the IME under the owner's permissive cleanup insertion policy
 
@@ -25,7 +25,8 @@ Last updated: 2026-08-21
 - Kotlin/View-based joined integration Activity on a physical Pixel 7.
 - Host-built voice-only `InputMethodService` with Android input-method metadata, enable/select
   setup controls, explicit Start/Stop, Cancel, conservative immediate Undo, next-keyboard switch,
-  and transcript-free timing logs. It has not yet been installed or enabled on a device.
+  transcript-free timing logs, and live raw partial display. It is installed and enabled on the
+  Pixel, but the new streaming speech path still needs an owner-run interactive check.
 - Application-scoped `DictationPipelineCoordinator` shares one Parakeet and S1-mini engine pair
   between the Activity and IME; destroying the Activity no longer unloads models needed by the IME.
 - IME editor policy disables dictation for password fields, editors requesting no personalized
@@ -43,20 +44,25 @@ Last updated: 2026-08-21
 - Mac-local, locked Qwen3-TTS/MLX-Audio fixture pipeline that converts literal text or bounded
   regression suites into resumable, hash-addressed 24 kHz masters and Pixel-compatible 16 kHz
   mono PCM16 WAV corpora without putting model weights or generated audio in Git.
-- Pinned Android ARM64 `parakeet.cpp` 0.5.0 JNI/C API integration for file-fed and live-captured
-  TDT/CTC 110M Q4_K GGUF inference. Its ggml dependency is statically isolated from
-  Moonshine/LEAP's packaged ggml.
+- Pinned Android ARM64 `parakeet.cpp` 0.5.0 JNI/C API integration. Historical/dedicated STT evidence
+  retains explicit offline TDT/CTC 110M artifact identities; the ordinary live and no-override
+  joined paths now use the 120M Realtime EOU Q4_K artifact, with live capture using its cache-aware
+  streaming API. Its ggml dependency is statically isolated from Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
 - ARM64-only joined/IME debug APK; current host-verified APK is 88,046,129 bytes with SHA-256
-  `56da9d81c66dac13839064b5313c9ed4397a56b03b04bdfa7f2b01ddd7d52683`. This build is installed
-  on the Pixel.
+  `884ef7413d8a338fa3a30332bfbc94ace4ae9076bc17f3e926f5eb40cd4ed7b0`. The immediately preceding
+  streaming build at SHA-256 `015a408704932b49f1735fa31c8e9a1379fbd2ad9aa1da77555757034a910159`
+  is installed on the Pixel; the final host build will not be installed without explicit owner
+  permission.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
 - **Stop Dictation** synchronously stops active microphone capture before final processing.
-- The selected offline Parakeet model transcribes the complete capture after Stop; it does not
-  expose partial/streaming hypotheses.
+- The selected live Parakeet model consumes 16 kHz microphone chunks during recording, carries
+  encoder/decoder state, and displays newly finalized raw transcript text in both the Activity and
+  IME. Stop drains captured audio and flushes only the remaining stream tail. Explicit Stop remains
+  authoritative; EOU events do not automatically end capture.
 - Liquid LEAP `0.10.9` cleanup-only benchmark with model download progress, persistent cache reuse,
   load/unload, minimal output-validity fallback, and monotonic TTFT/total-generation metrics.
 - Editable direct-text cleanup UI plus a 24-case, multi-prompt batch runner that exports JSONL for
@@ -70,6 +76,11 @@ Last updated: 2026-08-21
   interface remains swappable and Sotto is retained only as a historical/debug engine.
 - Joined Parakeet → S1-mini execution after every non-empty final transcript. The UI preserves raw
   STT, complete raw model output, selected output, STT tail, cleanup timing, and end-to-end tail.
+- Streaming partials are display-only and never reach S1-mini. After Stop produces the complete
+  transcript, the production engine uses S1-mini's tokenizer to pack passes at no more than 1,000
+  raw tokens, preferring Parakeet EOU and punctuation/sentence boundaries and using whitespace only
+  for an overlong unpunctuated span. Passes preserve the exact prompt/template/decoding contract,
+  run sequentially, and are rejoined in source order.
 - The active synthetic product regression is now the 20-case personal-conversation v3 suite:
   messages, journal entries, lists, ordinary names/numbers, uncertainty, repetition, explicit
   formatting, natural corrections, and four 3–5 sentence latency cases. Phone-number dictation and
@@ -132,11 +143,13 @@ Last updated: 2026-08-21
 
 - Google Pixel 7 (`panther`), ARM64, adb serial `33040DLH20004E`.
 - Cached Moonshine model remains installed on the device.
-- F16 and Q4_K Parakeet GGUFs plus the generated LibriSpeech probe remain in ignored local/device
-  evaluation storage; they are not committed app assets.
-- The selected Parakeet Q4_K and S1-mini Q4_K_M artifacts are staged in app-private storage with
-  their exact hashes verified on the device. Both load successfully in the installed integration
-  APK. App-private storage replaces shell-pushed app-scoped external storage on Android 17.
+- F16 and Q4_K offline Parakeet GGUFs plus the generated LibriSpeech probe remain in ignored
+  local/device evaluation storage; they are not committed app assets.
+- The 129,133,984-byte Realtime EOU 120M Q4_K artifact at SHA-256
+  `ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c` and S1-mini Q4_K_M are
+  staged in app-private storage with exact hashes verified on the device. The streaming artifact
+  loads and creates a native stream session in the installed APK without opening the microphone.
+  App-private storage replaces shell-pushed app-scoped external storage on Android 17.
 - Final no-override joined run `20260820T182349Z-joined-file` completes 20/20 personal-v3 cases.
   Median STT/cleanup/pipeline totals are 725.0/1,927.5/2,664.5 ms, peak PSS is 1,589,901 KiB, and
   max thermal is 1. Raw and guarded strict/normalized target counts agree at 8/20 and 9/20; the
@@ -191,14 +204,15 @@ Last updated: 2026-08-21
   used 23.8% less process CPU time, 23.3% less inference compute-rail energy, 8.6% less average
   compute power, and 25.5% less peak PSS. Q4_K is the provisional deployment candidate; F16 is the
   quality reference.
-- The current Parakeet build is CPU-only. GPU rail energy was below 0.1% of compute energy. Live
-  microphone capture is integrated, but it is batch-on-Stop rather than streaming; a protected-
-  token dictation corpus and streaming responsiveness remain required for product qualification.
+- The current Parakeet build is CPU-only. GPU rail energy was below 0.1% of compute energy for the
+  earlier offline model. Cache-aware microphone streaming is now integrated, but the Realtime EOU
+  Q4 artifact has no publisher-reported quantized WER and has not yet undergone owner-run live
+  partial-responsiveness, Stop-to-final, protected-token, memory, thermal, or power qualification.
 - An initial F16 latency run was contaminated by active phone use and excluded. Clean runs start
   with no competing app and thermal status 0. Perfetto affects wall timing, so untraced runs select
   latency while traced runs supply CPU/energy evidence.
-- The older Moonshine path displayed completed lines separately. The joined Parakeet path supplies
-  its whole final transcript to cleanup automatically.
+- Live Parakeet partials are displayed while recording. Only its whole final transcript is supplied
+  to cleanup after Stop.
 - Automatic end-of-speech is deliberately not implemented. V1 uses explicit Start/Stop.
 - Android's built-in on-device `SpeechRecognizer` is a planned A/B branch after the joined pipeline.
 - Liquid LEAP is governed by its own Terms of Use; its model weights have separate LFM licensing.

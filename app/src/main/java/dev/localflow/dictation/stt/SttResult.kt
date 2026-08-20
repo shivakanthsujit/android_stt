@@ -5,6 +5,8 @@ data class SttResult(
     val micStartedAtNs: Long,
     val stopPressedAtNs: Long,
     val finalTextAtNs: Long,
+    /** Character offsets immediately after sentence-like EOU events in [text]. */
+    val preferredCleanupBoundaryOffsets: List<Int> = emptyList(),
 ) {
     val recordingDurationMs: Long
         get() = nanosToMillis(stopPressedAtNs - micStartedAtNs)
@@ -14,4 +16,3 @@ data class SttResult(
 
     private fun nanosToMillis(nanos: Long): Long = nanos.coerceAtLeast(0L) / 1_000_000L
 }
-

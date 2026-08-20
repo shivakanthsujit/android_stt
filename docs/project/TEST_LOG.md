@@ -591,3 +591,26 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   `56da9d81c66dac13839064b5313c9ed4397a56b03b04bdfa7f2b01ddd7d52683`; verified Local Flow remains
   the selected IME and the 484,219,808-byte S1-mini plus 131,387,520-byte Parakeet files remain in
   app-private storage.
+
+## 2026-08-21 — streaming integration build and non-microphone Pixel initialization
+
+- `. ./scripts/android-env.sh && ./gradlew --offline testDebugUnitTest` passed, including seven new
+  S1-mini token-bounded chunking tests and STT cleanup-boundary metadata coverage.
+- `./scripts/build-parakeet-android.sh` rebuilt and packaged the pinned ARM64 libraries:
+  `libparakeet.so` SHA-256
+  `7a90cf869e52d5bb79494710350b3fa1acaba21deb56e24ca8d2cd193dc42ca4`,
+  `liblocalflow_parakeet_jni.so`
+  `db8726e134eed2207c3a1b464e8cee9754cb99c06852b5b96a8d5e6ee01ab3d0`, and `libomp.so`
+  `7998fffd575ef7c17aecafe456e41d84abc4bbf09437dee1755d8963fe36e6ae`.
+- `. ./scripts/android-env.sh && ./gradlew --offline testDebugUnitTest lintDebug assembleDebug`
+  passed with 33/33 unit tests. The final host APK is 88,046,129 bytes at SHA-256
+  `884ef7413d8a338fa3a30332bfbc94ace4ae9076bc17f3e926f5eb40cd4ed7b0` and was not installed.
+- The ignored `realtime_eou_120m-v1-q4_k.gguf` is 129,133,984 bytes and matches SHA-256
+  `ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c`. Device-side staging
+  verified both this artifact and the unchanged S1-mini Q4_K_M artifact in app-private storage.
+- The installed Activity loaded the Realtime EOU model and its load-time streaming-session probe
+  succeeded (`Parakeet Realtime EOU 120M Q4_K model ready`). No Start Dictation action was invoked
+  and no microphone capture was started. Live partial text, final tail, final-only cleanup, and
+  multi-pass cleanup remain an owner-run device check. The installed streaming APK is the preceding
+  88,046,129-byte build at SHA-256
+  `015a408704932b49f1735fa31c8e9a1379fbd2ad9aa1da77555757034a910159`.

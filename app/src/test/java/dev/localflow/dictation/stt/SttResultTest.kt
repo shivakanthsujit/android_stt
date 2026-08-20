@@ -29,5 +29,17 @@ class SttResultTest {
         assertEquals(0L, result.recordingDurationMs)
         assertEquals(0L, result.finalizationLatencyMs)
     }
-}
 
+    @Test
+    fun carriesStreamingSentenceBoundariesToFinalCleanup() {
+        val result = SttResult(
+            text = "first utterance second utterance",
+            micStartedAtNs = 1L,
+            stopPressedAtNs = 2L,
+            finalTextAtNs = 3L,
+            preferredCleanupBoundaryOffsets = listOf(15),
+        )
+
+        assertEquals(listOf(15), result.preferredCleanupBoundaryOffsets)
+    }
+}

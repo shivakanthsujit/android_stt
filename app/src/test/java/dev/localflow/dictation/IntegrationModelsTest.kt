@@ -8,6 +8,18 @@ import org.junit.Test
 
 class IntegrationModelsTest {
     @Test
+    fun liveSpeechIdentityIsPinnedToParakeetRealtimeEouQ4() {
+        assertEquals(
+            "realtime_eou_120m-v1-q4_k.gguf",
+            IntegrationModels.PARAKEET_FILE_NAME,
+        )
+        assertEquals(
+            "ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c",
+            IntegrationModels.PARAKEET_SHA256,
+        )
+    }
+
+    @Test
     fun preferredCleanupIdentityIsPinnedToS1MiniQ4() {
         assertEquals(
             "s1-mini-q4_k_m.gguf",

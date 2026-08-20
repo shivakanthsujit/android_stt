@@ -18,6 +18,16 @@ interface CleanupEngine {
         promptVariant: CleanupPromptVariant = CleanupPromptVariant.COMMAND_ENVELOPE,
     ): CleanupResult
 
+    /**
+     * Cleans one completed transcript while preserving any sentence-like boundaries reported by
+     * the STT engine. Engines that do not need chunking can use the ordinary one-pass behavior.
+     */
+    suspend fun cleanTranscript(
+        text: String,
+        promptVariant: CleanupPromptVariant = CleanupPromptVariant.COMMAND_ENVELOPE,
+        preferredBoundaryOffsets: List<Int> = emptyList(),
+    ): CleanupResult = clean(text, promptVariant)
+
     /** Stops using the engine and releases the model's native memory. */
     suspend fun unload()
 }
@@ -94,6 +104,7 @@ data class CleanupResult(
     val modelInputText: String = rawText,
     val removedFillers: List<String> = emptyList(),
     val modelWasRun: Boolean = true,
+    val cleanupPassCount: Int = if (modelWasRun) 1 else 0,
 ) {
     val timeToFirstTokenMs: Long?
         get() = firstTokenAtNs?.let { nanosToMillis(it - startedAtNs) }

@@ -31,6 +31,30 @@ Last updated: 2026-08-21
 Full evidence: `docs/evaluation/results/2026-08-21-s1-mini-v1-local-performance.md` and
 `docs/evaluation/results/2026-08-21-s1-mini-v1-pixel.md`.
 
+## Completed: streaming STT and long-transcript cleanup integration
+
+- [x] Replace the ordinary live offline-on-Stop artifact with Parakeet Realtime EOU 120M v1 Q4_K,
+  pin its filename/SHA-256, and extend the pinned `parakeet.cpp` JNI bridge to its cache-aware
+  streaming C API.
+- [x] Stream newly finalized raw text to the Activity and IME during recording while preserving
+  project-owned `AudioRecord`, synchronous microphone Stop, explicit Start/Stop, and cancel without
+  cleanup.
+- [x] Keep cleanup final-only. Tokenize the complete final transcript with S1-mini's loaded
+  tokenizer, greedily pack passes at no more than roughly 1,000 raw tokens, prefer EOU/punctuation
+  boundaries, preserve per-pass prompt/thinking/greedy/output-cap settings, and rejoin in order.
+- [x] Pass Android unit tests, rebuild the pinned ARM64 JNI libraries, assemble the debug APK, and
+  verify the staged Realtime EOU artifact can load and create a native stream session on Pixel
+  without opening the microphone.
+- [ ] Owner-run live speech check: confirm raw partial text appears while speaking, cleanup does not
+  start before Stop, Stop flushes the final tail, and the entire final text is then cleaned once.
+- [ ] Add deterministic long-input integration coverage that exercises multiple real-tokenizer S1
+  passes on device without using any evaluation-only corpus.
+- [ ] Before redistributing or bundling the Parakeet GGUF, reconcile and retain the NVIDIA source
+  model license and the converted collection's declared CC-BY-4.0 terms/notices.
+
+Runtime/model-card notes:
+`docs/research/STREAMING_STT_AND_S1_MINI_RUNTIME_CONTRACT_2026-08-21.md`.
+
 ## Completed: owner-local FluidVoice reference inventory
 
 - [x] Inventory the installed FluidVoice/FluidAudio application, active Parakeet TDT v2 Core ML
@@ -303,9 +327,9 @@ deterministic cleanup while generative corrections remain disabled.
   four 3–5 sentence cases for long-form quality and latency. Exclude technical stress text.
 - [ ] Add human/multi-speaker personal dictation recordings for qualification, and score protected
   names, numeric equivalence, correction success, and formatting separately from literal WER.
-- [ ] Integrate Parakeet Q4_K streaming/end-of-utterance behind `SpeechToTextEngine` without
-  weakening the project-owned microphone lifecycle; measure partial responsiveness and
-  Stop-to-final latency.
+- [x] Integrate Parakeet Realtime EOU 120M Q4_K streaming/end-of-utterance behind
+  `SpeechToTextEngine` without weakening the project-owned microphone lifecycle. Partial
+  responsiveness and Stop-to-final measurement remain part of the live qualification task.
 - [ ] Verify cold load, offline model reuse, sustained thermal behavior, and live dictation memory.
 - [ ] Compare Pixel's on-device `SpeechRecognizer` only if its offline path can be made deterministic.
 - [ ] Make the final STT choice after the dictation/streaming gate; the read-speech probe is not
@@ -436,8 +460,8 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 - [ ] Build a consented, evaluation-only human dictation set with multiple speakers, rooms, pace,
   accents, corrections, names, numbers, uncertainty, long-form speech, and interruptions. Keep all
   personal audio/transcripts ignored and publish only sanitized aggregates and hashes.
-- [ ] Qualify Parakeet on that dictation workload; investigate cache-aware streaming and end-of-
-  utterance only after the explicit Start/Stop baseline is stable.
+- [ ] Qualify Parakeet Realtime EOU on that dictation workload, including partial responsiveness,
+  Stop-to-final latency, EOU boundary behavior, and comparison with the earlier offline candidate.
 - [ ] Continue cleanup research with fresh train/dev data and a new evaluation version. Keep
   blind-v2 sealed until a candidate and evaluation policy are frozen. Keep research scoring
   separate from the owner's permissive personal-use insertion policy.

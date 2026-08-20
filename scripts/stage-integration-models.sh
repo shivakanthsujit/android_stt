@@ -4,13 +4,13 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "$repo_dir/scripts/android-env.sh"
 
-parakeet_model="${1:-$repo_dir/.cache/stt-eval/models/tdt_ctc-110m-q4_k.gguf}"
+parakeet_model="${1:-$repo_dir/.cache/stt-eval/models/realtime_eou_120m-v1-q4_k.gguf}"
 cleanup_model="${2:-$repo_dir/.cache/integration/s1-mini-v1/s1-mini-q4_k_m.gguf}"
 package_name="dev.localflow.dictation"
 device_temp_parakeet="/data/local/tmp/localflow-stage-parakeet.gguf"
 device_temp_cleanup="/data/local/tmp/localflow-stage-s1-mini.gguf"
 device_dir="files/models"
-expected_parakeet_sha="2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf"
+expected_parakeet_sha="ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c"
 expected_cleanup_sha="3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634"
 
 require_hash() {
@@ -43,12 +43,12 @@ adb push "$parakeet_model" "$device_temp_parakeet"
 adb push "$cleanup_model" "$device_temp_cleanup"
 adb shell chmod 0644 "$device_temp_parakeet" "$device_temp_cleanup"
 adb shell run-as "$package_name" cp "$device_temp_parakeet" \
-    "$device_dir/tdt_ctc-110m-q4_k.gguf"
+    "$device_dir/realtime_eou_120m-v1-q4_k.gguf"
 adb shell run-as "$package_name" cp "$device_temp_cleanup" \
     "$device_dir/s1-mini-q4_k_m.gguf"
 
 device_parakeet_sha="$(adb exec-out run-as "$package_name" sha256sum \
-    "$device_dir/tdt_ctc-110m-q4_k.gguf" | tr -d '\r' | awk '{print $1}')"
+    "$device_dir/realtime_eou_120m-v1-q4_k.gguf" | tr -d '\r' | awk '{print $1}')"
 device_cleanup_sha="$(adb exec-out run-as "$package_name" sha256sum \
     "$device_dir/s1-mini-q4_k_m.gguf" | tr -d '\r' | awk '{print $1}')"
 if [[ "$device_parakeet_sha" != "$expected_parakeet_sha" ||

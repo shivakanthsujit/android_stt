@@ -13,11 +13,11 @@ Last updated: 2026-08-21
    voice-only IME while cleanup and STT qualification continue in parallel. Reuse an
    application-scoped model coordinator, preserve explicit microphone control, and keep model
    replacement behind the existing interfaces.
-7. Share one application-scoped Parakeet/Sotto engine pair between the Activity and IME. The IME
-   never starts recording on editor focus, blocks password/private fields, invalidates output when
-   the editor changes, commits only the guarded local result, and permits Undo only while the exact
-   inserted text remains immediately before the cursor in the same editor. Keep device verification
-   separate from the host implementation claim.
+7. Share one application-scoped Parakeet/selected-cleanup engine pair between the Activity and IME.
+   The IME never starts recording on editor focus, blocks password/private fields, invalidates
+   output when the editor changes, commits only the selected local result, and permits Undo only
+   while the exact inserted text remains immediately before the cursor in the same editor. Keep
+   device verification separate from the host implementation claim.
 
 ## Speech recognition
 
@@ -53,6 +53,15 @@ Last updated: 2026-08-21
     this as deterministic plumbing and lexical-regression evidence only: a clean single synthetic
     voice cannot qualify real dictation, and technical/Unicode/correction clips require listening
     review.
+11. Use `nvidia/parakeet_realtime_eou_120m-v1` through pinned `parakeet.cpp` 0.5.0 for the ordinary
+    live path because the offline 110M artifact cannot reduce Stop latency through cache-aware
+    incremental inference. Feed captured 16 kHz chunks while recording, display only newly
+    finalized raw text, keep explicit Start/Stop, stop `AudioRecord` synchronously, and flush only
+    the remaining stream tail after Stop. EOU events are preferred cleanup boundaries, not
+    automatic Stop or cleanup triggers. Pin the 129,133,984-byte Q4_K GGUF at SHA-256
+    `ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c`. This supersedes decision
+    8 only for the ordinary live integration artifact; the unmeasured Realtime EOU Q4 quantization
+    remains provisional until direct Pixel dictation quality and performance qualification.
 
 ## Cleanup
 
@@ -389,6 +398,12 @@ Last updated: 2026-08-21
     or formatting changes. Preserve the stricter host guardrails and prior semantic evaluations as
     historical/research diagnostics only; they do not gate personal-use insertion. Keep the exact
     S1-mini publisher prompt, control, template, thinking, greedy-decoding, and output-cap contract.
+60. Apply S1-mini only to a completed STT transcript, never to live partials. Follow the v1 model
+    card's long-input guidance by counting raw tokens with the loaded S1 tokenizer and keeping each
+    pass at or below roughly 1,000 tokens. Greedily prefer Parakeet EOU offsets and written sentence
+    endings, fall back to whitespace only for an overlong unpunctuated span, run passes sequentially
+    with the exact trained prompt/template/greedy/per-input-cap contract, and rejoin them in source
+    order. Retain the personal-use blank/capped fallback policy independently for each pass.
 
 ## Hosted API benchmark
 

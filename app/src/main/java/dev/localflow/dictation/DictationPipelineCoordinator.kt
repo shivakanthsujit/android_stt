@@ -98,7 +98,13 @@ class DictationPipelineCoordinator(context: Context) {
         }
 
         val cleanupAttempt = if (cleanupEngine.state == CleanupState.READY) {
-            runCatching { cleanupEngine.clean(rawText, CleanupPromptVariant.S1_MINI_NATIVE) }
+            runCatching {
+                cleanupEngine.cleanTranscript(
+                    text = rawText,
+                    promptVariant = CleanupPromptVariant.S1_MINI_NATIVE,
+                    preferredBoundaryOffsets = sttResult.preferredCleanupBoundaryOffsets,
+                )
+            }
         } else {
             Result.failure(IllegalStateException("S1-mini is not ready"))
         }

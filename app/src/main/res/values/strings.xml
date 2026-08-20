@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Local Flow</string>
     <string name="benchmark_title">Joined pipeline test</string>
-    <string name="benchmark_subtitle" tools:ignore="TypographyDashes">Parakeet 110M Q4_K → S1-mini by Superwhisper Q4_K_M · preferred local pipeline</string>
+    <string name="benchmark_subtitle" tools:ignore="TypographyDashes">Parakeet Realtime EOU 120M Q4_K → S1-mini by Superwhisper Q4_K_M · streaming local pipeline</string>
     <string name="integration_warning">Preferred on-device cleanup model: S1-mini uses its exact publisher prompt, prose control, empty-thinking prefix, greedy decoding, and input-relative output cap. Every non-empty, complete generation is used directly.</string>
     <string name="load_model">Load staged Parakeet</string>
     <string name="start_dictation">Start dictation</string>
@@ -28,8 +28,8 @@
     <string name="cleaned_transcript_placeholder">Cleaned local text will appear here.</string>
     <string name="latency_metrics">Latency metrics</string>
     <string name="status_model_not_loaded">Parakeet is not loaded. Stage the verified Q4_K GGUF, then load it.</string>
-    <string name="status_preparing_model">Verifying and loading Parakeet 110M Q4_K…</string>
-    <string name="status_model_ready">Parakeet ready. Audio stays local; transcription finalizes after Stop.</string>
+    <string name="status_preparing_model">Verifying and loading Parakeet Realtime EOU 120M Q4_K…</string>
+    <string name="status_model_ready">Streaming Parakeet ready. Audio and partial transcripts stay local.</string>
     <string name="status_opening_microphone">Opening microphone…</string>
     <string name="status_requesting_microphone_permission">Microphone permission is required to dictate.</string>
     <string name="status_microphone_permission_denied">Microphone permission denied. Enable it in Android settings to dictate.</string>
@@ -63,6 +63,7 @@
     <string name="metric_fillers_removed">Pre-model fillers removed: %1$d</string>
     <string name="metric_cleanup_ttft">Cleanup TTFT: %1$d ms</string>
     <string name="metric_cleanup_total">Cleanup total: %1$d ms</string>
+    <string name="metric_cleanup_passes">Cleanup passes: %1$d (sentence-boundary chunks)</string>
     <string name="metric_cleanup_rate">Cleanup rate: %1$.1f tokens/s</string>
     <string name="metric_cleanup_tokens">Cleanup token counts: input=%1$d, output=%2$d</string>
     <string name="ime_name">Local Flow voice input</string>

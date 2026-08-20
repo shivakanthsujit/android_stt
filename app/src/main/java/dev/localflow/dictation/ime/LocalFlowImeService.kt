@@ -174,7 +174,16 @@ class LocalFlowImeService : InputMethodService() {
         lastMetrics = ""
         val generation = ++operationGeneration
         serviceScope.launch {
-            runCatching { coordinator.startDictation() }
+            runCatching {
+                coordinator.startDictation { partialTranscript ->
+                    serviceScope.launch {
+                        if (generation == operationGeneration && mode == Mode.RECORDING) {
+                            lastRawText = partialTranscript
+                            render()
+                        }
+                    }
+                }
+            }
                 .onSuccess {
                     if (generation == operationGeneration) {
                         mode = Mode.RECORDING

@@ -15,15 +15,12 @@ import dev.localflow.dictation.LocalFlowLog
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import org.json.JSONObject
 
-/**
- * Live microphone integration for the selected Parakeet 110M Q4_K artifact.
- *
- * The current pinned Parakeet model is an offline TDT/CTC model. Audio is captured locally while
- * dictation is active and a single final inference is run after Stop. No partial transcript is
- * fabricated. A cache-aware streaming model remains a later, independently measured STT option.
- */
+/** Live cache-aware Parakeet transcription with an explicit project-owned microphone lifecycle. */
 class ParakeetLiveSttEngine(
     context: Context,
     private val modelFile: File,
@@ -35,9 +32,13 @@ class ParakeetLiveSttEngine(
     private val worker: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "local-flow-parakeet").apply { isDaemon = true }
     }
-    private val captureLock = Any()
-    private val capturedChunks = mutableListOf<FloatArray>()
+    private val streamQueue = LinkedBlockingQueue<FloatArray>()
+    private val streamLock = Any()
+    private val streamingTranscript = StringBuilder()
+    private val preferredCleanupBoundaries = mutableListOf<Int>()
     private val stopRequested = AtomicBoolean(false)
+    private val streamingCancelled = AtomicBoolean(false)
+    private val capturedSampleCount = AtomicInteger(0)
 
     @Volatile
     override var state = SpeechToTextEngine.State.UNLOADED
@@ -53,12 +54,17 @@ class ParakeetLiveSttEngine(
     private var captureThread: Thread? = null
 
     @Volatile
+    private var streamingThread: Thread? = null
+
+    @Volatile
     private var captureError: Throwable? = null
+
+    @Volatile
+    private var streamingError: Throwable? = null
 
     @Volatile
     private var closed = false
 
-    private var capturedSampleCount = 0
     private var micStartedAtNs = 0L
     private var stopPressedAtNs = 0L
 
@@ -80,7 +86,7 @@ class ParakeetLiveSttEngine(
                 IntegrationModels.requireVerified(
                     file = modelFile,
                     expectedSha256 = expectedModelSha256,
-                    displayName = "Parakeet Q4_K",
+                    displayName = "Parakeet Realtime EOU 120M Q4_K",
                 )
                 val abiVersion = ParakeetNative.nativeAbiVersion()
                 require(abiVersion == EXPECTED_C_API_ABI) {
@@ -90,10 +96,17 @@ class ParakeetLiveSttEngine(
                     require(handle != 0L) { "Parakeet returned a null model context" }
                     nativeContext = handle
                 }
+                // Reject an offline-only GGUF before the user opens the microphone.
+                val probe = ParakeetNative.nativeStreamBegin(nativeContext)
+                require(probe != 0L) { "Parakeet did not create a streaming session" }
+                ParakeetNative.nativeStreamFree(probe)
             }.onSuccess {
-                LocalFlowLog.info("Parakeet 110M Q4_K model ready")
+                LocalFlowLog.info("Parakeet Realtime EOU 120M Q4_K model ready")
                 updateState(SpeechToTextEngine.State.READY)
             }.onFailure { error ->
+                val handle = nativeContext
+                nativeContext = 0L
+                if (handle != 0L) runCatching { ParakeetNative.nativeFree(handle) }
                 LocalFlowLog.error("Parakeet model load failed", error)
                 updateState(SpeechToTextEngine.State.FAILED)
             }.also { result -> mainHandler.post { callback(result.map { Unit }) } }
@@ -120,13 +133,12 @@ class ParakeetLiveSttEngine(
         }
 
         worker.execute {
-            runCatching {
-                synchronized(captureLock) {
-                    capturedChunks.clear()
-                    capturedSampleCount = 0
-                }
-                captureError = null
-                stopRequested.set(false)
+            val result = runCatching {
+                resetUtteranceState()
+                val streamHandle = ParakeetNative.nativeStreamBegin(nativeContext)
+                require(streamHandle != 0L) { "Parakeet did not create a streaming session" }
+                startStreamingThread(streamHandle, onPartialTranscript)
+
                 val record = createAudioRecord()
                 audioRecord = record
                 record.startRecording()
@@ -136,15 +148,23 @@ class ParakeetLiveSttEngine(
                 micStartedAtNs = SystemClock.elapsedRealtimeNanos()
                 startCaptureThread(record)
                 updateState(SpeechToTextEngine.State.RECORDING)
-                LocalFlowLog.info("Parakeet microphone capture started")
-            }.onFailure { error ->
+                LocalFlowLog.info("Parakeet streaming microphone capture started")
+            }
+            result.onFailure { error ->
+                streamingCancelled.set(true)
                 stopRequested.set(true)
                 stopAudioCapture()
+                streamQueue.clear()
+                streamQueue.offer(END_OF_STREAM)
+                runCatching { streamingThread?.join(STREAM_JOIN_TIMEOUT_MS) }
                 runCatching { audioRecord?.release() }
                 audioRecord = null
+                captureThread = null
+                streamingThread = null
                 updateState(SpeechToTextEngine.State.READY)
                 LocalFlowLog.error("Parakeet microphone start failed", error)
-            }.also { result -> mainHandler.post { callback(result.map { Unit }) } }
+            }
+            mainHandler.post { callback(result.map { Unit }) }
         }
     }
 
@@ -160,40 +180,44 @@ class ParakeetLiveSttEngine(
         stopRequested.set(true)
         updateState(SpeechToTextEngine.State.FINALIZING)
 
-        // This is synchronous so Android releases the microphone indicator at the Stop tap. Only
-        // already-captured samples are copied and transcribed by the background worker afterward.
+        // Stop synchronously so Android releases the microphone indicator at the Stop tap. The
+        // stream worker drains already-captured audio and flushes only the undecoded tail.
         stopAudioCapture()
         worker.execute {
             val result = runCatching {
-                captureThread?.join(CAPTURE_JOIN_TIMEOUT_MS)
+                joinThread(captureThread, CAPTURE_JOIN_TIMEOUT_MS, "microphone capture")
                 captureError?.let { throw it }
-                val samples = combinedSamples()
-                require(samples.isNotEmpty()) { "No microphone audio was captured" }
-                val text = ParakeetNative.nativeTranscribePcm(
-                    nativeContext,
-                    samples,
-                    SAMPLE_RATE,
-                    DECODER_DEFAULT,
-                ).trim()
+                joinThread(streamingThread, STREAM_JOIN_TIMEOUT_MS, "streaming transcription")
+                streamingError?.let { throw it }
+                require(capturedSampleCount.get() > 0) { "No microphone audio was captured" }
                 val finalAtNs = SystemClock.elapsedRealtimeNanos()
+                val (text, boundaries) = synchronized(streamLock) {
+                    val untrimmed = streamingTranscript.toString()
+                    val leadingWhitespace = untrimmed.indexOfFirst { !it.isWhitespace() }
+                        .let { index -> if (index >= 0) index else untrimmed.length }
+                    val trimmed = untrimmed.trim()
+                    trimmed to preferredCleanupBoundaries
+                        .map { offset -> offset - leadingWhitespace }
+                        .filter { offset -> offset in 1 until trimmed.length }
+                }
                 SttResult(
                     text = text,
                     micStartedAtNs = micStartedAtNs,
                     stopPressedAtNs = stopPressedAtNs,
                     finalTextAtNs = finalAtNs,
+                    preferredCleanupBoundaryOffsets = boundaries,
                 )
             }
-            runCatching { audioRecord?.release() }
-            audioRecord = null
-            captureThread = null
-            synchronized(captureLock) {
-                capturedChunks.clear()
-                capturedSampleCount = 0
+            releaseUtteranceResources()
+            if (!closed) {
+                updateState(
+                    if (result.isSuccess) SpeechToTextEngine.State.READY
+                    else SpeechToTextEngine.State.FAILED,
+                )
             }
-            if (!closed) updateState(SpeechToTextEngine.State.READY)
             result.onSuccess { stt ->
                 LocalFlowLog.info(
-                    "Parakeet finalized: recording=${stt.recordingDurationMs}ms, " +
+                    "Parakeet stream finalized: recording=${stt.recordingDurationMs}ms, " +
                         "tail=${stt.finalizationLatencyMs}ms",
                 )
             }.onFailure { error -> LocalFlowLog.error("Parakeet finalization failed", error) }
@@ -209,24 +233,26 @@ class ParakeetLiveSttEngine(
             return
         }
 
+        streamingCancelled.set(true)
         stopRequested.set(true)
         updateState(SpeechToTextEngine.State.FINALIZING)
         stopAudioCapture()
         worker.execute {
             val result = runCatching {
-                captureThread?.join(CAPTURE_JOIN_TIMEOUT_MS)
-                runCatching { audioRecord?.release() }
-                audioRecord = null
-                captureThread = null
-                captureError = null
-                synchronized(captureLock) {
-                    capturedChunks.clear()
-                    capturedSampleCount = 0
-                }
+                joinThread(captureThread, CAPTURE_JOIN_TIMEOUT_MS, "microphone capture")
+                streamQueue.clear()
+                streamQueue.offer(END_OF_STREAM)
+                joinThread(streamingThread, STREAM_JOIN_TIMEOUT_MS, "streaming cancellation")
                 Unit
             }
-            if (!closed) updateState(SpeechToTextEngine.State.READY)
-            result.onSuccess { LocalFlowLog.info("Parakeet dictation canceled before inference") }
+            releaseUtteranceResources()
+            if (!closed) {
+                updateState(
+                    if (result.isSuccess) SpeechToTextEngine.State.READY
+                    else SpeechToTextEngine.State.FAILED,
+                )
+            }
+            result.onSuccess { LocalFlowLog.info("Parakeet dictation canceled before cleanup") }
                 .onFailure { LocalFlowLog.error("Parakeet cancellation failed", it) }
             mainHandler.post { callback(result) }
         }
@@ -234,21 +260,22 @@ class ParakeetLiveSttEngine(
 
     override fun close() {
         closed = true
+        streamingCancelled.set(true)
         stopRequested.set(true)
         stopAudioCapture()
-        captureThread?.interrupt()
+        streamQueue.clear()
+        streamQueue.offer(END_OF_STREAM)
         val handle = nativeContext
         nativeContext = 0L
         worker.execute {
             runCatching { captureThread?.join(CAPTURE_JOIN_TIMEOUT_MS) }
+            runCatching { streamingThread?.join(STREAM_JOIN_TIMEOUT_MS) }
             runCatching { audioRecord?.release() }
             if (handle != 0L) ParakeetNative.nativeFree(handle)
         }
         worker.shutdown()
     }
 
-    // start() checks RECORD_AUDIO immediately before this worker call. Construction still lives
-    // inside runCatching so a permission revocation race is returned to the UI instead of crashing.
     @SuppressLint("MissingPermission")
     private fun createAudioRecord(): AudioRecord {
         val minimumBytes = AudioRecord.getMinBufferSize(
@@ -291,10 +318,8 @@ class ParakeetLiveSttEngine(
                             val chunk = FloatArray(read) { index ->
                                 shortSamples[index] / 32768.0f
                             }
-                            synchronized(captureLock) {
-                                capturedChunks += chunk
-                                capturedSampleCount += read
-                            }
+                            capturedSampleCount.addAndGet(read)
+                            streamQueue.put(chunk)
                         } else if (!stopRequested.get()) {
                             error("Microphone read failed with code $read")
                         }
@@ -305,6 +330,8 @@ class ParakeetLiveSttEngine(
                         stopRequested.set(true)
                         stopAudioCapture()
                     }
+                } finally {
+                    streamQueue.offer(END_OF_STREAM)
                 }
             },
             "local-flow-parakeet-capture",
@@ -314,14 +341,98 @@ class ParakeetLiveSttEngine(
         }
     }
 
-    private fun combinedSamples(): FloatArray = synchronized(captureLock) {
-        FloatArray(capturedSampleCount).also { result ->
-            var offset = 0
-            capturedChunks.forEach { chunk ->
-                chunk.copyInto(result, destinationOffset = offset)
-                offset += chunk.size
+    private fun startStreamingThread(
+        streamHandle: Long,
+        onPartialTranscript: (String) -> Unit,
+    ) {
+        streamingThread = Thread(
+            {
+                try {
+                    while (true) {
+                        val chunk = streamQueue.take()
+                        if (chunk === END_OF_STREAM) break
+                        if (streamingCancelled.get()) continue
+                        val update = ParakeetNative.nativeStreamFeedJson(streamHandle, chunk)
+                        if (!streamingCancelled.get()) {
+                            applyStreamingUpdate(update, onPartialTranscript)
+                        }
+                    }
+                    if (!streamingCancelled.get()) {
+                        applyStreamingUpdate(
+                            ParakeetNative.nativeStreamFinalizeJson(streamHandle),
+                            onPartialTranscript,
+                        )
+                    }
+                } catch (error: Throwable) {
+                    if (!streamingCancelled.get()) {
+                        streamingError = error
+                        stopRequested.set(true)
+                        stopAudioCapture()
+                    }
+                } finally {
+                    ParakeetNative.nativeStreamFree(streamHandle)
+                }
+            },
+            "local-flow-parakeet-stream",
+        ).apply {
+            isDaemon = true
+            start()
+        }
+    }
+
+    private fun applyStreamingUpdate(
+        updateJson: String,
+        onPartialTranscript: (String) -> Unit,
+    ) {
+        val update = JSONObject(updateJson)
+        val delta = update.optString("text")
+        val hasEou = update.optInt("eou") != 0
+        val transcript = synchronized(streamLock) {
+            if (delta.isNotEmpty()) streamingTranscript.append(delta)
+            if (hasEou) {
+                val offset = streamingTranscript.length
+                if (offset > 0 && preferredCleanupBoundaries.lastOrNull() != offset) {
+                    preferredCleanupBoundaries += offset
+                }
+            }
+            streamingTranscript.toString()
+        }
+        if (delta.isNotEmpty()) {
+            mainHandler.post {
+                if (
+                    state == SpeechToTextEngine.State.RECORDING ||
+                    state == SpeechToTextEngine.State.FINALIZING
+                ) {
+                    onPartialTranscript(transcript)
+                }
             }
         }
+    }
+
+    private fun resetUtteranceState() {
+        streamQueue.clear()
+        stopRequested.set(false)
+        streamingCancelled.set(false)
+        capturedSampleCount.set(0)
+        captureError = null
+        streamingError = null
+        synchronized(streamLock) {
+            streamingTranscript.clear()
+            preferredCleanupBoundaries.clear()
+        }
+    }
+
+    private fun releaseUtteranceResources() {
+        runCatching { audioRecord?.release() }
+        audioRecord = null
+        captureThread = null
+        streamingThread = null
+        streamQueue.clear()
+    }
+
+    private fun joinThread(thread: Thread?, timeoutMs: Long, label: String) {
+        thread?.join(timeoutMs)
+        check(thread?.isAlive != true) { "Timed out waiting for $label" }
     }
 
     private fun stopAudioCapture() {
@@ -341,10 +452,11 @@ class ParakeetLiveSttEngine(
 
     private companion object {
         const val EXPECTED_C_API_ABI = 6
-        const val DECODER_DEFAULT = 0
         const val SAMPLE_RATE = 16_000
         const val AUDIO_CHUNK_SAMPLES = 1_024
         const val AUDIO_RECORD_BUFFER_BYTES = 8_192
         const val CAPTURE_JOIN_TIMEOUT_MS = 1_000L
+        const val STREAM_JOIN_TIMEOUT_MS = 30_000L
+        val END_OF_STREAM = FloatArray(0)
     }
 }
