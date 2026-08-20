@@ -49,6 +49,24 @@ Q4_K_M peak sampled llama-server RSS was 4.927 GiB on the seed suite and 4.926 G
 F16 was 5.880 and 5.887 GiB. BF16 Transformers peaked at 1.549 GiB in each separately launched
 suite. These remain runtime-allocation measurements, not comparable model-only footprints.
 
+Secondary diagnostics retained from the canonical JSON:
+
+| Suite/runtime | Ready or load | Ready RSS | Peak RSS | Output tokens median/total | Client-derived decode median/p10 |
+|---|---:|---:|---:|---:|---:|
+| Seed Q4_K_M | 1,160.6 ms | 4.880 GiB | 4.927 GiB | 13 / 897 | 140.49 / 124.50 tok/s |
+| Seed F16 | 1,374.9 ms | 5.825 GiB | 5.880 GiB | 13 / 897 | 65.08 / 60.65 tok/s |
+| Seed BF16 | 328.6 ms | 0.423 GiB | 1.549 GiB | 13 / 897 | unavailable |
+| Held-out Q4_K_M | 1,063.9 ms | 4.880 GiB | 4.926 GiB | 11 / 1,359 | 141.42 / 135.93 tok/s |
+| Held-out F16 | 1,183.8 ms | 5.884 GiB | 5.887 GiB | 11 / 1,338 | 64.65 / 58.65 tok/s |
+| Held-out BF16 | 292.3 ms | 0.422 GiB | 1.549 GiB | 11 / 1,338 | unavailable |
+
+For GGUF, “Ready or load” is process start to healthy llama-server. For BF16, it is tokenizer plus
+model deserialization to `model.eval()` and is lazy/memory-mapped. The two columns must not be
+treated as equivalent cold-load measurements. “Client-derived decode” divides output tokens by
+the post-first-text interval and is retained as an approximate JSON diagnostic; the pooled native
+llama.cpp timing above is the authoritative same-runtime decode comparison. The BF16 harness does
+not emit a comparable decode-rate statistic.
+
 ## Personal-v3 canonical measurements
 
 Host: MacBook Air `Mac14,2`, Apple M2 (4 performance + 4 efficiency cores), 16 GB RAM, macOS
@@ -173,9 +191,11 @@ Canonical ignored evidence:
 The reproducible harnesses are `scripts/benchmark-s1-mini.py` and
 `scripts/benchmark-s1-mini-bf16.py`. The initial restricted-sandbox attempt could not bind the
 local server or query process RSS and is excluded; the canonical run was repeated unchanged with
-the required local process permissions. A later interrupted 24-case attempt is also excluded. It
-revealed that filler-only `heldout-015` validly returns an empty string; the harness now retains a
-zero-token completion and has a regression test for the publisher-documented behavior.
+the required local process permissions. A later user-interrupted seed attempt is also excluded.
+The first held-out attempt then stopped on a harness validation error when filler-only
+`heldout-015` validly returned an empty string. The corrected harness retains a zero-token
+completion, has a regression test for the publisher-documented behavior, and the held-out suite
+was rerun from a fresh path without changing inference configuration.
 
 ## Next evidence
 
