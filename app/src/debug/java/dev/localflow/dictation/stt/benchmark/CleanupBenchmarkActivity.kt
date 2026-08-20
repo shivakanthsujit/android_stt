@@ -10,6 +10,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import dev.localflow.dictation.IntegrationModels
 import dev.localflow.dictation.LocalFlowLog
+import dev.localflow.dictation.cleanup.CleanupLoadResult
 import dev.localflow.dictation.cleanup.CleanupPromptVariant
 import dev.localflow.dictation.cleanup.SottoCleanupEngine
 import java.io.BufferedWriter
@@ -34,19 +35,26 @@ class CleanupBenchmarkActivity : Activity() {
     }
     private val uiJob = SupervisorJob()
     private val uiScope = CoroutineScope(uiJob + Dispatchers.Main.immediate)
-    private val cleanupLazy = lazy {
+    private val sottoCleanupLazy = lazy {
         SottoCleanupEngine(
             context = applicationContext,
             modelFile = IntegrationModels.modelDirectory(applicationContext).resolve(modelFileName),
             expectedModelSha256 = modelSha256,
         )
     }
-    private val cleanup by cleanupLazy
+    private val s1MiniCleanupLazy = lazy {
+        S1MiniPixelBenchmarkEngine(
+            context = applicationContext,
+            modelFile = File(filesDir, MODELS_DIRECTORY).resolve(modelFileName),
+            expectedModelSha256 = modelSha256,
+        )
+    }
 
     private lateinit var benchmarkRoot: File
     private lateinit var runId: String
     private lateinit var modelFileName: String
     private lateinit var modelSha256: String
+    private lateinit var engineProfile: String
     private lateinit var partialResult: File
     private lateinit var finalResult: File
     private var measuredRepeats = DEFAULT_MEASURED_REPEATS
@@ -72,10 +80,9 @@ class CleanupBenchmarkActivity : Activity() {
     override fun onDestroy() {
         endBenchmarkTrace()
         runCatching { writer?.close() }
-        if (cleanupLazy.isInitialized()) {
-            val engine = cleanupLazy.value
+        if (sottoCleanupLazy.isInitialized() || s1MiniCleanupLazy.isInitialized()) {
             CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-                runCatching { engine.unload() }
+                runCatching { unloadEngine() }
             }
         }
         uiScope.cancel()
@@ -84,8 +91,16 @@ class CleanupBenchmarkActivity : Activity() {
     }
 
     private fun configureRun() {
-        benchmarkRoot = File(requireNotNull(getExternalFilesDir(null)), BENCHMARK_DIRECTORY)
-            .canonicalFile
+        engineProfile = intent.getStringExtra(EXTRA_ENGINE_PROFILE) ?: ENGINE_PROFILE_SOTTO
+        require(engineProfile == ENGINE_PROFILE_SOTTO || engineProfile == ENGINE_PROFILE_S1_MINI) {
+            "Unsupported cleanup benchmark engine profile: $engineProfile"
+        }
+        val benchmarkStorage = if (engineProfile == ENGINE_PROFILE_S1_MINI) {
+            filesDir
+        } else {
+            requireNotNull(getExternalFilesDir(null))
+        }
+        benchmarkRoot = File(benchmarkStorage, BENCHMARK_DIRECTORY).canonicalFile
         require(benchmarkRoot.isDirectory) { "Cleanup benchmark directory is missing" }
         runId = intent.getStringExtra(EXTRA_RUN_ID).orEmpty()
         require(SAFE_NAME.matches(runId)) { "Invalid or missing run_id" }
@@ -116,7 +131,7 @@ class CleanupBenchmarkActivity : Activity() {
         status.text = "Loading staged cleanup model…"
         uiScope.launch {
             val startedAtNs = android.os.SystemClock.elapsedRealtimeNanos()
-            runCatching { cleanup.load() }
+            runCatching { loadEngine() }
                 .onSuccess {
                     modelLoadMs = elapsedMs(startedAtNs)
                     runCatching { writer = BufferedWriter(FileWriter(partialResult, false)) }
@@ -156,7 +171,7 @@ class CleanupBenchmarkActivity : Activity() {
                 if (traceInference) Trace.beginAsyncSection(TRACE_INFERENCE_SECTION_NAME, index)
                 val cpuStartedAtMs = Process.getElapsedCpuTime()
                 val result = try {
-                    cleanup.clean(job.case.rawText, CleanupPromptVariant.SOTTO_NATIVE)
+                    clean(job.case)
                 } finally {
                     if (traceInference) Trace.endAsyncSection(TRACE_INFERENCE_SECTION_NAME, index)
                 }
@@ -178,6 +193,8 @@ class CleanupBenchmarkActivity : Activity() {
                     .put("fallback_reason", result.fallbackReason ?: JSONObject.NULL)
                     .put("model_file", modelFileName)
                     .put("model_sha256", modelSha256)
+                    .put("engine_profile", engineProfile)
+                    .put("requested_max_output_tokens", job.case.maxOutputTokens ?: JSONObject.NULL)
                     .put("model_load_ms", modelLoadMs)
                     .put("cleanup_ttft_ms", result.timeToFirstTokenMs ?: JSONObject.NULL)
                     .put("cleanup_total_ms", result.totalLatencyMs)
@@ -252,9 +269,18 @@ class CleanupBenchmarkActivity : Activity() {
                 val rawText = json.getString("raw")
                 val categoriesJson = json.getJSONArray("categories")
                 val categories = List(categoriesJson.length()) { categoriesJson.getString(it) }
+                val maxOutputTokens = if (json.has("max_new_tokens")) {
+                    json.getInt("max_new_tokens").also {
+                        require(it in 1..S1MiniPixelBenchmarkEngine.MAX_ALLOWED_OUTPUT_TOKENS) {
+                            "Invalid max_new_tokens on line ${index + 1}"
+                        }
+                    }
+                } else {
+                    null
+                }
                 require(SAFE_NAME.matches(caseId)) { "Invalid case id on line ${index + 1}" }
                 require(rawText.isNotBlank()) { "Empty raw text on line ${index + 1}" }
-                CleanupCase(caseId, rawText, categories)
+                CleanupCase(caseId, rawText, categories, maxOutputTokens)
             }.toList()
         }
         require(cases.isNotEmpty()) { "Cases file is empty" }
@@ -276,6 +302,32 @@ class CleanupBenchmarkActivity : Activity() {
         (android.os.SystemClock.elapsedRealtimeNanos() - startedAtNs)
             .coerceAtLeast(0L) / 1_000_000L
 
+    private suspend fun loadEngine(): CleanupLoadResult =
+        when (engineProfile) {
+            ENGINE_PROFILE_SOTTO -> sottoCleanupLazy.value.load()
+            ENGINE_PROFILE_S1_MINI -> s1MiniCleanupLazy.value.load()
+            else -> error("Unsupported engine profile: $engineProfile")
+        }
+
+    private suspend fun clean(case: CleanupCase): dev.localflow.dictation.cleanup.CleanupResult =
+        when (engineProfile) {
+            ENGINE_PROFILE_SOTTO ->
+                sottoCleanupLazy.value.clean(case.rawText, CleanupPromptVariant.SOTTO_NATIVE)
+            ENGINE_PROFILE_S1_MINI ->
+                s1MiniCleanupLazy.value.clean(
+                    text = case.rawText,
+                    maxOutputTokens = requireNotNull(case.maxOutputTokens) {
+                        "S1-mini case ${case.caseId} is missing max_new_tokens"
+                    },
+                )
+            else -> error("Unsupported engine profile: $engineProfile")
+        }
+
+    private suspend fun unloadEngine() {
+        if (sottoCleanupLazy.isInitialized()) sottoCleanupLazy.value.unload()
+        if (s1MiniCleanupLazy.isInitialized()) s1MiniCleanupLazy.value.unload()
+    }
+
     private fun endBenchmarkTrace() {
         if (benchmarkTraceActive) {
             Trace.endAsyncSection(TRACE_SECTION_NAME, TRACE_COOKIE)
@@ -287,6 +339,7 @@ class CleanupBenchmarkActivity : Activity() {
         val caseId: String,
         val rawText: String,
         val categories: List<String>,
+        val maxOutputTokens: Int?,
     )
 
     private data class CleanupJob(
@@ -299,13 +352,17 @@ class CleanupBenchmarkActivity : Activity() {
         const val EXTRA_RUN_ID = "run_id"
         const val EXTRA_MODEL_FILE_NAME = "model_file_name"
         const val EXTRA_MODEL_SHA256 = "model_sha256"
+        const val EXTRA_ENGINE_PROFILE = "engine_profile"
         const val EXTRA_MEASURED_REPEATS = "measured_repeats"
         const val EXTRA_WARMUP_RUNS = "warmup_runs"
         const val BENCHMARK_DIRECTORY = "cleanup-eval"
+        const val MODELS_DIRECTORY = "models"
         const val CASES_FILE = "cases.jsonl"
         const val DEFAULT_MEASURED_REPEATS = 3
         const val DEFAULT_WARMUP_RUNS = 1
         const val MAX_REPEATS = 10
+        const val ENGINE_PROFILE_SOTTO = "sotto-native"
+        const val ENGINE_PROFILE_S1_MINI = "s1-mini-v1-publisher"
         const val SCHEMA_VERSION = 1
         const val PHASE_WARMUP = "warmup"
         const val PHASE_MEASURED = "measured"

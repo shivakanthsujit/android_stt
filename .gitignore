@@ -19,6 +19,9 @@ training/models/
 .cache/integration/
 .cache/stt-eval/
 .cache/tts-eval/
+.cache/fluidvoice-reverse/
+.cache/fluidvoice-source-*/
+.cache/fluidaudio-source-*/
 app/src/debug/jniLibs/arm64-v8a/*.so
 wandb/
 

@@ -201,6 +201,37 @@ class ParakeetLiveSttEngine(
         }
     }
 
+    override fun cancel(callback: (Result<Unit>) -> Unit) {
+        if (state != SpeechToTextEngine.State.RECORDING) {
+            mainHandler.post {
+                callback(Result.failure(IllegalStateException("No dictation is active")))
+            }
+            return
+        }
+
+        stopRequested.set(true)
+        updateState(SpeechToTextEngine.State.FINALIZING)
+        stopAudioCapture()
+        worker.execute {
+            val result = runCatching {
+                captureThread?.join(CAPTURE_JOIN_TIMEOUT_MS)
+                runCatching { audioRecord?.release() }
+                audioRecord = null
+                captureThread = null
+                captureError = null
+                synchronized(captureLock) {
+                    capturedChunks.clear()
+                    capturedSampleCount = 0
+                }
+                Unit
+            }
+            if (!closed) updateState(SpeechToTextEngine.State.READY)
+            result.onSuccess { LocalFlowLog.info("Parakeet dictation canceled before inference") }
+                .onFailure { LocalFlowLog.error("Parakeet cancellation failed", it) }
+            mainHandler.post { callback(result) }
+        }
+    }
+
     override fun close() {
         closed = true
         stopRequested.set(true)

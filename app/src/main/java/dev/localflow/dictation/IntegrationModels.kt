@@ -4,23 +4,26 @@ import android.content.Context
 import java.io.File
 import java.security.MessageDigest
 
-/** Immutable model identities used by the joined integration-test build. */
+/** Immutable model identities used by the ordinary app and joined integration-test build. */
 object IntegrationModels {
     const val PARAKEET_FILE_NAME = "tdt_ctc-110m-q4_k.gguf"
     const val PARAKEET_SHA256 =
         "2d1d90edac07326b20a896440628c50323530cf28c7e7ca99d439bad1dee9abf"
 
-    const val SOTTO_FILE_NAME = "sotto-b-epoch2-lfm25-350m-q4_k_m.gguf"
+    const val CLEANUP_FILE_NAME = "s1-mini-q4_k_m.gguf"
+    const val CLEANUP_SHA256 =
+        "3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634"
 
+    // Retained only so the older direct-text benchmark profile remains reproducible.
+    const val SOTTO_FILE_NAME = "sotto-b-epoch2-lfm25-350m-q4_k_m.gguf"
     const val SOTTO_SHA256 =
         "02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0"
 
-    fun modelDirectory(context: Context): File {
-        val appStorage = context.getExternalFilesDir(null) ?: context.filesDir
-        return appStorage.resolve("models")
-    }
+    fun modelDirectory(context: Context): File = context.filesDir.resolve("models")
 
     fun parakeetFile(context: Context): File = modelDirectory(context).resolve(PARAKEET_FILE_NAME)
+
+    fun cleanupFile(context: Context): File = modelDirectory(context).resolve(CLEANUP_FILE_NAME)
 
     fun sottoFile(context: Context): File = modelDirectory(context).resolve(SOTTO_FILE_NAME)
 

@@ -1,6 +1,6 @@
 # Decisions
 
-Last updated: 2026-08-19
+Last updated: 2026-08-21
 
 ## Product and architecture
 
@@ -13,6 +13,11 @@ Last updated: 2026-08-19
    voice-only IME while cleanup and STT qualification continue in parallel. Reuse an
    application-scoped model coordinator, preserve explicit microphone control, and keep model
    replacement behind the existing interfaces.
+7. Share one application-scoped Parakeet/Sotto engine pair between the Activity and IME. The IME
+   never starts recording on editor focus, blocks password/private fields, invalidates output when
+   the editor changes, commits only the guarded local result, and permits Undo only while the exact
+   inserted text remains immediately before the cursor in the same editor. Keep device verification
+   separate from the host implementation claim.
 
 ## Speech recognition
 
@@ -338,6 +343,52 @@ Last updated: 2026-08-19
     `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`, preserve raw and guarded
     output in the UI, retain the debug artifact override and `CleanupEngine` boundary, and make a
     later swap only after fresh evidence and an explicit selection.
+55. Keep the reverse-inventoried FluidVoice/Fluid-1 artifacts as an owner-local Mac reference only.
+    Do not commit, redistribute, bundle, convert for Android, fine-tune, use as a teacher, or feed
+    project evaluation cases into Fluid-1 without explicit written permission consistent with the
+    located model card. Its roughly 4.6B architecture and 3.19 GiB GGUF / approximately 3.77 GB MLX
+    package are not Pixel deployment candidates. Record “Trained on 100K+ dictation data points”
+    only as a vendor-reported scale heuristic: it supplies no verifiable dataset provenance,
+    pairing, licensing, diversity, split, or quality evidence, and does not override this project's
+    reviewed data contract or safety gates.
+56. Keep the 2026-08-21 S1-mini v1 screen performance-only. Use the exact publisher system prompt,
+    trained control line, `enable_thinking=false`, greedy decoding, and input-relative output cap;
+    do not silently substitute F16 GGUF for the actual BF16 reference. On the 69-case seed +
+    held-out screen, preserve Q4_K_M's 1.87× same-runtime median-total speedup over F16 and 19.48×
+    cross-runtime speedup over Transformers BF16 as host evidence, while treating their memory
+    footprints as non-comparable runtime allocations. BF16/F16 agree on 207/207 requests and Q4
+    agrees on 201/207, but no difference is an accuracy loss or gain until semantic review. Make no
+    Android selection or BF16 Pixel feasibility claim from this Mac-only pass.
+57. Do not replace Sotto B with S1-mini v1 after the exact-contract Pixel screen. S1 Q4_K_M
+    improves default personal-v3 raw acceptability from 15/20 to 17/20, but it retains one
+    superseded recipient correction and ignores two explicit list-formatting directives. On the
+    Pixel 7 CPU path it needs about 1.576 seconds median traced direct cleanup, 1,293,620 KiB peak
+    PSS, and 6.493 J of compute energy per call, and sustained runs reach thermal status 1. Keep it
+    as research evidence only. Any later accelerated-runtime comparison must preserve the exact
+    system prompt, control line, empty-thinking prefix, greedy decoding, and per-input token cap,
+    then re-establish prompt-token and raw-output parity before comparing performance. BF16 Pixel
+    feasibility and the full retired-diagnostic semantic gate remain open.
+58. Supersede decision 57 only for the ordinary integration identity at explicit user direction:
+    use S1-mini by Superwhisper Q4_K_M as the preferred on-device cleanup model. The fixed
+    `[Structure: prose]` control makes the two transcript-level list directives configuration
+    conflicts rather than Pixel deployment failures, giving 19/20 user-acceptable personal-v3 raw
+    outputs; the retained superseded recipient remains a genuine failure. Pin the official
+    484,219,808-byte artifact at SHA-256
+    `3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634` and preserve the exact
+    system prompt, semi-formal/prose/general control, embedded Qwen3 template,
+    `enableThinking=false`, greedy decoding, and `ceil(1.3 × raw tokens + 32)` cap. Mac/Pixel raw
+    token counts and caps agree 69/69 and raw text agrees 66/69, so no silent option-loss bug is
+    present; bounded backend output differences still require raw semantic review and fallback.
+    This preference accepts measured Pixel latency/memory/thermal cost and does not qualify raw S1
+    for deployment or weaken the retired-diagnostic semantic-safety gate.
+59. Supersede the runtime-enforcement portions of earlier cleanup decisions for this personal-use
+    app. The owner accepts responsibility for reviewing and editing inserted text. Use every
+    sanitized, non-empty S1-mini generation that did not reach its output-token cap; fall back to
+    the raw transcript only for blank or capped output. Do not reject runtime output for lexical,
+    semantic, length, name, number, negation, uncertainty, correction, intent, question, command,
+    or formatting changes. Preserve the stricter host guardrails and prior semantic evaluations as
+    historical/research diagnostics only; they do not gate personal-use insertion. Keep the exact
+    S1-mini publisher prompt, control, template, thinking, greedy-decoding, and output-cap contract.
 
 ## Hosted API benchmark
 

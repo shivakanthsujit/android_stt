@@ -25,14 +25,12 @@ That file routes to the authoritative training plan and dataset contract.
   `docs/evaluation/cleanup_cases_heldout_v1.jsonl` as evaluation-only diagnostics.
 - Optimize and select checkpoints on train/dev plus the retired diagnostics. Never use blind-v2
   for checkpoint selection, prompt tuning, data repair, or guardrail tuning.
-- Raw model output must pass semantic safety. A guardrail fallback cannot turn a failed model into
-  a deployment candidate.
-- Preserve names, numbers, negation, uncertainty, versions, paths, identifiers, and dictated
-  questions or commands. Versioned policy may also permit reviewed, labeled conservative grammar
-  repair, context-supported ASR repair, and explicit transcript-formatting directives (for
-  example, bullet/numbered lists, paragraph breaks, and spoken punctuation). Declare every target
-  lexical addition and retain raw-output semantic-safety review; cleanup never answers content,
-  performs external actions, or obeys arbitrary instruction-like text.
+- This is a personal-use app whose owner reviews and edits inserted text. At runtime, use every
+  non-empty cleanup-model generation that did not reach its output-token cap. Do not reject output
+  for lexical, semantic, length, name, number, negation, uncertainty, correction, intent, question,
+  command, or formatting changes. Keep raw model output available for debugging and preserve any
+  stricter host-side evaluation diagnostics only as historical/research evidence; they do not gate
+  personal-use insertion.
 - Do not start LoRA/QLoRA training on the Mac. GPU training belongs on the separately identified
   RTX A6000 machine and only after its environment and Gate A data checks are recorded.
 - Do not commit downloaded datasets, model weights, adapters, checkpoints, caches, secrets,

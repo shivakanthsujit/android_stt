@@ -482,3 +482,112 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Device verification is pending. `./scripts/install-debug.sh` reached ADB after a successful build
   but reported `no devices/emulators found`; an escalated `adb devices -l` also returned an empty
   device list. No install, stage, or no-override inference claim is made for this APK.
+
+## 2026-08-19 — Minimal voice IME host gate
+
+- `. scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`
+  succeeded after the final Activity/IME ownership refinement: 55 tasks, 16 executed and 39
+  up-to-date.
+- Android unit tests: 46/46 passed. The three new editor-policy tests cover password/private-field
+  blocking, ordinary text/phone availability, and exact-suffix same-editor Undo constraints.
+- The merged debug manifest contains `LocalFlowApplication` and exported
+  `LocalFlowImeService` protected by `android.permission.BIND_INPUT_METHOD`, with
+  `android.view.InputMethod` intent metadata at `@xml/method`.
+- Debug APK: 88,045,853 bytes, SHA-256
+  `6652b4a2cffbc0fcef8e1c16534eddf4fd50e379695771abcbdda7732f5dabb7`.
+- No Pixel claim is made. IME enable/select, permission handoff, microphone indicator/release,
+  editor focus changes, cross-app commits, fallback, cancellation, Undo, PSS, thermal, power, and
+  Stop-to-editor-commit timing require the later connected-device gate.
+
+## 2026-08-21 — S1-mini v1 local performance gate
+
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.tests.test_benchmark_s1_mini
+  scripts.tests.test_benchmark_s1_mini_bf16 -v` passed 9/9, including valid empty-output
+  tokenization.
+- Python byte compilation passed for both benchmark harnesses and both test modules.
+- `git diff --check` passed.
+- Verified BF16 `model.safetensors` as 1,503,300,328 bytes with SHA-256
+  `69d2057077ab4dc738aaaab75d2a8ffa141e3a09fb9d956198cfce46f381131a`; safetensors inspection
+  reports 311/311 tensors as `torch.bfloat16`.
+- Canonical 60-request Q4_K_M and F16 llama.cpp runs completed after one warmup per model. Result
+  JSON SHA-256 is `8c8d2e720ad4e0815984716981503021370b23b0817bfa2aaa853cf2457f8a07`.
+- Canonical 60-request BF16 Transformers CPU run completed after warmup. Result JSON SHA-256 is
+  `fb7519084661c4ec210acb7972fb16202ee0f846f6de769e6f92c3330d8e53a2`.
+- Canonical seed Q4/F16 and BF16 JSON SHA-256 values are
+  `a462d29d60999667b354a8cb7b0e4fd5d8cdbf7fd71e1347735b7ee5b99b60b7` and
+  `a5bb29abef2c3d385bd2cee575da815f91da43041b58c7dad4b0b13bb31b147f`.
+- Canonical held-out Q4/F16 and BF16 JSON SHA-256 values are
+  `dbcd1d5c26fdf5dcb5d9d8f8f9f79ed73606d6551189bb6621dec0c1e831158c` and
+  `00c5d3d5977a6f4cdec898d498752359d32df0928ae9a5a9c5860b3e4cd7e29a`.
+- All three variants were stable on 20/20 cases across three repeats. BF16/F16 raw outputs matched
+  60/60 requests; Q4_K_M matched 48/60. Expected fields and semantic scoring were deliberately
+  excluded from this performance-only pass.
+- On the 69-case seed + held-out screen, all three variants were stable on 69/69 cases. BF16/F16
+  matched 207/207 requests; Q4_K_M matched 201/207. The three valid empty outputs for
+  `heldout-015` are retained with total latency and no TTFT.
+- No Pixel was attached; no Android runtime, latency, PSS, thermal, power, or BF16 feasibility
+  claim was made.
+
+## 2026-08-21 — S1-mini v1 Pixel exact-contract gate
+
+- Device: Pixel 7 `panther`, serial `33040DLH20004E`, Android 17, ARM64. Q4_K_M host/device
+  SHA-256 verified as `3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634`.
+- Exact-contract preflight: publisher `tokenizer.json` and llama.cpp `/tokenize` agree on 20/20 raw
+  inputs; Pixel LEAP and Mac llama.cpp prompt-token counts agree on 20/20; raw output agrees on
+  19/20 with one equivalent number-surface difference.
+- Traced run `20260820T173136Z`: 60/60 measured calls complete, outputs stable on 20/20 cases,
+  thermal 0/0, load 1,809 ms, median TTFT/total 975.5/1,576 ms, p90/max total 3,840/4,759 ms,
+  peak PSS 1,293,620 KiB, and median 11.21 tok/s.
+- Perfetto inference slices: 389.56692 J compute, 282.006376 J CPU, 106.898903 J memory/fabric,
+  and 0.661641 J GPU across 60 calls; compute is 6.493 J/call at 3.159 W average.
+- Untraced run `20260820T174033Z`: start thermal 0, max 1 after 27 status-zero calls, median
+  TTFT/total 1,100.5/1,665 ms, p90/max total 4,294/7,052 ms, and peak PSS 1,354,678 KiB.
+- Raw quality: 17/20 acceptable under personal policy, 2/3 corrections, 1/3 explicit formatting,
+  11/20 strict exact, 54/61 anchors, and zero output instability. Failures are retained
+  superseded recipient text and two unrealized list directives.
+- `. scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`
+  passed. Focused S1/Pixel Python tests passed 16/16. Full scripts discovery passed 174/175; the
+  known unrelated macOS `/var/folders` versus `/private/var/folders` alias assertion failed.
+- Debug APK: 88,046,038 bytes, SHA-256
+  `3d0468cfbc6a4c626ecc4e950dff6815747f8320934343cac2972afda7532fde`.
+
+## 2026-08-21 — S1-mini preferred default, full parity, joined pipeline, and IME partial gate
+
+- Full exact-contract seed Pixel run `20260820T180755Z`: 24/24 complete, thermal 0, raw strict
+  17/24, 54/61 anchors, 904.5 ms median TTFT, and 1,303 ms median total. Mac Q4 raw output and raw
+  token counts match 24/24.
+- Full exact-contract held-out Pixel run `20260820T180950Z`: 45/45 complete, thermal 0, raw strict
+  34/45, 91/102 anchors, 995 ms median TTFT, and 1,345 ms median total. Runtime LEAP-derived output
+  caps match publisher-tokenizer-prepared caps 45/45. Mac Q4 raw output matches 42/45; pooled parity
+  is 66/69 with token counts and caps matching 69/69.
+- `. scripts/android-env.sh && ./gradlew --offline testDebugUnitTest lintDebug assembleDebug`
+  passed after the production engine, Android 17 staging, joined runner, and guardrail regressions.
+  Focused `CleanupGuardrailsTest` covers sentence-boundary corrections, retained list-colon output,
+  and capitalized ordinals.
+- `bash -n scripts/stage-integration-models.sh scripts/run-joined-file-eval.sh
+  scripts/run-s1-mini-pixel-benchmark.sh` passed.
+- `scripts/stage-integration-models.sh` installed verified Parakeet and S1 artifacts in app-private
+  `files/models`; device SHA-256 checks passed for both.
+- An initial joined run correctly failed with `Missing manifest.jsonl`, reproducing Android 17
+  external-app-data invisibility. After switching joined inputs/results to app-private storage,
+  run `20260820T181957Z-joined-file` completed 20/20 but exposed five guardrail fallbacks, four of
+  which were false rejections.
+- Final joined run `20260820T182349Z-joined-file` completed 20/20 with one genuine correction
+  fallback. Median STT/cleanup/pipeline totals: 725.0/1,927.5/2,664.5 ms; cleanup p90 4,605 ms;
+  max thermal 1; peak PSS 1,589,901 KiB. Raw and guarded strict/normalized target counts are both
+  8/20 and 9/20.
+- IME partial device gate: service installed and enabled; temporary selection succeeded; the app's
+  editor displayed the Local Flow keyboard. With `RECORD_AUDIO` denied, the keyboard visibly showed
+  `Microphone setup required`, an `Open Local Flow setup` action, disabled cancel/undo, and no
+  recording action. Permission was temporarily granted for the pending interactive model-load
+  step. Previous/default IME was Gboard and must be restored after interactive testing.
+- Final debug APK: 88,046,129 bytes, SHA-256
+  `2f9ca73eaf1b30e454ee381f510c75dc75cbab8692177375659a56a0dd640357`.
+- Minimal personal-use cleanup policy tests cover blank rejection, token-cap rejection, known
+  wrapper cleanup, and explicit acceptance of otherwise arbitrary changed output. The observed
+  `ten PM`/`nine PM` → `10pm`/`9pm` result is therefore accepted without special-case logic.
+- Re-ran `. scripts/android-env.sh && ./gradlew --offline testDebugUnitTest lintDebug assembleDebug`:
+  all tasks passed. Installed the 88,046,129-byte APK with SHA-256
+  `56da9d81c66dac13839064b5313c9ed4397a56b03b04bdfa7f2b01ddd7d52683`; verified Local Flow remains
+  the selected IME and the 484,219,808-byte S1-mini plus 131,387,520-byte Parakeet files remain in
+  app-private storage.

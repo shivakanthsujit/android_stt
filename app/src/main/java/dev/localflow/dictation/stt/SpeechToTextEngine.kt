@@ -17,6 +17,11 @@ interface SpeechToTextEngine {
 
     fun stop(callback: (Result<SttResult>) -> Unit)
 
+    /** Stops active capture and discards the utterance. Implementations should avoid inference. */
+    fun cancel(callback: (Result<Unit>) -> Unit) {
+        stop { result -> callback(result.map { Unit }) }
+    }
+
     fun close()
 
     enum class State {
@@ -28,4 +33,3 @@ interface SpeechToTextEngine {
         FAILED,
     }
 }
-

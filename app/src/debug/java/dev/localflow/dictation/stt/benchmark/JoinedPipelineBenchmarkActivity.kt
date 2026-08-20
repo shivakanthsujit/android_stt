@@ -12,7 +12,7 @@ import android.widget.TextView
 import dev.localflow.dictation.IntegrationModels
 import dev.localflow.dictation.LocalFlowLog
 import dev.localflow.dictation.cleanup.CleanupPromptVariant
-import dev.localflow.dictation.cleanup.SottoCleanupEngine
+import dev.localflow.dictation.cleanup.S1MiniCleanupEngine
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Debug-only file-fed Parakeet -> Sotto integration runner. The microphone is never opened. */
+/** Debug-only file-fed Parakeet -> S1-mini integration runner. The microphone is never opened. */
 class JoinedPipelineBenchmarkActivity : Activity() {
     private lateinit var status: TextView
     private val ioWorker: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
@@ -43,10 +43,11 @@ class JoinedPipelineBenchmarkActivity : Activity() {
         )
     }
     private val cleanupLazy = lazy {
-        SottoCleanupEngine(
+        S1MiniCleanupEngine(
             context = applicationContext,
-            modelFile = IntegrationModels.modelDirectory(applicationContext).resolve(sottoFileName),
-            expectedModelSha256 = sottoSha256,
+            modelFile = IntegrationModels.modelDirectory(applicationContext)
+                .resolve(cleanupFileName),
+            expectedModelSha256 = cleanupSha256,
         )
     }
     private val parakeet by parakeetLazy
@@ -59,8 +60,8 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     private var writer: BufferedWriter? = null
     private var parakeetLoadMs = 0L
     private var cleanupLoadMs = 0L
-    private lateinit var sottoFileName: String
-    private lateinit var sottoSha256: String
+    private lateinit var cleanupFileName: String
+    private lateinit var cleanupSha256: String
     private var benchmarkTraceActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,19 +94,18 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     }
 
     private fun configureRun() {
-        benchmarkRoot = File(requireNotNull(getExternalFilesDir(null)), BENCHMARK_DIRECTORY)
-            .canonicalFile
+        benchmarkRoot = File(filesDir, BENCHMARK_DIRECTORY).canonicalFile
         require(benchmarkRoot.isDirectory) {
             "Joined benchmark directory is missing; run scripts/run-joined-file-eval.sh"
         }
         runId = intent.getStringExtra(EXTRA_RUN_ID).orEmpty()
         require(SAFE_NAME.matches(runId)) { "Invalid or missing run_id" }
-        sottoFileName = intent.getStringExtra(EXTRA_SOTTO_FILE_NAME)
-            ?: IntegrationModels.SOTTO_FILE_NAME
-        require(SAFE_GGUF_NAME.matches(sottoFileName)) { "Invalid Sotto model filename" }
-        sottoSha256 = (intent.getStringExtra(EXTRA_SOTTO_SHA256)
-            ?: IntegrationModels.SOTTO_SHA256).lowercase()
-        require(SHA256.matches(sottoSha256)) { "Invalid Sotto SHA-256" }
+        cleanupFileName = intent.getStringExtra(EXTRA_CLEANUP_FILE_NAME)
+            ?: IntegrationModels.CLEANUP_FILE_NAME
+        require(SAFE_GGUF_NAME.matches(cleanupFileName)) { "Invalid cleanup model filename" }
+        cleanupSha256 = (intent.getStringExtra(EXTRA_CLEANUP_SHA256)
+            ?: IntegrationModels.CLEANUP_SHA256).lowercase()
+        require(SHA256.matches(cleanupSha256)) { "Invalid cleanup SHA-256" }
         partialResult = childFile("results-$runId.jsonl.partial")
         finalResult = childFile("results-$runId.jsonl")
         require(!partialResult.exists() && !finalResult.exists()) {
@@ -141,7 +141,7 @@ class JoinedPipelineBenchmarkActivity : Activity() {
     }
 
     private fun loadCleanup(cases: List<JoinedCase>) {
-        status.text = "Loading staged Sotto…"
+        status.text = "Loading staged S1-mini…"
         uiScope.launch {
             val startedAtNs = SystemClock.elapsedRealtimeNanos()
             runCatching { cleanup.load() }
@@ -196,7 +196,7 @@ class JoinedPipelineBenchmarkActivity : Activity() {
                         val cleanupCpuStartedAtMs = Process.getElapsedCpuTime()
                         Trace.beginAsyncSection(TRACE_CLEANUP_SECTION_NAME, index)
                         val cleanupResult = try {
-                            cleanup.clean(stt.text, CleanupPromptVariant.SOTTO_NATIVE)
+                            cleanup.clean(stt.text, CleanupPromptVariant.S1_MINI_NATIVE)
                         } finally {
                             Trace.endAsyncSection(TRACE_CLEANUP_SECTION_NAME, index)
                         }
@@ -212,9 +212,9 @@ class JoinedPipelineBenchmarkActivity : Activity() {
                             .put("reference", case.reference)
                             .put("audio_duration_ms", audio.durationMs)
                             .put("parakeet_model_load_ms", parakeetLoadMs)
-                            .put("sotto_model_load_ms", cleanupLoadMs)
-                            .put("sotto_model_file", sottoFileName)
-                            .put("sotto_model_sha256", sottoSha256)
+                            .put("cleanup_model_load_ms", cleanupLoadMs)
+                            .put("cleanup_model_file", cleanupFileName)
+                            .put("cleanup_model_sha256", cleanupSha256)
                             .put("stt_inference_ms", stt.inferenceDurationMs)
                             .put("stt_process_cpu_ms", stt.processCpuDurationMs)
                             .put("raw_stt", stt.text)
@@ -384,12 +384,12 @@ class JoinedPipelineBenchmarkActivity : Activity() {
 
     private companion object {
         const val EXTRA_RUN_ID = "run_id"
-        const val EXTRA_SOTTO_FILE_NAME = "sotto_file_name"
-        const val EXTRA_SOTTO_SHA256 = "sotto_sha256"
+        const val EXTRA_CLEANUP_FILE_NAME = "cleanup_file_name"
+        const val EXTRA_CLEANUP_SHA256 = "cleanup_sha256"
         const val BENCHMARK_DIRECTORY = "joined-eval"
         const val MANIFEST_FILE = "manifest.jsonl"
         const val PARAKEET_VARIANT = "q4-k"
-        const val SCHEMA_VERSION = 1
+        const val SCHEMA_VERSION = 2
         const val TRACE_SECTION_NAME = "localflow_joined_benchmark"
         const val TRACE_STT_SECTION_NAME = "localflow_joined_stt_inference"
         const val TRACE_CLEANUP_SECTION_NAME = "localflow_joined_cleanup_inference"

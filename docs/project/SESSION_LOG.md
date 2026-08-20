@@ -856,3 +856,155 @@
 - Tried both the install/staging workflow and a direct ADB check, but no device was attached. The
   final no-override Pixel reinstall/stage/file-fed smoke remains explicitly open rather than being
   inferred from the earlier B benchmark runs.
+
+## 2026-08-19 — Minimal voice IME host implementation
+
+- Implemented and registered a voice-only `InputMethodService` without requiring Pixel access.
+  Its compact view provides local model load, explicit Start/Stop, Cancel, bounded Undo, and a
+  switch-to-next-keyboard action. Added setup controls in the Activity for microphone permission,
+  Android input-method enablement, and keyboard selection.
+- Added an application-scoped coordinator so the Activity and IME share one Parakeet Q4_K and
+  Sotto B epoch-2 engine pair. The Activity no longer tears down shared models on ordinary
+  destruction, but it still cancels microphone capture that it started itself.
+- The IME never records merely because an editor gains focus. It blocks password, numeric-password,
+  web-password, visible-password, no-personalized-learning, and non-editable destinations. It
+  invalidates in-flight output when the editor changes and commits only through `InputConnection`.
+- Added Parakeet cancel-before-inference, processing cancellation/invalidation, raw/inserted local
+  review, guardrail/raw-fallback status, transcript-free timing, and exact-suffix same-editor Undo.
+- Host lint, 46 Android unit tests, and debug assembly pass. The APK is 88,045,853 bytes with
+  SHA-256 `6652b4a2cffbc0fcef8e1c16534eddf4fd50e379695771abcbdda7732f5dabb7`.
+  Pixel enable/select, cross-app commit, microphone/focus lifecycle, fallback, undo, memory,
+  thermal, power, and true Stop-to-commit verification remain pending by user agreement.
+
+## 2026-08-19 — FluidVoice local reference preservation
+
+- Inventoried the owner-local FluidVoice application before and after its self-update from 1.6.0
+  build 12 to 1.6.9 build 20. Pinned ignored FluidVoice 1.6.0 source and FluidAudio source snapshots
+  and traced capture, Core ML Parakeet TDT v2 decoding, filler/dictionary preprocessing, Fluid-1
+  prompt/template rendering, thinking stripping, and app formatting/continuous-dictation output.
+- Confirmed that Parakeet TDT v2 is the only locally installed STT artifact despite multiple UI and
+  registry options. It is an Apple-only 0.6B Core ML package, not the project's 110M Parakeet GGUF.
+- Preserved the pre-update 3,427,878,144-byte Fluid-1 Q4_K_M at SHA-256
+  `38fafbfaab6504b7ad125523f0b993d52112c3cc7e20543f4929e619022bc7d8` and the 4,945-byte
+  Fluid-1 prompt at SHA-256
+  `e542001e392bb201fd975c7981bdfbf27833c07d0468b181c24f12db1278037a` in ignored storage.
+- Monitored the replacement download and preserved the complete eight-file, 3,583,024,557-byte
+  Fluid-1 NVFP4 MLX main model. Every live and copied file matches the v1.6.9 manifest's byte count
+  and SHA-256; the 3,550,633,590-byte main weight hash is
+  `8211486bf8299f4e59e691c12d90fac1a264fc27a93df646d927d46fc4f25b51`. The signed manifest's
+  optional 188,714,557-byte MTP drafter was not downloaded and is not claimed as preserved.
+- Preserved the 1.6.9 inference helper plus its Fluid Intelligence and MLX Metal resource bundles.
+  Added `scripts/run-fluidvoice-fluid1-baseline.sh`; both the ignored old GGUF and new MLX snapshot
+  independently clean the ad hoc text `um send the package on tuesday` to
+  `Send the package on Tuesday.` The MLX preserved-helper smoke reported 5,706 ms total, 5,552 ms
+  TTFT, 6 generated tokens, and 41.99 tokens/s. No committed evaluation case was used.
+- Recorded FluidVoice's exact “Trained on 100K+ dictation data points to polish your words” UI
+  sentence as an unverified vendor scale claim. It provides no dataset provenance, pair structure,
+  licensing, diversity, split, or quality evidence and does not authorize teacher-label or training
+  reuse. The located model-card restrictions and Pixel size/platform mismatch keep both artifacts
+  outside Android selection and project training.
+
+## 2026-08-21 — S1-mini v1 BF16/F16/Q4_K_M local performance
+
+- Pinned the official S1-mini by Superwhisper v1 artifacts outside Git: 1,503,300,328-byte BF16
+  safetensors, 1,509,347,232-byte F16 GGUF, and 484,219,808-byte Q4_K_M GGUF. Verified exact
+  revisions, byte counts, SHA-256 identities, and all 311 reference tensors as BF16.
+- Added performance harnesses and nine focused tests that lock the exact publisher system prompt,
+  semi-formal/prose/general control line, thinking-off template, greedy decoding, and
+  `ceil(1.3 × raw tokens + 32)` cap. The harnesses read only `id` and `raw`, never expected fields.
+- Ran 20 personal-v3 raw inputs × 3 measured repeats after warmup. llama.cpp Q4_K_M reached 29.7 ms
+  median TTFT, 167.5 ms median total, and 139.25 tok/s native decode; F16 reached 30.7 ms, 308.9 ms,
+  and 62.64 tok/s. Q4 was 1.84× faster in median total and used 0.945 GiB less peak server RSS.
+- Ran the actual BF16 weights through the publisher's Transformers CPU path: 1,088.8 ms median
+  first decoded text and 1,720.9 ms median total, making Q4 10.28× faster across the two documented
+  runtimes. BF16 peak process RSS was 1.555 GiB; it is not compared to llama-server's four-slot,
+  40,960-token-per-slot allocation.
+- BF16 and F16 matched on 60/60 requests. Q4 matched them on 48/60; all three variants were stable
+  on 20/20 cases across repeats. Per user scope, no expected-output, semantic-safety, or guardrail
+  scoring was performed, so no quantization accuracy claim or deployment selection was made.
+- Extended the same unchanged configuration across the 24-case seed and 45-case held-out cleanup
+  suites, three repeats each. Pooled 69-case medians are 110.2 ms Q4_K_M, 206.0 ms F16, and
+  2,147.6 ms BF16; Q4 is 1.87× faster than F16 in llama.cpp and 19.48× faster than the documented
+  BF16 CPU path. Pooled native GGUF decode medians are 141.17 versus 64.85 tok/s.
+- The first held-out attempt exposed a harness rejection of a valid filler-only empty output.
+  Updated output tokenization to retain zero tokens, added a regression test, and repeated the
+  held-out run from a fresh path without changing inference configuration. `heldout-015` returns
+  empty deterministically in all three variants and has total latency but no TTFT.
+- On the 69-case screen, BF16/F16 match 207/207 requests and Q4 matches 201/207, differing only on
+  every repeat of `heldout-006` and `heldout-039`. Across project evals plus personal-v3, all three
+  variants are stable on 89/89 cases; BF16/F16 match 267/267 and Q4 matches 249/267. These remain
+  raw-agreement observations, not semantic or quantization-accuracy judgments.
+- Recorded full aggregate evidence and reproducibility hashes in
+  `docs/evaluation/results/2026-08-21-s1-mini-v1-local-performance.md`. Pixel latency, memory,
+  thermal, power, runtime compatibility, and BF16 feasibility remain pending because no device was
+  attached.
+
+## 2026-08-21 — S1-mini v1 exact-contract Pixel benchmark
+
+- Added a debug-only S1-mini engine on LEAP 0.10.9's Android llama.cpp backend plus transcript-only
+  case preparation and a Pixel runner with verified internal staging for Android 17. The shipping
+  Sotto engine/default is unchanged.
+- Preserved the exact publisher system prompt, semi-formal/prose/general control line, embedded
+  Qwen3 template with `enableThinking=false`, temperature-zero greedy decoding, no reasoning-budget
+  override, and `ceil(1.3 × raw tokens + 32)` cap. Publisher-tokenizer and llama.cpp raw counts
+  match 20/20; Pixel and Mac prompt-token counts match 20/20.
+- Ran personal-v3 three times after warmup with Perfetto and again untraced. Outputs are stable on
+  20/20 cases. Pixel and Mac Q4 text match on 19/20; the sole difference is equivalent `12` versus
+  `twelve` rendering.
+- Manual policy review reaches 17/20 acceptable, 2/3 corrections, 1/3 explicit formatting, 11/20
+  strict exact, and 54/61 anchors. The failures are one retained superseded recipient plus missing
+  bullet and numbered-list realization. Guardrails were not used to qualify raw output.
+- The traced run remains thermal status 0 and measures 975.5 ms median TTFT, 1,576 ms median total,
+  3,840 ms p90, 1,293,620 KiB peak PSS, and 6.493 J/call at 3.159 W. A matching untraced run starts
+  at status 0 but crosses to status 1 after 27/60 calls and reaches 1,665 ms median, 4,294 ms p90,
+  and 7,052 ms maximum.
+- Decided not to replace Sotto B: S1 gains two acceptable cases but is about 3.3× slower, 2.4× more
+  compute-energy-intensive, and 1.9× larger in measured PSS on the current Pixel CPU path.
+- Android lint/unit tests/assembly pass. Relevant Python tests pass 16/16. Full script discovery is
+  174/175 with only the pre-existing macOS `/var/folders` path-alias assertion failing. Complete
+  evidence is `docs/evaluation/results/2026-08-21-s1-mini-v1-pixel.md`.
+
+## 2026-08-21 — S1-mini preferred integration and joined Pixel gate
+
+- At explicit user direction, recalibrated the two personal-v3 list cases against the fixed
+  publisher `[Structure: prose]` control. They are configuration conflicts rather than Pixel
+  deployment failures, so personal-v3 raw acceptability is 19/20. Case 011's retained superseded
+  family-group recipient remains the one genuine raw failure; no guardrail is credited as a pass.
+- Extended Mac/Pixel parity across all 69 seed + held-out cleanup cases. Raw transcript token counts
+  and publisher output caps match 69/69; raw output text matches 66/69. The three differences are
+  bounded decoder/backend surfaces, with no system prompt, control, template, thinking flag,
+  temperature, or cap drift. The held-out Pixel runner also asserted its LEAP-derived runtime cap
+  against the publisher-tokenizer-prepared cap on 45/45 requests.
+- Added the production `S1MiniCleanupEngine` and moved the ordinary coordinator, Activity, UI copy,
+  integration identity, and tests from Sotto B to the official S1-mini by Superwhisper Q4_K_M
+  artifact. The production path uses the embedded template, exact system/control messages,
+  `enableThinking=false`, greedy decoding, and a runtime `ceil(1.3 × raw tokens + 32)` cap; it does
+  not run the Sotto-specific filler preprocessor.
+- Moved integration models and joined benchmark inputs/results to app-private storage after Android
+  17 reproduced shell-pushed external-app-data invisibility. Updated model staging and joined
+  runners to copy through fixed readable `/data/local/tmp` files with app-private hash verification.
+- Final no-override run `20260820T182349Z-joined-file` completed all 20 personal-v3 audio cases
+  through Parakeet → shipping S1. Median STT/cleanup/pipeline totals were 725.0/1,927.5/2,664.5 ms,
+  peak PSS was 1,589,901 KiB, and max thermal status was 1. Raw and guarded strict/normalized target
+  counts agree at 8/20 and 9/20. One fallback remains, exactly the genuine retained-recipient case.
+- The first joined pass exposed four guardrail false rejections. Added regressions and fixed full
+  `actually make that` matching at sentence boundaries, trailing list-colon normalization, and
+  capitalized ordinal equivalence. The rerun reduced fallback count from five to one while keeping
+  raw semantic safety and protected-content checks intact.
+- Installed and enabled the voice IME on the Pixel, temporarily selected it, and visually verified
+  the permission-denied state in the app's own safe editor. It correctly displays `Microphone setup
+  required` and no recording action. Microphone permission was then granted temporarily for the
+  user-assisted interactive model-load gate; actual speech commit/cancel/undo/cross-app checks
+  remain open.
+- Offline Android unit tests, lint, and debug assembly pass. The 88,046,129-byte APK SHA-256 is
+  `2f9ca73eaf1b30e454ee381f510c75dc75cbab8692177375659a56a0dd640357`.
+- The first user-spoken IME attempt exposed a false lexical rejection: S1 rendered `ten PM` and
+  `nine PM` as compact `10pm` and `9pm`. The owner then explicitly changed the repository's
+  personal-use policy: accept every sanitized, non-empty generation that did not reach its output
+  cap, and rely on manual editing instead of semantic rejection. Replaced the 656-line Android
+  semantic guardrail with the two validity checks and reduced its unit suite to four focused tests;
+  retained stricter host diagnostics only as historical research evidence.
+- Full offline Android unit tests, lint, and debug assembly passed. Installed the 88,046,129-byte
+  APK with SHA-256 `56da9d81c66dac13839064b5313c9ed4397a56b03b04bdfa7f2b01ddd7d52683`
+  on the connected Pixel. Verified package presence, Local Flow still selected as the IME, and both
+  app-private Parakeet/S1-mini model files preserved after the in-place update.

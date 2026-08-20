@@ -257,6 +257,8 @@ class LiquidCleanupEngine(
             CleanupPromptVariant.STRICT_MINIMAL_EDIT -> STRICT_MINIMAL_SYSTEM_PROMPT
             CleanupPromptVariant.FEW_SHOT_CORRECTIONS -> FEW_SHOT_SYSTEM_PROMPT
             CleanupPromptVariant.SOTTO_NATIVE -> error("Sotto native prompt requires SottoCleanupEngine")
+            CleanupPromptVariant.S1_MINI_NATIVE ->
+                error("S1-mini native prompt requires S1MiniCleanupEngine")
         }
 
     private fun userMessage(promptVariant: CleanupPromptVariant, rawText: String): String =
@@ -273,6 +275,8 @@ class LiquidCleanupEngine(
             CleanupPromptVariant.FEW_SHOT_CORRECTIONS ->
                 "INPUT TRANSCRIPT:\n$rawText\nOUTPUT TRANSCRIPT:"
             CleanupPromptVariant.SOTTO_NATIVE -> error("Sotto native prompt requires SottoCleanupEngine")
+            CleanupPromptVariant.S1_MINI_NATIVE ->
+                error("S1-mini native prompt requires S1MiniCleanupEngine")
         }
 
     private fun fallbackResult(

@@ -2,11 +2,11 @@
 
 Local Flow is a Pixel-first, fully local dictation project. The ordinary Android testing app now
 captures microphone speech for the selected **Parakeet TDT/CTC 110M Q4_K** model and automatically
-passes its final transcript to **Sotto B epoch 2 LFM2.5-350M Q4_K_M**. This is the user-selected,
-provisional local integration baseline, not a deployment-qualified cleanup model: it has known
-correction, formatting, and semantic-safety failures. The raw transcript, complete model output,
-guarded result, and stage timings stay visible so the product pipeline can advance while a better
-cleanup checkpoint is developed.
+passes its final transcript to **S1-mini by Superwhisper Q4_K_M**. This is the user-selected
+personal-use pipeline. It preserves S1-mini's exact publisher prompt/template/decoder contract and
+uses every sanitized generation that is non-empty and did not reach its output-token cap. The owner
+reviews and edits inserted text; semantic evaluation remains research evidence rather than a
+runtime insertion gate.
 
 Keeping these stages independently measurable in a normal Activity makes model quality, latency,
 offline behavior, and microphone lifecycle observable before Android keyboard work is introduced.
@@ -23,7 +23,7 @@ Implemented:
 - monotonic recording-duration and STT-tail metrics
 - transcript-free `LocalFlow` diagnostic logs
 - Liquid LEAP 0.10.9 cleanup model download, progress, cache reuse, unload, and generation metrics
-- editable direct-text cleanup with raw pre-guard output and conservative output fallbacks
+- editable direct-text cleanup with raw output and blank/token-cap fallbacks
 - a 24-case, multi-prompt cleanup batch runner with JSONL export and deterministic host scoring
 - completed Pixel 7 evaluations of LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M`; all are no-go
   results, with 230M retained as the latency baseline and 1.2B as the capability baseline
@@ -43,39 +43,31 @@ Implemented:
   final inference after Stop; the selected model does not provide fabricated partial text
 - reproducible BF16-to-GGUF/Q4_K_M exports of the pinned public Sotto checkpoint and selected
   Sotto B epoch-2 checkpoint, with hash-checked staging into app-scoped device storage
-- joined Parakeet → Sotto integration flow with automatic cleanup, raw/guarded output, STT tail,
+- joined Parakeet → S1-mini integration flow with automatic cleanup, raw/selected output, STT tail,
   cleanup TTFT/total, and Stop-to-cleanup end-to-end tail
+- a voice-only Android `InputMethodService` that shares the application-scoped Parakeet/S1-mini
+  pipeline, uses explicit Start/Stop, blocks password/private editors, commits only
+  to the originating editor, and provides cancel, bounded undo, and keyboard switching
 - a debug-only joined file runner that accepts a WAV/MP3 or generated corpus, loads both staged
-  models once, and records Parakeet → Sotto → guardrail output without opening the microphone
-- deterministic pre-model removal of only standalone `um`, `uh`, and `erm`, with protections for
-  uppercase acronyms, likely names, quoted text, hyphenated words, paths, and identifiers
+  models once, and records Parakeet → S1-mini output without opening the microphone
 - an active 20-case personal-conversation v3 voice suite centered on messages, journal entries,
   lists, ordinary names/numbers, uncertainty, repetition, formatting, natural self-corrections,
   and four 3–5 sentence latency cases; phone-number and technical synthetic cases are excluded
 - command-line build, install, log, and toolchain-check scripts
 
-The current experimental cleanup comparison is hosted `gpt-5.6-luna` versus local Sotto B epoch 2.
-The checkpoint has now been copied from `dante`, reproducibly converted to a 229,310,336-byte
-Q4_K_M artifact, and measured on Pixel 7. It remains a no-go at 15/20 acceptable direct cleanup,
-1/3 corrections, and 0/3 formatting directives despite a 481 ms median local cleanup time. The
-complete comparison puts Luna at 20/20 acceptable direct and 17/20 after Parakeet, versus 15/20
-and about 13/20 for Sotto. Luna still has one model-induced raw semantic failure in the joined
-run, so neither candidate passes the deployment gate. See the
-[Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md)
-and the earlier
-[personal-v3 cross-model comparison](docs/evaluation/results/2026-08-18-personal-v3-relaxed-cross-model-comparison.md).
-At explicit user direction, B epoch 2 is now the ordinary app's fully local default so Android
-integration and IME work can continue. That product-engineering choice does not reverse its raw
-quality no-go result, and the cleanup interface and debug model override remain swappable.
+S1-mini by Superwhisper Q4_K_M is the current local cleanup default. Mac/Pixel raw token counts and
+output caps match on 69/69 evaluation inputs, and raw text matches on 66/69. On Pixel 7 it measured
+975.5 ms median TTFT and 1,576 ms median total in the thermal-clean traced run. See the
+[S1-mini Pixel benchmark](docs/evaluation/results/2026-08-21-s1-mini-v1-pixel.md).
 
 Not implemented yet:
 
-- a cleanup model that has passed the fixed quality/safety bar
+- broader consented human-dictation testing of the selected personal-use models
 - a dictation-focused STT qualification corpus; the current 24-clip read-speech probe is not a
   final product WER claim
 - cache-aware Parakeet partial/streaming inference; the current joined build transcribes the
   complete captured utterance after Stop
-- Android `InputMethodService`
+- device verification of the new Android `InputMethodService` across real target apps
 
 See [ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md](ANDROID_LOCAL_DICTATION_AGENT_CONTEXT.md) for the
 product plan and milestone sequence.
@@ -92,9 +84,9 @@ Audio and transcripts are processed on the phone. They are not uploaded and the 
 analytics or cloud transcription fallback.
 
 The app retains network permission for the older Moonshine/Liquid benchmark paths, but the joined
-Parakeet/Sotto build does not download a model at runtime. Both verified GGUFs are staged over ADB
-into app-scoped external storage and all inference is local. Clearing app data or uninstalling the
-app removes the staged files.
+Parakeet/S1-mini build does not download a model at runtime. Both verified GGUFs are staged over ADB
+into app-private storage and all inference is local. Clearing app data or uninstalling the app
+removes the staged files.
 
 The joined path works in airplane mode as soon as both staged artifacts pass their local hash
 checks. The older downloaded benchmark models also retain their previously verified offline cache
@@ -118,8 +110,9 @@ behavior.
 | STT quality reference | Parakeet TDT/CTC 110M F16; Moonshine Small retained as an evaluated baseline |
 | Liquid LEAP | `ai.liquid.leap:leap-sdk:0.10.9` and `ai.liquid.leap:leap-model-downloader:0.10.9` |
 | Cleanup baselines | LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` (all rejected) |
-| Joined-build cleanup | Sotto B epoch 2 LFM2.5-350M Q4_K_M, locally converted and hash pinned; provisional integration baseline only |
+| Joined-build cleanup | S1-mini by Superwhisper Q4_K_M, publisher artifact and inference contract pinned |
 | Cleanup research | Completed Sotto LFM2.5-350M correction-repair campaign; next experiment requires fresh, reviewed data and runs only on the RTX A6000 machine |
+| Mac-only reference | Owner-local FluidVoice Parakeet TDT v2 → Fluid-1 pipeline inventoried and preserved outside Git; not licensed or sized for Android distribution |
 
 AGP 8.13.2 and target API 36 are kept intentionally because they match the current Moonshine sample
 and Liquid LEAP 0.10.9 Android requirements.
@@ -200,14 +193,13 @@ Filtered diagnostic logs:
 
 The app deliberately does not write transcript text to logs.
 
-## Joined Parakeet → Sotto integration flow
+## Joined Parakeet → S1-mini integration flow
 
 The model files are deliberately excluded from Git and the APK. The staging script expects the
-selected Parakeet artifact at `.cache/stt-eval/models/tdt_ctc-110m-q4_k.gguf` and the converted
-Sotto artifact at
-`.cache/integration/models/sotto-b-epoch2-gguf/sotto-b-epoch2-lfm25-350m-q4_k_m.gguf`. It rejects
-anything except the pinned SHA-256 identities. The selected Sotto artifact is 229,310,336 bytes
-with SHA-256 `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`.
+selected Parakeet artifact at `.cache/stt-eval/models/tdt_ctc-110m-q4_k.gguf` and the official
+S1-mini artifact at `.cache/integration/models/s1-mini-v1/s1-mini-q4_k_m.gguf`. It rejects anything
+except the pinned SHA-256 identities. S1-mini is 484,219,808 bytes with SHA-256
+`3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634`.
 
 From a clean checkout, prepare the Parakeet source/model as described in the
 [STT benchmark guide](docs/evaluation/STT_BENCHMARK.md), then package the pinned Android ARM64
@@ -217,22 +209,8 @@ runtime and shared JNI bridge:
 ./scripts/build-parakeet-android.sh
 ```
 
-The default Sotto export starts from the B epoch-2 inference checkpoint copied from
-`dante:/data/rise/android_stt/runs/sotto-lfm-b-full-20260818T084213Z-dirty/checkpoint-542` into
-`.cache/integration/models/sotto-b-epoch2-hf`. Its 708,984,464-byte source weight has SHA-256
-`5336415629256074cd265b95938b4803ab908e0ea8f6bb8cd8c5265bfc3338e6`. Put the tokenizer from the
-pinned public-family snapshot under `.cache/integration/models/sotto-hf`, check out Liquid's
-`leap-finetune` commit `ee010f850a6f9e810aebbbc8e5d072675fcaece7` under
-`.cache/integration/leap-finetune`, install pinned `llama.cpp` 10450 and `uv`, then run:
-
-```bash
-./scripts/export-sotto-b-epoch2-gguf.sh
-```
-
-The exporter verifies the source identity, makes compatibility aliases only in an ignored export
-copy, applies the committed LFM2.5 tensor-name mapping, and quantizes the selected deployment GGUF.
-It refuses to overwrite an existing export. The older public-checkpoint exporter remains available
-as a reproducible historical baseline, but its artifact is no longer the ordinary app default.
+Historical Sotto exporters remain available for reproducing older evaluations, but their artifacts
+are no longer the ordinary app default.
 
 Build and install the APK before staging its app-scoped model directory:
 
@@ -244,11 +222,11 @@ adb shell am start -n dev.localflow.dictation/.MainActivity
 
 In the app:
 
-1. Tap **Load staged Parakeet** and **Load staged Sotto B**.
+1. Tap **Load staged Parakeet** and **Load staged S1-mini**.
 2. Tap **Start dictation**, grant microphone permission, speak, and tap **Stop dictation**.
-3. Parakeet transcribes the completed local capture, then Sotto cleanup runs automatically.
-4. Inspect the raw transcript, exact post-filler model input, complete unguarded Sotto output,
-   guarded output, and stage metrics.
+3. Parakeet transcribes the completed local capture, then S1-mini cleanup runs automatically.
+4. Inspect the raw transcript, exact model input, complete S1-mini output, selected output, and
+   stage metrics.
 
 The models remain warm between utterances. The microphone does not: the app creates and starts
 `AudioRecord` only after **Start dictation** and stops it synchronously at the Stop tap. The current
@@ -256,23 +234,16 @@ Parakeet model processes the already captured utterance as one offline batch and
 no partial transcript. `STT tail` measures Stop-to-final transcript; `End-to-end tail` measures
 Stop-to-cleanup completion. All timing uses `SystemClock.elapsedRealtimeNanos()`.
 
-Before Sotto runs, a deterministic pass removes only low-ambiguity standalone `um`, `uh`, and
-`erm` tokens. It deliberately does not remove `like`, `well`, `you know`, `hmm`, or other terms
-that may carry tone or meaning. Uppercase acronyms, likely title-cased names without filler
-punctuation, quoted text, hyphenated words, paths, identifiers, and paragraph breaks are preserved.
-Sotto may remove a discourse lead-in such as sentence-initial `Well` when the remaining content is
-preserved. The guardrail also accepts explicit self-correction deletion, consumed list/paragraph
-directives, and spoken-number → digit/time formatting only when deterministic numeric equivalence
-proves the value is unchanged. These rules fix earlier false rejections caused by protecting every
-surface token literally. Changed names, numeric values, negation, uncertainty, or other unsupported
-lexical additions still fail closed. If Sotto fails a guardrail, the fallback is the visible
-deterministic model input; the original Parakeet transcript remains unchanged above it.
+S1-mini receives the trimmed Parakeet transcript directly under its pinned
+`[Styling: semi-formal] [Structure: prose] [Context: general]` control. The app uses every sanitized,
+non-empty generation that did not reach its output-token cap. It falls back to the raw Parakeet
+transcript only for blank or capped output.
 
 ### Fast file-fed voice demo
 
 For repeatable joined testing, generate the active personal suite and feed its WAV files directly
-to the Pixel. This exercises the same Parakeet, Sotto, and guardrail code as the Activity, but it
-does not open the microphone or wait for real-time speaker playback:
+to the Pixel. This exercises the same Parakeet and S1-mini code as the Activity, but it does not
+open the microphone or wait for real-time speaker playback:
 
 ```bash
 TTS_OFFLINE=1 ./scripts/prepare-cleanup-tts-eval.sh --suite personal-v3 --resume
@@ -296,12 +267,9 @@ JOINED_EVAL_REFERENCE="The words spoken in the recording." \
 This is the fastest model-pipeline regression path. It deliberately does not test microphone
 capture, room acoustics, endpointing, or recorder lifecycle; use the ordinary Activity for those.
 
-This flow is for integration testing, not model qualification. B epoch 2 scored 15/20 acceptable,
-only 1/3 corrections, and 0/3 formatting directives in the active direct suite, with broader raw
-semantic failures. Guardrail fallback is visible defense in depth and cannot turn it into a
-deployment candidate. See the
-[complete B/Luna Pixel comparison](docs/evaluation/results/2026-08-18-luna-vs-sotto-b-epoch2-pixel.md)
-and the historical
+This flow is for repeatable integration testing. S1-mini is the preferred personal-use cleanup
+model; its semantic evaluations remain useful diagnostics but do not gate insertion. See the
+[S1-mini Pixel evidence](docs/evaluation/results/2026-08-21-s1-mini-v1-pixel.md) and historical
 [public-Sotto integration evidence](docs/evaluation/results/2026-08-18-parakeet-sotto-integration-build.json).
 
 ## Cleanup-only evaluation status
@@ -338,11 +306,21 @@ experiment repairs those behaviors with a correction-weighted LFM training mixtu
 Android conversion or integration.
 See [the full screen](docs/evaluation/results/2026-08-18-sotto-lfm25-350m-public-screen.md).
 
-Sotto B epoch 2 is therefore the replaceable, provisional local integration baseline. The
-deployment quality gate is unchanged: raw model output still must pass semantic safety before a
-checkpoint can ship. Future cleanup work runs on the separate training machine. This Mac is used
-only for data tooling, model conversion, inference, evaluation, and app integration; no training
-job is run here.
+S1-mini is the preferred personal-use Android cleanup model. The owner reviews and edits its
+non-empty, non-capped output; stricter semantic scoring remains optional research evidence. Future
+cleanup training work runs on the separate training machine. This Mac is used only for data
+tooling, model conversion, inference, evaluation, and app integration; no training job is run here.
+
+The owner's FluidVoice installation was also inventoried as a separate Mac-only reference. Its
+active path uses an Apple Core ML Parakeet TDT v2 recognizer followed by a roughly 4.6B-parameter
+Fluid-1 cleanup model, a bundled task prompt, and app-specific pre/postprocessing. Both the old
+3.19 GiB GGUF and the newer 3.58 GB main MLX model remain ignored outside Git. Its signed manifest
+totals 3.77 GB including an optional 188.7 MB MTP drafter that was not locally downloaded. The
+model card restrictions and size/platform mismatch rule out treating these as Android product or
+training artifacts; a personal local smoke runner exists only for behavioral comparison. The
+vendor's “100K+ dictation data points” sentence is recorded as an unverified scale heuristic, not
+dataset provenance. See the
+[complete local-pipeline inventory](docs/research/FLUIDVOICE_LOCAL_PIPELINE_2026-08-19.md).
 
 The optional hosted comparison now also covers the active 20-case personal-v3 direct-text suite.
 GPT-5.4 and GPT-5.6 Luna each reached 12/20 strict exact and 55/61 literal anchors; mini reached

@@ -1,27 +1,36 @@
 # Current state
 
-Last updated: 2026-08-19
+Last updated: 2026-08-21
 
 ## Repository
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: joined Parakeet/Sotto integration pipeline with Sotto B epoch 2 selected
-  as the provisional local default (device-default smoke pending reconnection)
+- Last verified milestone: preferred Parakeet/S1-mini joined pipeline complete on Pixel; minimal
+  voice IME enabled and visually verified through its permission gate, with interactive model-load
+  and cross-app dictation verification in progress
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
-- Current phase: transition from the ordinary Android integration app to the minimal voice IME
+- Current phase: minimal voice IME device verification and daily-driver hardening
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
   no-go evaluation), 3 (cross-family generic-model quality screen)
 - Active product milestone: minimal voice-only `InputMethodService`
 - Parallel model milestone: 4 (task-specific cleanup qualification/training remains open)
 - Partially completed milestone: 5 (standard-corpus STT probe plus batch-on-Stop microphone
   integration; dictation/streaming qualification remains)
-- Completed integration milestone: the joined path has a pinned, swappable default and is ready to
-  supply the IME, without relaxing the independent STT or cleanup deployment gates
+- Completed integration milestone: the joined path has a pinned, swappable personal-use default
+  and supplies the IME under the owner's permissive cleanup insertion policy
 
 ## Working functionality
 
 - Kotlin/View-based joined integration Activity on a physical Pixel 7.
+- Host-built voice-only `InputMethodService` with Android input-method metadata, enable/select
+  setup controls, explicit Start/Stop, Cancel, conservative immediate Undo, next-keyboard switch,
+  and transcript-free timing logs. It has not yet been installed or enabled on a device.
+- Application-scoped `DictationPipelineCoordinator` shares one Parakeet and S1-mini engine pair
+  between the Activity and IME; destroying the Activity no longer unloads models needed by the IME.
+- IME editor policy disables dictation for password fields, editors requesting no personalized
+  learning, and non-text destinations. A result is committed only to the same editor identity that
+  started the utterance, and Undo deletes only an exact immediate suffix in that editor.
 - Moonshine Voice `0.1.2`, English Small Streaming architecture `4`.
 - Model download, persistent no-backup cache, progress display, and offline cache reuse.
 - Raw provisional/final transcript display and monotonic latency metrics.
@@ -29,8 +38,8 @@ Last updated: 2026-08-19
   WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
   native heap, and thermal status.
 - Debug-only joined benchmark Activity that accepts a generated corpus or one host-canonicalized
-  WAV/MP3, loads Parakeet and Sotto once, never opens the microphone, and records raw STT, exact
-  model input/output, guarded output, fallback reason, and per-stage/joined latency.
+  WAV/MP3, loads Parakeet and S1-mini once, never opens the microphone, and records raw STT, exact
+  model input/output, selected output, fallback reason, and per-stage/joined latency.
 - Mac-local, locked Qwen3-TTS/MLX-Audio fixture pipeline that converts literal text or bounded
   regression suites into resumable, hash-addressed 24 kHz masters and Pixel-compatible 16 kHz
   mono PCM16 WAV corpora without putting model weights or generated audio in Git.
@@ -39,8 +48,9 @@ Last updated: 2026-08-19
   Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined debug APK; current host-verified APK is 88,045,661 bytes with SHA-256
-  `2b40bd16238df4285cfcf48b5d826238a6175e7d8638a3ab1d2694439e7edf92`.
+- ARM64-only joined/IME debug APK; current host-verified APK is 88,046,129 bytes with SHA-256
+  `56da9d81c66dac13839064b5313c9ed4397a56b03b04bdfa7f2b01ddd7d52683`. This build is installed
+  on the Pixel.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -48,30 +58,30 @@ Last updated: 2026-08-19
 - The selected offline Parakeet model transcribes the complete capture after Stop; it does not
   expose partial/streaming hypotheses.
 - Liquid LEAP `0.10.9` cleanup-only benchmark with model download progress, persistent cache reuse,
-  load/unload, conservative guardrails, and monotonic TTFT/total-generation metrics.
+  load/unload, minimal output-validity fallback, and monotonic TTFT/total-generation metrics.
 - Editable direct-text cleanup UI plus a 24-case, multi-prompt batch runner that exports JSONL for
   deterministic host-side scoring without involving the microphone or Moonshine.
-- Sideloaded LEAP runtime defaults to the selected Sotto B epoch-2 LFM2.5-350M checkpoint,
-  reproducibly converted to a 229,310,336-byte Q4_K_M GGUF with SHA-256
-  `02a4635a4c3bfdeadaa8c23a975dfc3bc6fde127184017f08ccefa6b431f65e0`. The native Sotto
-  prompt/parser and decoder settings are fixed, while the cleanup interface and debug artifact
-  override remain swappable.
-- Joined Parakeet → Sotto execution after every non-empty final transcript. The UI preserves raw
-  STT, complete raw model output, guarded output, STT tail, cleanup timing, and end-to-end tail.
+- Sideloaded LEAP runtime defaults to the official 484,219,808-byte S1-mini by Superwhisper
+  Q4_K_M GGUF with SHA-256
+  `3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634`. The exact publisher
+  system prompt, semi-formal/prose/general control line, embedded Qwen3 template,
+  `enableThinking=false`, temperature-zero greedy decoding, and
+  `ceil(1.3 × raw transcript tokens + 32)` cap are fixed in the production engine. The cleanup
+  interface remains swappable and Sotto is retained only as a historical/debug engine.
+- Joined Parakeet → S1-mini execution after every non-empty final transcript. The UI preserves raw
+  STT, complete raw model output, selected output, STT tail, cleanup timing, and end-to-end tail.
 - The active synthetic product regression is now the 20-case personal-conversation v3 suite:
   messages, journal entries, lists, ordinary names/numbers, uncertainty, repetition, explicit
   formatting, natural corrections, and four 3–5 sentence latency cases. Phone-number dictation and
   technical v1 cases are historical/excluded from the active workload.
-- A deterministic pre-model pass removes only standalone `um`, `uh`, and `erm`. Result metadata and
-  cleanup JSON preserve the original transcript, exact model input, removed-token list, and whether
-  Sotto ran; the UI exposes the model input and removal count. Ambiguous discourse words,
-  uncertainty markers, acronyms, likely names, quotes, paths, identifiers, hyphenated words, and
-  paragraph breaks are excluded from removal.
-- Android and host guardrails no longer protect lexical surfaces more strictly than meaning where
-  deterministic equivalence exists. They accept bounded removal of sentence-initial discourse,
-  explicit `sorry`/`actually make that` corrections, equivalent word→digit/time rendering, and
-  consumed list/paragraph directives; changed names, values, negation, uncertainty, unsupported
-  additions, and answered content still fail closed.
+- The preferred S1 path sends the trimmed Parakeet transcript directly under the publisher control;
+  it does not insert the older Sotto-specific deterministic filler preprocessor. Result metadata
+  preserves the original transcript, exact model input, complete raw model output, selected output,
+  and fallback reason.
+- The personal-use Android runtime accepts every sanitized S1-mini generation that is non-empty and
+  did not reach its output-token cap. It does not reject lexical, semantic, length, name, number,
+  negation, uncertainty, correction, intent, question, command, or formatting changes. Historical
+  host guardrails remain research diagnostics and do not gate insertion.
 - LFM2.5-230M, 350M, and 1.2B-Instruct `Q4_K_M` were exercised on-device; their raw static-corpus
   results and summaries are preserved under `docs/evaluation/`. All three are cleanup no-go results.
 - A deterministic baseline plus Granite 350M, Qwen3 0.6B, Gemma 270M, Qwen3.5 0.8B, and Gemma 1B
@@ -86,6 +96,37 @@ Last updated: 2026-08-19
   misses required corrections/formatting and fails broader safety. At explicit user direction,
   B epoch 2 is the provisional local integration default so product work can continue. This is not
   a deployment qualification claim.
+- S1-mini v1 by Superwhisper now has a reproducible Mac-local performance screen under the exact
+  publisher prompt, control line, empty-thinking prefix, greedy decoding, and input-relative cap.
+  Across the 69-case seed + held-out project screen, Q4_K_M llama.cpp reaches 110.2 ms median total
+  and 141.17 tok/s native decode, versus 206.0 ms and 64.85 tok/s for the same-runtime F16 control.
+  The actual BF16 safetensors weights reach 2,147.6 ms median through the documented Transformers
+  CPU path. BF16/F16 agree on all 207 requests; Q4 agrees on 201/207. Across project evals plus
+  personal-v3, all variants are stable on 89/89 cases and Q4 agreement is 249/267 requests. This is
+  performance/agreement evidence only: semantic scoring and all Pixel measurements remain open.
+  Full evidence: `docs/evaluation/results/2026-08-21-s1-mini-v1-local-performance.md`.
+- S1-mini v1 Q4_K_M now has a full exact-contract Pixel 7 screen through LEAP 0.10.9. Mac and Pixel
+  raw-token counts/output caps match 69/69; raw Q4 text matches 66/69, with three bounded backend
+  decoder differences and no prompt/template/options drift. Under the user's control-aware
+  calibration, personal-v3 raw output is 19/20 acceptable: the fixed `Structure: prose` setting
+  resolves the two transcript-level list conflicts, while one retained superseded recipient remains
+  a genuine failure. The thermal-clean traced run reaches 975.5 ms median TTFT, 1,576 ms median
+  total, 1,293,620 KiB peak PSS, and 6.493 J/call; a matching untraced run crosses to thermal status
+  1 under sustained use. At explicit user direction S1 replaces Sotto B as the preferred ordinary
+  integration default. A later explicit personal-use policy change removed semantic runtime
+  rejection while retaining empty/token-cap fallback. Full evidence:
+  `docs/evaluation/results/2026-08-21-s1-mini-v1-pixel.md`.
+- The owner-local FluidVoice 1.6.9 pipeline is now inventoried as a Mac-only reference. Its active
+  path is Parakeet TDT v2 Core ML → app filler/dictionary preprocessing → Fluid-1 with bundled
+  prompt/template → thinking-markup and app formatting/continuous-dictation postprocessing. The
+  prior 3,427,878,144-byte Q4_K_M GGUF is preserved in ignored storage at SHA-256
+  `38fafbfaab6504b7ad125523f0b993d52112c3cc7e20543f4929e619022bc7d8`; all eight files in the new
+  3,583,024,557-byte main MLX model are also preserved and manifest-verified. Its signed 3.77 GB
+  total additionally lists a 188,714,557-byte optional MTP drafter that was not downloaded.
+  Neither model is an Android candidate or a
+  permitted training/teacher source under the located model-card restrictions. FluidVoice's
+  “100K+ dictation data points” statement is retained only as an unverified scale heuristic. See
+  `docs/research/FLUIDVOICE_LOCAL_PIPELINE_2026-08-19.md`.
 
 ## Physical device
 
@@ -93,12 +134,23 @@ Last updated: 2026-08-19
 - Cached Moonshine model remains installed on the device.
 - F16 and Q4_K Parakeet GGUFs plus the generated LibriSpeech probe remain in ignored local/device
   evaluation storage; they are not committed app assets.
-- The selected Parakeet Q4_K and converted Sotto Q4_K_M artifacts are staged in app-scoped external
-  storage with their exact hashes verified on the device. Both load successfully in the installed
-  integration APK.
-- Sotto B epoch 2 has already completed direct and Parakeet-fed Pixel benchmarking. The new
-  no-override app identity and staging defaults pass host build/tests; final reinstall and
-  default-path smoke are pending because no ADB device was attached on 2026-08-19.
+- The selected Parakeet Q4_K and S1-mini Q4_K_M artifacts are staged in app-private storage with
+  their exact hashes verified on the device. Both load successfully in the installed integration
+  APK. App-private storage replaces shell-pushed app-scoped external storage on Android 17.
+- Final no-override joined run `20260820T182349Z-joined-file` completes 20/20 personal-v3 cases.
+  Median STT/cleanup/pipeline totals are 725.0/1,927.5/2,664.5 ms, peak PSS is 1,589,901 KiB, and
+  max thermal is 1. Raw and guarded strict/normalized target counts agree at 8/20 and 9/20; the
+  only fallback is the genuine retained-recipient correction failure.
+- The IME is installed, enabled, selected, and visually verified in the app's safe text editor.
+  With microphone permission denied it correctly shows `Microphone setup required` and does not
+  expose a recording action. Temporary permission grant and interactive model-load verification
+  are in progress; actual speech commit, cancel, undo, focus switching, and cross-app behavior
+  remain open.
+- A first consented in-app voice attempt reached Parakeet and S1-mini. S1 produced a non-empty,
+  complete cleanup but the installed guardrail falsely classified compact `ten PM` → `10pm` and
+  `nine PM` → `9pm` rendering as new lexical content. The superseding personal-use runtime policy
+  now accepts that output and every other non-empty, non-capped generation; the updated APK is
+  installed with both app-private models preserved and Local Flow still selected as the IME.
 - On-device joined smoke: Parakeet model load 270 ms; 22.091-second microphone capture; 1,568 ms
   Stop-to-STT final; Sotto total 456 ms; 2,029 ms Stop-to-cleanup. Sotto deleted protected negation,
   and the guardrail correctly returned the raw STT text. This is useful integration evidence and a
@@ -470,10 +522,11 @@ Last updated: 2026-08-19
 4. On the Mac with the Pixel attached, run `./scripts/check-toolchain.sh`, then
    `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`.
 5. To resume integration testing, install the debug APK, run
-   `./scripts/stage-integration-models.sh`, then load staged Parakeet and Sotto in the Activity. The
+   `./scripts/stage-integration-models.sh`, then load staged Parakeet and S1-mini in the Activity or
+   IME. The
    ignored `.cache` artifacts must match the hard-coded hashes; see the root README and integration
    evidence manifest.
-6. Preserve the completed LFM campaign and personal-v3 evidence. Keep B epoch 2 as the provisional
-   app baseline until an explicitly selected replacement has fresh evidence. Do not train on v3
-   errors. Any next model run or guardrail repair needs a separately reviewed plan and a fresh
-   evaluation version; never use blind-v2 for iteration.
+6. Preserve the completed LFM campaign and personal-v3 evidence. Keep exact-contract S1-mini as the
+   preferred integration model, with Sotto B retained only for historical/debug reproducibility.
+   Do not train on v3 errors. Any next model run or guardrail repair needs a separately reviewed
+   plan and a fresh evaluation version; never use blind-v2 for iteration.

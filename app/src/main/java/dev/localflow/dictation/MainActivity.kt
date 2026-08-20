@@ -2,19 +2,23 @@ package dev.localflow.dictation
 
 import android.Manifest
 import android.app.Activity
+import android.content.ComponentName
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.SystemClock
+import android.provider.Settings
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import dev.localflow.dictation.cleanup.CleanupBatchRunner
+import dev.localflow.dictation.cleanup.CleanupEngine
 import dev.localflow.dictation.cleanup.CleanupPromptVariant
 import dev.localflow.dictation.cleanup.CleanupResult
 import dev.localflow.dictation.cleanup.CleanupState
-import dev.localflow.dictation.cleanup.SottoCleanupEngine
-import dev.localflow.dictation.stt.ParakeetLiveSttEngine
+import dev.localflow.dictation.ime.LocalFlowImeService
 import dev.localflow.dictation.stt.SpeechToTextEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +39,10 @@ class MainActivity : Activity() {
     private lateinit var cleanTextButton: Button
     private lateinit var runCleanupEvalButton: Button
     private lateinit var evaluationStatusText: TextView
+    private lateinit var imeSetupStatusText: TextView
+    private lateinit var enableImeButton: Button
+    private lateinit var chooseImeButton: Button
+    private lateinit var grantMicrophoneButton: Button
 
     private var modelLoadStartedAtNs = 0L
     private var modelLoadDurationMs: Long? = null
@@ -45,25 +53,18 @@ class MainActivity : Activity() {
     private var lastCleanupResult: CleanupResult? = null
     private var cleanupBatchRunning = false
     private var startAfterPermissionGrant = false
+    private var activityOwnsRecording = false
     private val uiJob = SupervisorJob()
     private val uiScope = CoroutineScope(uiJob + Dispatchers.Main.immediate)
 
-    private val engine by lazy {
-        ParakeetLiveSttEngine(
-            context = applicationContext,
-            modelFile = IntegrationModels.parakeetFile(applicationContext),
-            expectedModelSha256 = IntegrationModels.PARAKEET_SHA256,
-            onStateChanged = ::renderState,
-        )
+    private val pipelineCoordinator: DictationPipelineCoordinator by lazy {
+        (application as LocalFlowApplication).pipelineCoordinator
     }
-    private val cleanupEngineLazy = lazy {
-        SottoCleanupEngine(
-            context = applicationContext,
-            modelFile = IntegrationModels.sottoFile(applicationContext),
-            expectedModelSha256 = IntegrationModels.SOTTO_SHA256,
-        )
-    }
-    private val cleanupEngine by cleanupEngineLazy
+    private val engine: SpeechToTextEngine
+        get() = pipelineCoordinator.speechEngine
+    private val cleanupEngine: CleanupEngine
+        get() = pipelineCoordinator.cleanupEngine
+    private val speechStateListener: (SpeechToTextEngine.State) -> Unit = ::renderState
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,11 +83,27 @@ class MainActivity : Activity() {
         cleanTextButton = findViewById(R.id.cleanTextButton)
         runCleanupEvalButton = findViewById(R.id.runCleanupEvalButton)
         evaluationStatusText = findViewById(R.id.evaluationStatusText)
+        imeSetupStatusText = findViewById(R.id.imeSetupStatusText)
+        enableImeButton = findViewById(R.id.enableImeButton)
+        chooseImeButton = findViewById(R.id.chooseImeButton)
+        grantMicrophoneButton = findViewById(R.id.grantMicrophoneButton)
 
         loadModelButton.setOnClickListener { loadModel() }
         loadCleanupModelButton.setOnClickListener { loadCleanupModel() }
         cleanTextButton.setOnClickListener { cleanRawText() }
         runCleanupEvalButton.setOnClickListener { runCleanupEvaluation() }
+        enableImeButton.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+        }
+        chooseImeButton.setOnClickListener {
+            inputMethodManager().showInputMethodPicker()
+        }
+        grantMicrophoneButton.setOnClickListener {
+            requestPermissions(
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                MICROPHONE_PERMISSION_REQUEST,
+            )
+        }
         dictationButton.setOnClickListener {
             when (engine.state) {
                 SpeechToTextEngine.State.READY -> startDictation()
@@ -95,20 +112,39 @@ class MainActivity : Activity() {
             }
         }
 
-        renderState(SpeechToTextEngine.State.UNLOADED)
-        renderCleanupState(CleanupState.UNLOADED)
-        statusText.setText(R.string.status_model_not_loaded)
+        pipelineCoordinator.addSpeechStateListener(speechStateListener)
+        renderState(engine.state)
+        renderCleanupState(cleanupEngine.state)
+        statusText.setText(
+            if (engine.state == SpeechToTextEngine.State.READY) {
+                R.string.status_model_ready
+            } else {
+                R.string.status_model_not_loaded
+            },
+        )
+        cleanupStatusText.setText(
+            if (cleanupEngine.state == CleanupState.READY) {
+                R.string.status_cleanup_ready
+            } else {
+                R.string.status_cleanup_model_not_loaded
+            },
+        )
+        renderImeSetupState()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::imeSetupStatusText.isInitialized) renderImeSetupState()
     }
 
     override fun onDestroy() {
-        engine.close()
-        if (cleanupEngineLazy.isInitialized()) {
-            val engineToUnload = cleanupEngineLazy.value
-            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-                runCatching { engineToUnload.unload() }
-                    .onFailure { LocalFlowLog.error("Cleanup unload failed", it) }
+        if (activityOwnsRecording && engine.state == SpeechToTextEngine.State.RECORDING) {
+            activityOwnsRecording = false
+            pipelineCoordinator.cancelDictation { result ->
+                result.onFailure { LocalFlowLog.error("Activity dictation cancel failed", it) }
             }
         }
+        pipelineCoordinator.removeSpeechStateListener(speechStateListener)
         uiJob.cancel()
         super.onDestroy()
     }
@@ -132,6 +168,7 @@ class MainActivity : Activity() {
             statusText.setText(R.string.status_microphone_permission_denied)
             renderState(engine.state)
         }
+        renderImeSetupState()
     }
 
     private fun loadModel() {
@@ -185,12 +222,17 @@ class MainActivity : Activity() {
             },
         ) { result ->
             result.onSuccess {
+                activityOwnsRecording = true
                 statusText.setText(R.string.status_listening)
-            }.onFailure(::showError)
+            }.onFailure {
+                activityOwnsRecording = false
+                showError(it)
+            }
         }
     }
 
     private fun stopDictation() {
+        activityOwnsRecording = false
         statusText.setText(R.string.status_finalizing)
         dictationButton.isEnabled = false
         engine.stop { result ->
@@ -259,7 +301,7 @@ class MainActivity : Activity() {
         renderCleanupState(CleanupState.GENERATING)
         uiScope.launch {
             runCatching {
-                cleanupEngine.clean(rawText, CleanupPromptVariant.SOTTO_NATIVE)
+                cleanupEngine.clean(rawText, CleanupPromptVariant.S1_MINI_NATIVE)
             }
                 .onSuccess { result ->
                     lastCleanupResult = result
@@ -280,7 +322,7 @@ class MainActivity : Activity() {
                     cleanupStatusText.text = when {
                         result.usedFallback -> getString(
                             R.string.status_cleanup_fallback,
-                            result.fallbackReason ?: "guardrail",
+                            result.fallbackReason ?: "output validity check",
                         )
                         !result.modelWasRun ->
                             getString(R.string.status_cleanup_preprocessing_only)
@@ -299,7 +341,7 @@ class MainActivity : Activity() {
         uiScope.launch {
             runCatching {
                 CleanupBatchRunner(applicationContext, cleanupEngine).run(
-                    promptVariants = listOf(CleanupPromptVariant.SOTTO_NATIVE),
+                    promptVariants = listOf(CleanupPromptVariant.S1_MINI_NATIVE),
                 ) { progress ->
                     uiScope.launch {
                         evaluationStatusText.text = getString(
@@ -419,8 +461,35 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun currentCleanupState(): CleanupState =
-        if (cleanupEngineLazy.isInitialized()) cleanupEngine.state else CleanupState.UNLOADED
+    private fun currentCleanupState(): CleanupState = cleanupEngine.state
+
+    private fun renderImeSetupState() {
+        val permissionGranted = checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        val enabled = inputMethodManager().enabledInputMethodList.any { info ->
+            info.serviceInfo.packageName == packageName &&
+                info.serviceInfo.name == LocalFlowImeService::class.java.name
+        }
+        val selectedId = Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.DEFAULT_INPUT_METHOD,
+        )
+        val component = ComponentName(this, LocalFlowImeService::class.java)
+        val selected = selectedId == component.flattenToString() ||
+            selectedId == component.flattenToShortString()
+
+        imeSetupStatusText.text = getString(
+            R.string.ime_setup_status,
+            if (permissionGranted) getString(R.string.setup_yes) else getString(R.string.setup_no),
+            if (enabled) getString(R.string.setup_yes) else getString(R.string.setup_no),
+            if (selected) getString(R.string.setup_yes) else getString(R.string.setup_no),
+        )
+        grantMicrophoneButton.visibility = if (permissionGranted) View.GONE else View.VISIBLE
+        chooseImeButton.isEnabled = enabled
+    }
+
+    private fun inputMethodManager(): InputMethodManager =
+        getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
 
     private fun showError(error: Throwable) {
         LocalFlowLog.error("Benchmark UI error", error)

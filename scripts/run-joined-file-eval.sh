@@ -5,8 +5,8 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 input_path="${1:-}"
 timeout_seconds="${JOINED_EVAL_TIMEOUT_SECONDS:-1800}"
 power_trace="${JOINED_EVAL_POWER_TRACE:-0}"
-sotto_model="${JOINED_EVAL_SOTTO_MODEL:-}"
-sotto_sha="${JOINED_EVAL_SOTTO_SHA256:-}"
+cleanup_model="${JOINED_EVAL_CLEANUP_MODEL:-}"
+cleanup_sha="${JOINED_EVAL_CLEANUP_SHA256:-}"
 
 if [[ -z "$input_path" ]]; then
     echo "Usage: $0 <corpus-directory|audio.wav|audio.mp3>" >&2
@@ -25,26 +25,26 @@ if [[ "$power_trace" != "0" && "$power_trace" != "1" ]]; then
     exit 1
 fi
 
-sotto_args=()
-if [[ -n "$sotto_model" ]]; then
-    if [[ ! -f "$sotto_model" ]]; then
-        echo "JOINED_EVAL_SOTTO_MODEL does not exist: $sotto_model" >&2
+cleanup_args=()
+if [[ -n "$cleanup_model" ]]; then
+    if [[ ! -f "$cleanup_model" ]]; then
+        echo "JOINED_EVAL_CLEANUP_MODEL does not exist: $cleanup_model" >&2
         exit 1
     fi
-    sotto_name="$(basename "$sotto_model")"
-    if [[ ! "$sotto_name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.gguf$ ]]; then
-        echo "JOINED_EVAL_SOTTO_MODEL has an unsafe filename" >&2
+    cleanup_name="$(basename "$cleanup_model")"
+    if [[ ! "$cleanup_name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.gguf$ ]]; then
+        echo "JOINED_EVAL_CLEANUP_MODEL has an unsafe filename" >&2
         exit 1
     fi
-    actual_sotto_sha="$(shasum -a 256 "$sotto_model" | awk '{print $1}')"
-    if [[ -n "$sotto_sha" && "$sotto_sha" != "$actual_sotto_sha" ]]; then
-        echo "Sotto SHA-256 mismatch: expected $sotto_sha, found $actual_sotto_sha" >&2
+    actual_cleanup_sha="$(shasum -a 256 "$cleanup_model" | awk '{print $1}')"
+    if [[ -n "$cleanup_sha" && "$cleanup_sha" != "$actual_cleanup_sha" ]]; then
+        echo "Cleanup SHA-256 mismatch: expected $cleanup_sha, found $actual_cleanup_sha" >&2
         exit 1
     fi
-    sotto_sha="$actual_sotto_sha"
-    sotto_args=(--es sotto_file_name "$sotto_name" --es sotto_sha256 "$sotto_sha")
-elif [[ -n "$sotto_sha" ]]; then
-    echo "JOINED_EVAL_SOTTO_SHA256 requires JOINED_EVAL_SOTTO_MODEL" >&2
+    cleanup_sha="$actual_cleanup_sha"
+    cleanup_args=(--es cleanup_file_name "$cleanup_name" --es cleanup_sha256 "$cleanup_sha")
+elif [[ -n "$cleanup_sha" ]]; then
+    echo "JOINED_EVAL_CLEANUP_SHA256 requires JOINED_EVAL_CLEANUP_MODEL" >&2
     exit 1
 fi
 
@@ -67,6 +67,10 @@ stop_power_trace() {
 }
 cleanup() {
     stop_power_trace
+    adb shell rm -f "/data/local/tmp/localflow-joined-cleanup.gguf" >/dev/null 2>&1 || true
+    adb shell rm -f "/data/local/tmp/localflow-joined-manifest.jsonl" \
+        >/dev/null 2>&1 || true
+    adb shell rm -f "/data/local/tmp/localflow-joined-audio.wav" >/dev/null 2>&1 || true
     if [[ -n "$temporary_dir" && -d "$temporary_dir" && ! -L "$temporary_dir" && \
           "$temporary_dir" == /private/tmp/localflow-joined.* ]]; then
         rm -rf -- "$temporary_dir"
@@ -121,7 +125,7 @@ elif [[ "${JOINED_EVAL_INSTALL:-1}" != "0" ]]; then
 fi
 
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-joined-file"
-device_root="/sdcard/Android/data/dev.localflow.dictation/files/joined-eval"
+device_root="files/joined-eval"
 device_result="$device_root/results-$run_id.jsonl"
 device_error="$device_root/error-$run_id.json"
 host_result_dir="$repo_dir/.cache/integration/results"
@@ -146,13 +150,42 @@ if [[ -n "$expected_cases" && ! -f "$expected_cases" ]]; then
     exit 1
 fi
 
-adb shell mkdir -p "$device_root/audio"
-adb push "$corpus_dir/manifest.jsonl" "$device_root/manifest.jsonl"
-adb push "$corpus_dir/audio/." "$device_root/audio"
-if [[ -n "$sotto_model" ]]; then
-    device_model_dir="/sdcard/Android/data/dev.localflow.dictation/files/models"
-    adb shell mkdir -p "$device_model_dir"
-    adb push "$sotto_model" "$device_model_dir/$sotto_name"
+device_temp_manifest="/data/local/tmp/localflow-joined-manifest.jsonl"
+device_temp_audio="/data/local/tmp/localflow-joined-audio.wav"
+adb shell run-as dev.localflow.dictation mkdir -p "$device_root/audio"
+adb push "$corpus_dir/manifest.jsonl" "$device_temp_manifest"
+adb shell chmod 0644 "$device_temp_manifest"
+adb shell run-as dev.localflow.dictation cp "$device_temp_manifest" \
+    "$device_root/manifest.jsonl"
+audio_count=0
+for audio_file in "$corpus_dir"/audio/*.wav; do
+    if [[ ! -f "$audio_file" ]]; then
+        echo "Corpus has no WAV files: $corpus_dir/audio" >&2
+        exit 1
+    fi
+    audio_name="$(basename "$audio_file")"
+    if [[ ! "$audio_name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.wav$ ]]; then
+        echo "Unsafe joined audio filename: $audio_name" >&2
+        exit 1
+    fi
+    adb push "$audio_file" "$device_temp_audio"
+    adb shell chmod 0644 "$device_temp_audio"
+    adb shell run-as dev.localflow.dictation cp "$device_temp_audio" \
+        "$device_root/audio/$audio_name"
+    audio_count=$((audio_count + 1))
+done
+if (( audio_count == 0 )); then
+    echo "Corpus has no staged WAV files" >&2
+    exit 1
+fi
+if [[ -n "$cleanup_model" ]]; then
+    device_model_dir="files/models"
+    device_temp_model="/data/local/tmp/localflow-joined-cleanup.gguf"
+    adb shell run-as dev.localflow.dictation mkdir -p "$device_model_dir"
+    adb push "$cleanup_model" "$device_temp_model"
+    adb shell chmod 0644 "$device_temp_model"
+    adb shell run-as dev.localflow.dictation cp "$device_temp_model" \
+        "$device_model_dir/$cleanup_name"
 fi
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
@@ -172,19 +205,25 @@ if [[ "$power_trace" == "1" ]]; then
         exit 1
     fi
 fi
-adb shell am start -W \
-    -n dev.localflow.dictation/.stt.benchmark.JoinedPipelineBenchmarkActivity \
-    --es run_id "$run_id" \
-    "${sotto_args[@]}"
+if [[ -n "$cleanup_model" ]]; then
+    adb shell am start -W \
+        -n dev.localflow.dictation/.stt.benchmark.JoinedPipelineBenchmarkActivity \
+        --es run_id "$run_id" \
+        "${cleanup_args[@]}"
+else
+    adb shell am start -W \
+        -n dev.localflow.dictation/.stt.benchmark.JoinedPipelineBenchmarkActivity \
+        --es run_id "$run_id"
+fi
 
 echo "Waiting for joined file result: $run_id"
 started_at="$(date +%s)"
 while true; do
-    if adb shell test -f "$device_result"; then
+    if adb shell run-as dev.localflow.dictation test -f "$device_result"; then
         break
     fi
-    if adb shell test -f "$device_error"; then
-        adb shell cat "$device_error" >&2
+    if adb shell run-as dev.localflow.dictation test -f "$device_error"; then
+        adb exec-out run-as dev.localflow.dictation cat "$device_error" >&2
         exit 1
     fi
     now="$(date +%s)"
@@ -198,7 +237,7 @@ done
 stop_power_trace
 
 mkdir -p "$host_result_dir"
-adb pull "$device_result" "$host_result"
+adb exec-out run-as dev.localflow.dictation cat "$device_result" > "$host_result"
 score_args=("$host_result" --json-out "$host_summary")
 if [[ -n "$expected_cases" ]]; then
     score_args+=(--expected-cases "$expected_cases")

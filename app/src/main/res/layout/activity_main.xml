@@ -39,6 +39,47 @@
             android:textSize="14sp" />
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/ime_setup_title"
+            android:textColor="@color/local_flow_text"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/imeSetupStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@color/local_flow_surface"
+            android:padding="12dp"
+            android:text="@string/ime_setup_status_placeholder"
+            android:textColor="@color/local_flow_muted"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/grantMicrophoneButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/ime_grant_microphone" />
+
+        <Button
+            android:id="@+id/enableImeButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/ime_enable_keyboard" />
+
+        <Button
+            android:id="@+id/chooseImeButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/ime_choose_keyboard" />
+
+        <TextView
             android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

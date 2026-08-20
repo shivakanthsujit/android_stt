@@ -1,6 +1,51 @@
 # Next steps
 
-Last updated: 2026-08-19
+Last updated: 2026-08-21
+
+## Completed: S1-mini v1 selection and preferred joined integration
+
+- [x] Pin and hash the official BF16 safetensors, F16 GGUF, and Q4_K_M GGUF artifacts outside Git.
+- [x] Preserve the exact publisher system prompt, trained control line, thinking-off template,
+  greedy decoding, and input-relative output cap in reproducible host harnesses.
+- [x] Run the 69-case seed + held-out project screen and 20-case personal-v3 suite × 3 measured
+  repeats after warmup on Q4_K_M and F16 through llama.cpp and on actual BF16 through the
+  documented Transformers CPU path. Exclude blind-v2 and STT/audio suites.
+- [x] Record latency, native GGUF decode rate, load/readiness, sampled RSS, repeat stability, and
+  raw-output agreement without reading expected answers or making a quality claim.
+- [x] Record the owner's personal-use acceptance policy: model semantic quality remains measurable
+  research evidence, but it does not gate insertion because the owner reviews and edits text.
+- [x] On the attached Pixel, use LEAP 0.10.9's Android llama.cpp backend to reproduce the exact
+  trained prompt/template contract and measure Q4_K_M. Raw-token/output-cap parity is 69/69 and
+  raw text parity is 66/69 versus Mac Q4. Preserve 1.576 s traced median total, 1.29M KiB PSS,
+  6.493 J/call, and sustained thermal status 1 as product caveats. BF16 Pixel feasibility remains
+  open.
+- [x] At explicit user direction, make exact-contract S1-mini the preferred ordinary cleanup
+  engine/artifact, move model and joined-corpus staging to Android 17-compatible app-private
+  storage, and keep raw output visible.
+- [x] Run the no-override 20-case Parakeet → S1-mini joined path on Pixel. The final run completes
+  20/20 with one genuine correction fallback; raw and guarded strict/normalized counts agree.
+- [ ] Before redistributing or bundling S1-mini weights, retain its license/attribution notices and
+  exact required name, `S1-mini by Superwhisper`, and confirm the additional naming term covers the
+  intended distribution. Current sideloaded development staging is not a release package.
+
+Full evidence: `docs/evaluation/results/2026-08-21-s1-mini-v1-local-performance.md` and
+`docs/evaluation/results/2026-08-21-s1-mini-v1-pixel.md`.
+
+## Completed: owner-local FluidVoice reference inventory
+
+- [x] Inventory the installed FluidVoice/FluidAudio application, active Parakeet TDT v2 Core ML
+  model, selectable-model registry, transcript preprocessing, Fluid-1 prompt/template, inference
+  artifacts, and output processing without recording personal dictionary contents or transcripts.
+- [x] Preserve and hash the pre-update Fluid-1 Q4_K_M checkpoint, bundled prompt, current signed
+  MLX manifest/helper/runtime bundles, and all eight files in the completed 3.58 GB main replacement
+  model. Record that the manifest's optional 188.7 MB MTP drafter was not locally downloaded.
+- [x] Add a one-shot owner-local GGUF/MLX smoke runner that emits raw cleanup output without using
+  committed evaluation cases.
+- [x] Record the vendor-reported “100K+ dictation data points” sentence as a scale heuristic only;
+  it is not evidence of dataset composition, provenance, pair structure, licensing, or quality.
+- [ ] Obtain explicit written permission before any Fluid-1 conversion, fine-tuning, teacher-label
+  generation, research evaluation, redistribution, bundling, or product use. Until then, keep the
+  artifacts outside training and Android candidate selection.
 
 ## Completed: Milestone 2 — Liquid cleanup model evaluation
 
@@ -63,7 +108,7 @@ Do not join cleanup to STT during this milestone.
 
 Cleanup remains the model-quality bottleneck, but it no longer blocks product integration work.
 The current offline STT path is provisionally good enough to supply raw transcripts, and the joined
-Android boundary now defaults to Sotto B epoch 2 as the explicit provisional local baseline. Keep
+Android boundary now defaults to exact-contract S1-mini as the explicit preferred local model. Keep
 that engineering choice separate from checkpoint qualification and never treat guardrail fallback
 as a passing raw model result.
 
@@ -348,11 +393,10 @@ This remains required before final product selection, but it is not the current 
   and the integration-only warning. This supersedes the public placeholder identity, not the raw
   quality/safety no-go result.
 - [x] Build, lint, and unit-test the no-override app configuration on the host.
-- [ ] Reconnect the Pixel, install the current APK, run the default staging script, and complete one
-  no-override Parakeet → B file-fed smoke. Verify the recorded cleanup filename and SHA-256 before
-  closing device integration verification.
-- [ ] Replace Sotto B only after an explicitly selected later checkpoint has fresh, independent
-  quality/safety and device evidence.
+- [x] Reconnect the Pixel, install the current APK, run app-private default staging, and complete a
+  no-override 20-case Parakeet → S1-mini file-fed run with verified artifact hashes.
+- [x] Replace Sotto B with S1-mini as the preferred integration model at explicit user direction;
+  preserve Sotto only for historical/debug reproducibility.
 - [ ] Run the fixed cleanup evaluation and sustained dictation checks on that qualified quantized
   checkpoint before calling the joined pipeline deployable.
 
@@ -361,22 +405,29 @@ This remains required before final product selection, but it is not the current 
 Goal: make the already joined local pipeline usable from ordinary text fields without duplicating
 model ownership or weakening microphone, privacy, and fallback behavior.
 
-- [ ] Add a voice-only `InputMethodService` and the manifest/settings metadata needed to enable it.
-- [ ] Add a small setup surface that explains how to enable and select Local Flow as a keyboard.
-- [ ] Reuse Parakeet and `CleanupEngine` through an application-scoped coordinator; do not create a
+- [x] Add a voice-only `InputMethodService` and the manifest/settings metadata needed to enable it.
+- [x] Add a small setup surface with microphone permission plus enable/select keyboard controls.
+- [x] Reuse Parakeet and `CleanupEngine` through an application-scoped coordinator; do not create a
   second independent model stack in the IME.
-- [ ] Keep explicit tap-to-start/tap-to-stop. Create `AudioRecord` only on Start, stop it before
-  inference, and never activate the microphone merely because an editor gains focus.
-- [ ] Commit the guarded cleanup result through `InputConnection`, while keeping the original raw
+- [x] Implement explicit tap-to-start/tap-to-stop and fast cancel-before-inference. Reuse the
+  project-owned `AudioRecord` path, which starts only after the button tap and stops before final
+  inference; never activate the microphone merely because an editor gains focus. Device behavior
+  remains to be verified.
+- [x] Commit the non-empty, non-capped cleanup result through `InputConnection`, while keeping the original raw
   transcript available for review, cancel, or one-step undo.
-- [ ] Detect password and other sensitive editor types. Disable dictation there by default, never
+- [x] Detect password/private editor types. Disable dictation there by default, never
   log transcript content, and do not introduce a hosted fallback.
-- [ ] Handle editor changes, app switching, focus loss, interruption, cancellation, and service
-  teardown without leaking microphone or model resources.
-- [ ] Instrument cold/warm model load, Stop-to-STT, cleanup, Stop-to-commit, PSS, thermal state, and
-  power with transcript-free diagnostics.
-- [ ] Verify enable/select, dictation, cancellation, guarded fallback, and teardown on the Pixel in
-  several target apps before calling the IME baseline complete.
+- [x] Add host-side editor identity checks, focus/window cancellation, service teardown handling,
+  operation invalidation, and exact-suffix bounded Undo. Confirm all paths on-device before treating
+  the lifecycle as complete.
+- [x] Instrument model load, recording, Stop-to-STT, cleanup, and Stop-to-result in the IME with
+  transcript-free diagnostics.
+- [ ] Add/measure IME-specific PSS, thermal state, power, and true Stop-to-editor-commit timing on
+  the Pixel; host code cannot supply those device measurements.
+- [ ] Finish the Pixel IME gate. Enable/select, permission-denied UI, model execution, and one
+  consented in-app voice attempt are verified, and the minimal-check build is installed. Repeat the
+  speech commit, then test cancel, empty/capped fallback, undo, focus switching, teardown, and
+  several target apps before calling the baseline complete.
 
 ## Then: daily-driver and qualification work
 
@@ -388,7 +439,8 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 - [ ] Qualify Parakeet on that dictation workload; investigate cache-aware streaming and end-of-
   utterance only after the explicit Start/Stop baseline is stable.
 - [ ] Continue cleanup research with fresh train/dev data and a new evaluation version. Keep
-  blind-v2 sealed until a candidate and policy are frozen; raw semantic safety remains mandatory.
+  blind-v2 sealed until a candidate and evaluation policy are frozen. Keep research scoring
+  separate from the owner's permissive personal-use insertion policy.
 - [ ] Swap the cleanup artifact through the existing boundary when a later local model earns it.
   Keep Luna as optional research only unless a separate privacy-aware hosted product decision is
   made and a real Pixel network client is measured.
