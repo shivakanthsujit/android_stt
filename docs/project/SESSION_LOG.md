@@ -1116,3 +1116,34 @@
   `6aaa8adeeeb4a9fdafc398dc36c28e5cb64b4c8917256a16d9953246e943195c`; it was not installed.
   The benchmark-installed preceding APK remains on the Pixel. The unrelated `t.txt` remains
   untouched. Stage 2's isolated pinned llama.cpp same-GGUF module is next.
+
+## 2026-08-22 — Direct llama.cpp Android host-readiness checkpoint
+
+- Added a standalone `:llamacpp-benchmark` application with no LEAP, Moonshine, or Parakeet
+  dependency. It is pinned to llama.cpp commit `ece963f41b0b02d7a0d61436ae365762c073a4c8`, tree
+  `f59cbdf04f233655507cc98ee9f704b71bfd1403`, build `b10450`, NDK `28.0.13004108`, and CMake
+  package/binary `3.31.6` / `3.31.6-g38307f9`.
+- Implemented a persistent synchronized JNI model/context owner, exact GGUF-embedded Minja
+  rendering with `enable_thinking=false`, exact raw/prompt token evidence, greedy EOG/cap
+  generation, fresh KV metadata, authoritative native timings, and complete runtime/system/backend
+  metadata. Fixed an integration collision in which native generation initially duplicated the
+  host-owned schema field.
+- Packaged seven runtime-scored Android ARM CPU variants. Fixed the unextracted-APK loader boundary
+  by probing variant sonames through Android's linker and registering only the pinned runtime's
+  highest-scoring supported CPU backend. Kept KleidiAI and every GPU backend off in this first arm.
+- Added transcript-only preparation, strict result scoring, reproducible source/build evidence,
+  and a future Pixel runner with explicit non-evaluation cases, explicit serial, one-device Pixel
+  and ARM64 validation, exact hashes, thermal-zero gate, unique artifacts, failure retention, and
+  optional matched LEAP/Perfetto scoring. The runner was not executed.
+- The complete Release unit/build gate passed with 13 JVM tests. Twenty-one Python tooling tests,
+  shell syntax, Python compilation, and `git diff --check` pass. APK integrity, 16 KiB alignment,
+  v2 signing, ARM64 packaging, JNI exports, and dynamic dependencies were inspected.
+- The reproducible Release APK is 18,700,783 bytes at SHA-256
+  `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6`; its stripped JNI DSO is
+  131,400 bytes at SHA-256
+  `2d599c96e1caef721ba9086252d486ac5c2dec184d6f15e403fae5ae1ad8c390`. The ignored build manifest
+  SHA-256 is `e13e6ed271e96a8ca7a249fbd47a8cee40735ab70f37f68c3575d41fe618d5bc`.
+- No ADB command, app install, Pixel interaction, model conversion, lower-bit quantization, or
+  production runtime change occurred. Order 4 remains open for a fresh owner-approved device
+  prompt/token/raw-output parity smoke and later CPU comparison. Full host evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`.

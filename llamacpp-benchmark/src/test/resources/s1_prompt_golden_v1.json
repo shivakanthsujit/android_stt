@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "model_sha256": "3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634",
+  "prompt_profile": "s1-mini-v1-publisher",
+  "cases": [
+    {
+      "id": "short-filler",
+      "raw": "um hello there",
+      "raw_token_ids": [372, 23811, 1052],
+      "rendered_prompt": "<|im_start|>system\nYou are a text normalizer for speech-to-text transcripts. The input begins with a control line specifying the styling, structure, and context settings; clean the transcript to match those settings and output only the cleaned text.<|im_end|>\n<|im_start|>user\n[Styling: semi-formal] [Structure: prose] [Context: general]\num hello there<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+      "prompt_token_ids": [151644, 8948, 198, 2610, 525, 264, 1467, 4622, 3135, 369, 8806, 4686, 9345, 60312, 13, 576, 1946, 12033, 448, 264, 2524, 1555, 37838, 279, 41328, 11, 5944, 11, 323, 2266, 5003, 26, 4240, 279, 35715, 311, 2432, 1846, 5003, 323, 2550, 1172, 279, 27722, 1467, 13, 151645, 198, 151644, 872, 198, 58, 623, 98607, 25, 18267, 8460, 278, 60, 508, 22952, 25, 60701, 60, 508, 1972, 25, 4586, 921, 372, 23811, 1052, 151645, 198, 151644, 77091, 198, 151667, 271, 151668, 271]
+    },
+    {
+      "id": "unicode",
+      "raw": "Please write café 東京 🚲 exactly.",
+      "raw_token_ids": [5501, 3270, 51950, 60596, 109, 46553, 11162, 248, 110, 6896, 13],
+      "rendered_prompt": "<|im_start|>system\nYou are a text normalizer for speech-to-text transcripts. The input begins with a control line specifying the styling, structure, and context settings; clean the transcript to match those settings and output only the cleaned text.<|im_end|>\n<|im_start|>user\n[Styling: semi-formal] [Structure: prose] [Context: general]\nPlease write café 東京 🚲 exactly.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+      "prompt_token_ids": [151644, 8948, 198, 2610, 525, 264, 1467, 4622, 3135, 369, 8806, 4686, 9345, 60312, 13, 576, 1946, 12033, 448, 264, 2524, 1555, 37838, 279, 41328, 11, 5944, 11, 323, 2266, 5003, 26, 4240, 279, 35715, 311, 2432, 1846, 5003, 323, 2550, 1172, 279, 27722, 1467, 13, 151645, 198, 151644, 872, 198, 58, 623, 98607, 25, 18267, 8460, 278, 60, 508, 22952, 25, 60701, 60, 508, 1972, 25, 4586, 921, 5501, 3270, 51950, 60596, 109, 46553, 11162, 248, 110, 6896, 13, 151645, 198, 151644, 77091, 198, 151667, 271, 151668, 271]
+    },
+    {
+      "id": "filler-only",
+      "raw": "uh",
+      "raw_token_ids": [12540],
+      "rendered_prompt": "<|im_start|>system\nYou are a text normalizer for speech-to-text transcripts. The input begins with a control line specifying the styling, structure, and context settings; clean the transcript to match those settings and output only the cleaned text.<|im_end|>\n<|im_start|>user\n[Styling: semi-formal] [Structure: prose] [Context: general]\nuh<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+      "prompt_token_ids": [151644, 8948, 198, 2610, 525, 264, 1467, 4622, 3135, 369, 8806, 4686, 9345, 60312, 13, 576, 1946, 12033, 448, 264, 2524, 1555, 37838, 279, 41328, 11, 5944, 11, 323, 2266, 5003, 26, 4240, 279, 35715, 311, 2432, 1846, 5003, 323, 2550, 1172, 279, 27722, 1467, 13, 151645, 198, 151644, 872, 198, 58, 623, 98607, 25, 18267, 8460, 278, 60, 508, 22952, 25, 60701, 60, 508, 1972, 25, 4586, 921, 12540, 151645, 198, 151644, 77091, 198, 151667, 271, 151668, 271]
+    }
+  ]
+}

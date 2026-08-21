@@ -2,7 +2,7 @@
 
 Date: 2026-08-22
 
-Status: Stage 1 LEAP tuning complete and selected in production; Stage 2 direct llama.cpp pending
+Status: Stage 1 selected in production; Stage 2 host implementation complete, device parity pending
 
 ## Objective
 
@@ -197,20 +197,20 @@ holding the S1 Q4_K_M bytes constant.
 
 ### 2A. Isolated native benchmark app
 
-- [ ] Create a minimal separate Android benchmark module/APK with no LEAP, Moonshine, or Parakeet
+- [x] Create a minimal separate Android benchmark module/APK with no LEAP, Moonshine, or Parakeet
   native dependencies. This is the first same-GGUF probe and avoids duplicate `libllama.so`,
   `libggml*.so`, and exported ggml symbols in one process.
-- [ ] Pin llama.cpp commit `ece963f41` / build 10450 for the first comparison because it is the
+- [x] Pin llama.cpp commit `ece963f41` / build 10450 for the first comparison because it is the
   runtime already used by the validated Mac S1 Q4 reference. Pin Android NDK `28.0.13004108`,
   CMake `3.31.6`, compiler flags, source SHA-256, native-library hashes, and APK hash. Treat a newer
   llama.cpp revision as a separate later arm.
-- [ ] Build ARM64 Release with runtime-selected CPU variants, native/OpenMP/llamafile disabled,
+- [x] Build ARM64 Release with runtime-selected CPU variants, native/OpenMP/llamafile disabled,
   and tests/examples/server omitted. Record the exact resolved flags rather than relying on
   defaults.
 - [ ] Load the exact reference GGUF and reproduce the exact templated token IDs, prompt-token
   counts, output caps, greedy sampler, stop handling, and raw output.
 - [ ] Record authoritative native prompt-eval and decode timings independently of Kotlin/JNI.
-- [ ] Use a persistent native model/context handle, clear KV state between requests, and return
+- [x] Use a persistent native model/context handle, clear KV state between requests, and return
   prompt/completion counts, first-token/end timestamps, EOG-versus-cap finish, native timings, and
   selected backend/system information.
 
@@ -329,7 +329,7 @@ checkpoint and nominal four-bit deployment precision.
 | 1 | LEAP API/settings audit | complete | supported-option inventory captured above |
 | 2 | LEAP context/cache/CPU host implementation | complete | tests and debug-only parameters |
 | 3 | LEAP Pixel A/B | complete | `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md` |
-| 4 | Direct llama.cpp standalone same-GGUF parity | pending | pinned build manifest and native timings |
+| 4 | Direct llama.cpp standalone same-GGUF parity | host build complete; device parity pending | pinned build manifest complete; Android prompt/output/timing evidence pending |
 | 5 | Direct llama.cpp Android CPU A/B | pending | same-artifact comparison |
 | 6 | Direct GPU feasibility probe | pending after CPU parity | supported/no-go evidence |
 | 7 | LiteRT-LM S1 BF16 conversion | pending | `.litertlm` hash and conversion manifest |
@@ -337,6 +337,6 @@ checkpoint and nominal four-bit deployment precision.
 | 9 | LiteRT Pixel CPU/GPU A/B | pending owner-approved device run | performance/power report |
 | 10 | Runtime selection and production swap, if earned | pending | decision, tests, rollback path |
 
-The immediate executable task is Order 4: build the isolated, pinned direct llama.cpp same-GGUF
-host/Android parity module. A later Pixel install or benchmark still requires the owner's immediate
-device-session approval.
+The immediate executable task is Order 4's owner-approved device smoke: verify the isolated pinned
+APK's exact prompt/token/cap/output contract and selected ARM backend before performance tuning. A
+Pixel install or benchmark still requires the owner's immediate device-session approval.

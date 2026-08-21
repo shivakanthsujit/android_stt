@@ -53,9 +53,15 @@ Do not add lower-bit GGUF variants.
   10.50%, and inference compute energy by 10.09% with 60/60 raw parity. Cache reused zero tokens.
   Production now uses the selected supported LEAP settings. Evidence:
   `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`.
-- [ ] Build a separate collision-free Android benchmark module pinned first to llama.cpp
-  `ece963f41` / build 10450 and run the exact same GGUF through a direct CPU path. Add an
-  experimental Pixel Mali Vulkan arm only after CPU prompt/token/output parity.
+- [x] Build a separate collision-free Android benchmark module pinned to llama.cpp `ece963f41` /
+  build 10450, NDK `28.0.13004108`, and CMake `3.31.6`. The 18,700,783-byte host-verified Release
+  APK contains only the isolated llama/ggml CPU stack and has SHA-256
+  `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6`. Evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`.
+- [ ] With fresh owner approval, run the direct APK's device smoke and exact prompt/token/cap/raw
+  parity gate, then tune its CPU path on an explicit non-evaluation performance corpus. Freeze the
+  CPU setting before declared personal-v3/regression parity. Add an experimental Pixel Mali Vulkan
+  arm only after CPU prompt/token/output parity.
 - [ ] On the Linux RTX A6000 host, convert the pinned S1 BF16 checkpoint—not the GGUF or generic
   Qwen—to LiteRT-LM with a metadata-verified blockwise-32 INT4/FP32 recipe. Export context 4,096
   first; explicitly exclude channelwise, block-128, sub-four-bit, and smaller-GGUF arms.

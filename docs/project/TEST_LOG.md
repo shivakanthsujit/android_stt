@@ -660,3 +660,26 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   focused Python tests, Python compilation, shell syntax, and `git diff --check`. Final host APK:
   88,046,229 bytes, SHA-256
   `6aaa8adeeeb4a9fdafc398dc36c28e5cb64b4c8917256a16d9953246e943195c`; not installed.
+
+## 2026-08-22 — direct llama.cpp Android host readiness
+
+- No ADB command, app install, or Pixel inference was run.
+- `:llamacpp-benchmark:testReleaseUnitTest :llamacpp-benchmark:assembleRelease` passed with 13/13
+  unit tests. The build is isolated to ARM64 application ID `dev.localflow.llamacppbenchmark`.
+- Twenty-one Python tests passed across exact source preparation, transcript-only case projection,
+  strict result scoring, reproducible build evidence, and future Pixel-runner preflight. Shell
+  syntax, Python compilation, and `git diff --check` passed.
+- APK compression integrity, 16 KiB alignment, and v2 signature checks passed. The stripped JNI
+  DSO exports exactly six JNI entry points and depends on the isolated llama/ggml stack plus Android
+  system libraries. All seven pinned Android ARM CPU variant DSOs are present; no LEAP, Moonshine,
+  or Parakeet native library is packaged.
+- Pinned source: llama.cpp commit `ece963f41b0b02d7a0d61436ae365762c073a4c8`, tree
+  `f59cbdf04f233655507cc98ee9f704b71bfd1403`, build `b10450`; NDK `28.0.13004108`; CMake package
+  `3.31.6`, binary `3.31.6-g38307f9`.
+- Release APK: 18,700,783 bytes, SHA-256
+  `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6`. Stripped JNI DSO:
+  131,400 bytes, SHA-256
+  `2d599c96e1caef721ba9086252d486ac5c2dec184d6f15e403fae5ae1ad8c390`. Ignored build manifest:
+  SHA-256 `e13e6ed271e96a8ca7a249fbd47a8cee40735ab70f37f68c3575d41fe618d5bc`.
+- Android prompt-token/output parity and performance remain unmeasured. Full host evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`.

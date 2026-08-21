@@ -423,6 +423,16 @@ Last updated: 2026-08-22
     zero prompt tokens and regressed the complete profile. Retain the 2,410-token worst-case pass
     calculation and runtime capacity evidence; any prompt, template, cap, or 1,000-token chunk-policy
     change must revalidate the 150-token margin before keeping context 2,560.
+63. Implement the first direct llama.cpp comparison as a standalone application ID
+    `dev.localflow.llamacppbenchmark` pinned to commit `ece963f41` / build 10450, NDK
+    `28.0.13004108`, and CMake `3.31.6`. Ordinary dynamic llama/ggml SONAMEs and seven scored ARM
+    CPU variant DSOs are acceptable only inside this collision-isolated APK; they must not be
+    added beside LEAP or Parakeet in the production process. Resolve unextracted Android APK DSOs
+    by soname through the Android linker, register only the highest supported CPU variant, and
+    record its exact name. Keep KleidiAI and GPU backends off in the first arm so no unpinned
+    external source or different accelerator is silently mixed into the same-runtime CPU test.
+    This is a build-boundary decision, not a runtime-selection decision; LEAP remains production
+    until device parity and complete matched performance evidence justify replacement.
 
 ## Hosted API benchmark
 

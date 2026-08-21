@@ -2,6 +2,7 @@
 .idea/
 local.properties
 **/build/
+**/.cxx/
 captures/
 .DS_Store
 *.iml
@@ -22,6 +23,7 @@ training/models/
 .cache/fluidvoice-reverse/
 .cache/fluidvoice-source-*/
 .cache/fluidaudio-source-*/
+.cache/llama.cpp-*/
 app/src/debug/jniLibs/arm64-v8a/*.so
 wandb/
 

@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "LocalFlow"
 include(":app")
-
+include(":llamacpp-benchmark")

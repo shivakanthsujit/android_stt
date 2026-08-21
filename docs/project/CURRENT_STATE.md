@@ -139,8 +139,15 @@ Last updated: 2026-08-22
   uses 55.47% more median process CPU and 13.76% more average inference compute power, but finishes
   sooner; thermal status 1 is delayed rather than eliminated. The 32/64 MiB cache arms reused zero
   tokens and regressed latency, CPU, memory, and thermal behavior. Full evidence is in
-  `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`. The next task is the isolated,
-  pinned direct llama.cpp same-GGUF host/Android parity module; no LiteRT conversion has started.
+  `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`. Stage 2's isolated direct
+  llama.cpp host implementation is now complete at pinned commit `ece963f41` / build 10450 with
+  NDK `28.0.13004108`, CMake `3.31.6`, exact prompt/token/cap evidence, a transcript-only runner,
+  and a reproducible 18,700,783-byte Release APK at SHA-256
+  `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6`.
+  The APK was not installed. Android prompt/token/raw-output parity and performance remain pending
+  fresh device approval, so direct llama.cpp has not earned a production comparison or swap. Full
+  host evidence: `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`.
+  No LiteRT conversion has started.
 - The owner-local FluidVoice 1.6.9 pipeline is now inventoried as a Mac-only reference. Its active
   path is Parakeet TDT v2 Core ML → app filler/dictionary preprocessing → Fluid-1 with bundled
   prompt/template → thinking-markup and app formatting/continuous-dictation postprocessing. The
