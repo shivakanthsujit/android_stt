@@ -27,6 +27,63 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
+internal const val CLEANUP_BENCHMARK_PHASE_WARMUP = "warmup"
+internal const val CLEANUP_BENCHMARK_PHASE_MEASURED = "measured"
+
+internal data class CleanupBenchmarkJobOrderEntry(
+    val caseIndex: Int,
+    val phase: String,
+    val repeatIndex: Int,
+)
+
+internal fun buildCleanupBenchmarkJobOrder(
+    caseCount: Int,
+    warmupRuns: Int,
+    measuredRepeats: Int,
+): List<CleanupBenchmarkJobOrderEntry> {
+    require(caseCount > 0) { "caseCount must be positive" }
+    require(warmupRuns >= 0) { "warmupRuns must be non-negative" }
+    require(measuredRepeats > 0) { "measuredRepeats must be positive" }
+
+    val measuredCaseOrder = if (caseCount > 1) {
+        (1 until caseCount).toList() + 0
+    } else {
+        listOf(0)
+    }
+    return buildList {
+        repeat(warmupRuns) { repeatIndex ->
+            add(
+                CleanupBenchmarkJobOrderEntry(
+                    caseIndex = 0,
+                    phase = CLEANUP_BENCHMARK_PHASE_WARMUP,
+                    repeatIndex = repeatIndex,
+                ),
+            )
+        }
+        repeat(measuredRepeats) { repeatIndex ->
+            measuredCaseOrder.forEach { caseIndex ->
+                add(
+                    CleanupBenchmarkJobOrderEntry(
+                        caseIndex = caseIndex,
+                        phase = CLEANUP_BENCHMARK_PHASE_MEASURED,
+                        repeatIndex = repeatIndex,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+internal fun requireCleanupBenchmarkCacheSeparation(
+    caseCount: Int,
+    cacheMaxEntries: Int,
+) {
+    require(caseCount > cacheMaxEntries) {
+        "Cache benchmarks require more unique cases than cache entries: " +
+            "cases=$caseCount, entries=$cacheMaxEntries"
+    }
+}
+
 /** Debug-only direct-text cleanup benchmark. Expected outputs never enter model context. */
 class CleanupBenchmarkActivity : Activity() {
     private lateinit var status: TextView
@@ -47,6 +104,7 @@ class CleanupBenchmarkActivity : Activity() {
             context = applicationContext,
             modelFile = File(filesDir, MODELS_DIRECTORY).resolve(modelFileName),
             expectedModelSha256 = modelSha256,
+            requestedConfig = s1MiniBenchmarkConfig,
         )
     }
 
@@ -59,6 +117,7 @@ class CleanupBenchmarkActivity : Activity() {
     private lateinit var finalResult: File
     private var measuredRepeats = DEFAULT_MEASURED_REPEATS
     private var warmupRuns = DEFAULT_WARMUP_RUNS
+    private lateinit var s1MiniBenchmarkConfig: S1MiniPixelBenchmarkEngine.Config
     private var modelLoadMs = 0L
     private var writer: BufferedWriter? = null
     private var benchmarkTraceActive = false
@@ -112,6 +171,20 @@ class CleanupBenchmarkActivity : Activity() {
         warmupRuns = intent.getIntExtra(EXTRA_WARMUP_RUNS, DEFAULT_WARMUP_RUNS)
         require(measuredRepeats in 1..MAX_REPEATS) { "measured_repeats is out of range" }
         require(warmupRuns in 0..MAX_REPEATS) { "warmup_runs is out of range" }
+        s1MiniBenchmarkConfig = if (engineProfile == ENGINE_PROFILE_S1_MINI) {
+            val requestedCpuThreads = intent.getIntExtra(EXTRA_LEAP_CPU_THREADS, 0)
+            val requestedCacheMemoryMb = intent.getIntExtra(EXTRA_LEAP_CACHE_MEMORY_MB, 0)
+            S1MiniPixelBenchmarkEngine.Config(
+                contextTokens = intent.getIntExtra(
+                    EXTRA_LEAP_CONTEXT_TOKENS,
+                    S1MiniPixelBenchmarkEngine.MODEL_CONTEXT_TOKENS,
+                ),
+                cpuThreads = requestedCpuThreads.takeUnless { it == 0 },
+                cacheMemoryMb = requestedCacheMemoryMb.takeUnless { it == 0 },
+            )
+        } else {
+            S1MiniPixelBenchmarkEngine.Config()
+        }
         partialResult = childFile("results-$runId.jsonl.partial")
         finalResult = childFile("results-$runId.jsonl")
         require(!partialResult.exists() && !finalResult.exists()) {
@@ -143,17 +216,24 @@ class CleanupBenchmarkActivity : Activity() {
     }
 
     private fun startBenchmark(cases: List<CleanupCase>) {
+        if (s1MiniBenchmarkConfig.cacheEnabled) {
+            requireCleanupBenchmarkCacheSeparation(
+                caseCount = cases.size,
+                cacheMaxEntries = s1MiniBenchmarkConfig.cacheMaxEntries,
+            )
+        }
         Trace.beginAsyncSection(TRACE_SECTION_NAME, TRACE_COOKIE)
         benchmarkTraceActive = true
-        val jobs = buildList {
-            repeat(warmupRuns) { repeatIndex ->
-                add(CleanupJob(cases.first(), PHASE_WARMUP, repeatIndex))
-            }
-            cases.forEach { case ->
-                repeat(measuredRepeats) { repeatIndex ->
-                    add(CleanupJob(case, PHASE_MEASURED, repeatIndex))
-                }
-            }
+        val jobs = buildCleanupBenchmarkJobOrder(
+            caseCount = cases.size,
+            warmupRuns = warmupRuns,
+            measuredRepeats = measuredRepeats,
+        ).map { entry ->
+            CleanupJob(
+                case = cases[entry.caseIndex],
+                phase = entry.phase,
+                repeatIndex = entry.repeatIndex,
+            )
         }
         runJob(jobs, 0)
     }
@@ -167,17 +247,18 @@ class CleanupBenchmarkActivity : Activity() {
         status.text = "${job.phase}: ${job.case.caseId} (${index + 1}/${jobs.size})"
         uiScope.launch {
             runCatching {
-                val traceInference = job.phase == PHASE_MEASURED
+                val traceInference = job.phase == CLEANUP_BENCHMARK_PHASE_MEASURED
                 if (traceInference) Trace.beginAsyncSection(TRACE_INFERENCE_SECTION_NAME, index)
                 val cpuStartedAtMs = Process.getElapsedCpuTime()
-                val result = try {
+                val benchmarkResult = try {
                     clean(job.case)
                 } finally {
                     if (traceInference) Trace.endAsyncSection(TRACE_INFERENCE_SECTION_NAME, index)
                 }
+                val result = benchmarkResult.cleanupResult
                 val processCpuMs =
                     (Process.getElapsedCpuTime() - cpuStartedAtMs).coerceAtLeast(0L)
-                JSONObject()
+                val record = JSONObject()
                     .put("schema_version", SCHEMA_VERSION)
                     .put("run_id", runId)
                     .put("phase", job.phase)
@@ -210,6 +291,29 @@ class CleanupBenchmarkActivity : Activity() {
                         getSystemService(PowerManager::class.java).currentThermalStatus,
                     )
                     .put("created_at_utc", Instant.now().toString())
+                benchmarkResult.s1Metadata?.let { metadata ->
+                    val config = metadata.config
+                    record
+                        .put("context_size", config.contextTokens)
+                        .put("cpu_threads_mode", config.cpuThreadsMode)
+                        .put("cpu_threads", config.cpuThreads ?: JSONObject.NULL)
+                        .put("resolved_cpu_threads", metadata.resolvedCpuThreads)
+                        .put("cache_enabled", config.cacheEnabled)
+                        .put("cache_max_memory_bytes", config.cacheMaxMemoryBytes)
+                        .put("cache_max_entries", config.cacheMaxEntries)
+                        .put("cache_disk_disabled", config.cacheDiskDisabled)
+                        .put(
+                            "cache_requested_max_disk_entries",
+                            config.cacheMaxDiskEntries,
+                        )
+                        .put("mmap_enabled", true)
+                        .put("fixed_prompt_tokens", metadata.fixedPromptTokens)
+                        .put(
+                            "cached_prompt_tokens",
+                            metadata.cachedPromptTokens ?: JSONObject.NULL,
+                        )
+                }
+                record
             }.onSuccess { record ->
                 ioWorker.execute {
                     runCatching {
@@ -309,17 +413,32 @@ class CleanupBenchmarkActivity : Activity() {
             else -> error("Unsupported engine profile: $engineProfile")
         }
 
-    private suspend fun clean(case: CleanupCase): dev.localflow.dictation.cleanup.CleanupResult =
+    private suspend fun clean(case: CleanupCase): BenchmarkCleanupResult =
         when (engineProfile) {
             ENGINE_PROFILE_SOTTO ->
-                sottoCleanupLazy.value.clean(case.rawText, CleanupPromptVariant.SOTTO_NATIVE)
-            ENGINE_PROFILE_S1_MINI ->
-                s1MiniCleanupLazy.value.clean(
+                BenchmarkCleanupResult(
+                    cleanupResult = sottoCleanupLazy.value.clean(
+                        case.rawText,
+                        CleanupPromptVariant.SOTTO_NATIVE,
+                    ),
+                )
+            ENGINE_PROFILE_S1_MINI -> {
+                val result = s1MiniCleanupLazy.value.clean(
                     text = case.rawText,
                     maxOutputTokens = requireNotNull(case.maxOutputTokens) {
                         "S1-mini case ${case.caseId} is missing max_new_tokens"
                     },
                 )
+                BenchmarkCleanupResult(
+                    cleanupResult = result.cleanupResult,
+                    s1Metadata = S1BenchmarkMetadata(
+                        config = result.requestedConfig,
+                        fixedPromptTokens = result.fixedPromptTokens,
+                        cachedPromptTokens = result.cachedPromptTokens,
+                        resolvedCpuThreads = result.resolvedCpuThreads,
+                    ),
+                )
+            }
             else -> error("Unsupported engine profile: $engineProfile")
         }
 
@@ -348,6 +467,18 @@ class CleanupBenchmarkActivity : Activity() {
         val repeatIndex: Int,
     )
 
+    private data class BenchmarkCleanupResult(
+        val cleanupResult: dev.localflow.dictation.cleanup.CleanupResult,
+        val s1Metadata: S1BenchmarkMetadata? = null,
+    )
+
+    private data class S1BenchmarkMetadata(
+        val config: S1MiniPixelBenchmarkEngine.Config,
+        val fixedPromptTokens: Int,
+        val cachedPromptTokens: Long?,
+        val resolvedCpuThreads: Int,
+    )
+
     private companion object {
         const val EXTRA_RUN_ID = "run_id"
         const val EXTRA_MODEL_FILE_NAME = "model_file_name"
@@ -355,6 +486,9 @@ class CleanupBenchmarkActivity : Activity() {
         const val EXTRA_ENGINE_PROFILE = "engine_profile"
         const val EXTRA_MEASURED_REPEATS = "measured_repeats"
         const val EXTRA_WARMUP_RUNS = "warmup_runs"
+        const val EXTRA_LEAP_CPU_THREADS = "leap_cpu_threads"
+        const val EXTRA_LEAP_CONTEXT_TOKENS = "leap_context_tokens"
+        const val EXTRA_LEAP_CACHE_MEMORY_MB = "leap_cache_memory_mb"
         const val BENCHMARK_DIRECTORY = "cleanup-eval"
         const val MODELS_DIRECTORY = "models"
         const val CASES_FILE = "cases.jsonl"
@@ -364,8 +498,6 @@ class CleanupBenchmarkActivity : Activity() {
         const val ENGINE_PROFILE_SOTTO = "sotto-native"
         const val ENGINE_PROFILE_S1_MINI = "s1-mini-v1-publisher"
         const val SCHEMA_VERSION = 1
-        const val PHASE_WARMUP = "warmup"
-        const val PHASE_MEASURED = "measured"
         const val TRACE_SECTION_NAME = "localflow_cleanup_benchmark"
         const val TRACE_INFERENCE_SECTION_NAME = "localflow_cleanup_inference"
         const val TRACE_COOKIE = 1

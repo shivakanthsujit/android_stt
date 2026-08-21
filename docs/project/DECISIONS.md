@@ -1,6 +1,6 @@
 # Decisions
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 ## Product and architecture
 
@@ -404,6 +404,16 @@ Last updated: 2026-08-21
     endings, fall back to whitespace only for an overlong unpunctuated span, run passes sequentially
     with the exact trained prompt/template/greedy/per-input-cap contract, and rejoin them in source
     order. Retain the personal-use blank/capped fallback policy independently for each pass.
+61. Optimize S1-mini Pixel inference in three controlled stages: supported LEAP settings with the
+    exact selected Q4_K_M; a collision-isolated direct llama.cpp Android comparison using the same
+    GGUF; and an exact-checkpoint BF16-to-LiteRT-LM blockwise-32 INT4 conversion measured on Pixel
+    CPU/GPU. Do not test lower-bit GGUF, block-128, or channelwise conversion variants. Preserve the
+    exact tokenizer, prompt/control/template, empty thinking prefix, greedy decoding, per-input cap,
+    chunking, raw-output evidence, and personal-use insertion policy. Require host contract and raw
+    semantic-difference review before device speed can influence selection. Pixel 7 Tensor G2 NPU
+    is outside the plan without official reproducible support. Use a separate direct llama.cpp
+    benchmark module first because LEAP already packages generic llama/ggml libraries and Parakeet
+    owns another statically isolated ggml; never introduce colliding native SONAMEs or symbols.
 
 ## Hosted API benchmark
 

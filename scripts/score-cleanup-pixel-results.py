@@ -13,6 +13,27 @@ from collections import defaultdict
 from pathlib import Path
 
 
+RUNTIME_CONFIGURATION_FIELDS = (
+    "context_size",
+    "cpu_threads_mode",
+    "cpu_threads",
+    "resolved_cpu_threads",
+    "cache_enabled",
+    "cache_max_memory_bytes",
+    "cache_max_entries",
+    "cache_disk_disabled",
+    "cache_requested_max_disk_entries",
+    "mmap_enabled",
+    "fixed_prompt_tokens",
+)
+
+APPROVED_CONTEXT_SIZES = {4_096, 3_072, 2_560}
+APPROVED_CPU_THREADS = {2, 3, 4}
+APPROVED_CACHE_MEMORY_BYTES = {32 * 1_048_576, 64 * 1_048_576}
+FIXED_PROMPT_TOKENS = 78
+CACHE_MAX_ENTRIES = 4
+
+
 def read_jsonl(path: Path) -> list[dict]:
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
     if not rows:
@@ -45,6 +66,117 @@ def timing(values: list[float]) -> dict[str, float]:
     }
 
 
+def _require_nonnegative_integer(value: object, field: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"runtime configuration has invalid {field}")
+    return value
+
+
+def runtime_configuration(rows: list[dict]) -> dict | None:
+    has_configuration = [
+        any(field in row for field in RUNTIME_CONFIGURATION_FIELDS) for row in rows
+    ]
+    if not any(has_configuration):
+        return None
+    if not all(has_configuration):
+        raise ValueError("measured rows mix legacy and runtime configuration metadata")
+
+    configurations: list[dict] = []
+    for row in rows:
+        missing = [field for field in RUNTIME_CONFIGURATION_FIELDS if field not in row]
+        if missing:
+            raise ValueError(
+                "measured row has incomplete runtime configuration metadata: "
+                + ", ".join(missing)
+            )
+        configuration = {field: row[field] for field in RUNTIME_CONFIGURATION_FIELDS}
+
+        if configuration["cpu_threads_mode"] not in ("implicit", "explicit"):
+            raise ValueError("runtime configuration has invalid cpu_threads_mode")
+        cpu_threads = configuration["cpu_threads"]
+        resolved_cpu_threads = configuration["resolved_cpu_threads"]
+        _require_nonnegative_integer(resolved_cpu_threads, "resolved_cpu_threads")
+        if resolved_cpu_threads not in APPROVED_CPU_THREADS:
+            raise ValueError("runtime configuration has unapproved resolved_cpu_threads")
+        if configuration["cpu_threads_mode"] == "implicit":
+            if cpu_threads is not None:
+                raise ValueError("implicit cpu_threads_mode requires null cpu_threads")
+        else:
+            _require_nonnegative_integer(cpu_threads, "cpu_threads")
+            if cpu_threads not in APPROVED_CPU_THREADS:
+                raise ValueError("explicit cpu_threads_mode has unapproved cpu_threads")
+            if resolved_cpu_threads != cpu_threads:
+                raise ValueError(
+                    "explicit cpu_threads_mode requires resolved_cpu_threads to match cpu_threads"
+                )
+
+        for field in (
+            "context_size",
+            "cache_max_memory_bytes",
+            "cache_max_entries",
+            "cache_requested_max_disk_entries",
+            "fixed_prompt_tokens",
+        ):
+            _require_nonnegative_integer(configuration[field], field)
+        for field in ("cache_enabled", "cache_disk_disabled", "mmap_enabled"):
+            if not isinstance(configuration[field], bool):
+                raise ValueError(f"runtime configuration has invalid {field}")
+        if configuration["context_size"] not in APPROVED_CONTEXT_SIZES:
+            raise ValueError("runtime configuration has unapproved context_size")
+        if configuration["fixed_prompt_tokens"] != FIXED_PROMPT_TOKENS:
+            raise ValueError("runtime configuration has unexpected fixed_prompt_tokens")
+        if configuration["mmap_enabled"] is not True:
+            raise ValueError("runtime configuration requires mmap_enabled=true")
+        if configuration["cache_disk_disabled"] is not True:
+            raise ValueError("runtime configuration requires cache_disk_disabled=true")
+        if configuration["cache_requested_max_disk_entries"] != 0:
+            raise ValueError(
+                "runtime configuration requires cache_requested_max_disk_entries=0"
+            )
+        if configuration["cache_enabled"]:
+            if configuration["cache_max_memory_bytes"] not in APPROVED_CACHE_MEMORY_BYTES:
+                raise ValueError(
+                    "enabled cache has unapproved cache_max_memory_bytes"
+                )
+            if configuration["cache_max_entries"] != CACHE_MAX_ENTRIES:
+                raise ValueError(
+                    f"enabled cache requires cache_max_entries={CACHE_MAX_ENTRIES}"
+                )
+        elif (
+            configuration["cache_max_memory_bytes"] != 0
+            or configuration["cache_max_entries"] != 0
+        ):
+            raise ValueError("disabled cache requires zero memory bytes and entries")
+        configurations.append(configuration)
+
+    first = configurations[0]
+    if any(configuration != first for configuration in configurations[1:]):
+        raise ValueError("measured rows contain mixed runtime configurations")
+    return first
+
+
+def cached_prompt_token_summary(rows: list[dict]) -> dict | None:
+    present = ["cached_prompt_tokens" in row for row in rows]
+    if not any(present):
+        return None
+    if not all(present):
+        raise ValueError("measured rows have incomplete cached_prompt_tokens metadata")
+    values = [
+        _require_nonnegative_integer(value, "cached_prompt_tokens")
+        for row in rows
+        if (value := row["cached_prompt_tokens"]) is not None
+    ]
+    if not values:
+        return None
+    return {
+        "count": len(values),
+        "min": min(values),
+        "median": statistics.median(values),
+        "max": max(values),
+        "total": sum(values),
+    }
+
+
 def load_cases(path: Path) -> dict[str, dict]:
     cases: dict[str, dict] = {}
     for row in read_jsonl(path):
@@ -70,6 +202,8 @@ def summarize(result_path: Path, cases_path: Path) -> dict:
     rows = [row for row in all_rows if row.get("phase") == "measured"]
     if not rows:
         raise ValueError("result has no measured rows")
+    runtime_config = runtime_configuration(rows)
+    cached_prompt_tokens = cached_prompt_token_summary(rows)
     grouped: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
         case_id = row.get("case_id")
@@ -127,6 +261,11 @@ def summarize(result_path: Path, cases_path: Path) -> dict:
         "model_file": rows[0].get("model_file"),
         "model_sha256": rows[0].get("model_sha256"),
         "model_load_ms": rows[0].get("model_load_ms"),
+        **{
+            field: runtime_config[field] if runtime_config is not None else None
+            for field in RUNTIME_CONFIGURATION_FIELDS
+        },
+        "cached_prompt_tokens": cached_prompt_tokens,
         "raw_strict_exact": strict_exact,
         "raw_normalized_exact": normalized_exact,
         "guarded_strict_exact": guarded_strict_exact,

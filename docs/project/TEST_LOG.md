@@ -614,3 +614,24 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   multi-pass cleanup remain an owner-run device check. The installed streaming APK is the preceding
   88,046,129-byte build at SHA-256
   `015a408704932b49f1735fa31c8e9a1379fbd2ad9aa1da77555757034a910159`.
+
+## 2026-08-22 — S1-mini LEAP optimization host implementation
+
+- No Pixel or ADB command was run.
+- `. ./scripts/android-env.sh && ./gradlew --offline testDebugUnitTest` passed.
+- `. ./scripts/android-env.sh && ./gradlew --offline lintDebug testDebugUnitTest assembleDebug`
+  passed after the final source change: 55 actionable tasks, 17 executed and 38 up-to-date.
+- Focused Python/shell verification passed 14/14 tests across runner validation, result-metadata
+  scoring, legacy-result compatibility, mixed-configuration rejection, and publisher output-cap
+  preparation. `bash -n scripts/run-s1-mini-pixel-benchmark.sh` and `git diff --check` pass.
+- The debug LEAP matrix is bounded to implicit/2/3/4 threads, 4,096/3,072/2,560 context, and
+  cache-off/four-entry 32/64 MiB memory-only arms. Context 2,048 and all other values fail before
+  model/device work. Generation asserts `prompt_tokens + requested_max_output_tokens <= context`.
+- Cache metadata records disk disabled, zero requested disk entries, four memory entries, requested
+  memory bytes, the SDK-resolved CPU thread count, and LEAP-reported cached prompt tokens. Each call
+  retains a fresh conversation in a dedicated cache namespace. Job-order tests prove measured work
+  is repeat-major and the warmed prompt is not immediately repeated.
+- The fixed prompt is asserted at 78 tokens. The worst permitted one-pass budget is 2,410 tokens,
+  so 3,072 and 2,560 are safe candidates while 2,048 is not.
+- Host debug APK: 88,046,129 bytes, SHA-256
+  `bbf420c874d3e4b13ee7a44622c6f2f8d65a02a10f01514dde1e78dd66a348b7`. It was not installed.

@@ -1,6 +1,6 @@
 # Next steps
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 ## Completed: S1-mini v1 selection and preferred joined integration
 
@@ -30,6 +30,38 @@ Last updated: 2026-08-21
 
 Full evidence: `docs/evaluation/results/2026-08-21-s1-mini-v1-local-performance.md` and
 `docs/evaluation/results/2026-08-21-s1-mini-v1-pixel.md`.
+
+## Active: S1-mini Pixel inference optimization
+
+Follow the controlled sequence in
+`docs/research/S1_MINI_PIXEL_INFERENCE_OPTIMIZATION_PLAN_2026-08-22.md`. Keep the official S1
+Q4_K_M bytes and exact publisher contract fixed while isolating each source of performance change.
+Do not add lower-bit GGUF variants.
+
+- [x] Audit LEAP 0.10.9's public controls. It exposes two-to-four-thread candidates, context size,
+  mmap, memory/disk cache policy, and cached-prompt statistics, but not batch/ubatch. The fixed
+  prompt is 78 tokens and the maximum permitted pass needs 2,410 tokens, so 3,072 and 2,560 are
+  safe context candidates while 2,048 is not.
+- [x] Add debug-only LEAP parameters and result metadata. The host implementation accepts only
+  explicit CPU threads 2/3/4 or implicit, contexts 4,096/3,072/2,560, and cache-off or memory-only
+  four-entry 32/64 MiB arms. It keeps mmap and fresh conversations, asserts prompt+cap context
+  capacity, records cached tokens plus requested/resolved configuration, gives every arm a unique
+  run ID, and keeps the scorer backward compatible while rejecting mixed or out-of-matrix
+  configurations. Measured repeats are interleaved instead of placing identical prompts adjacent.
+- [ ] After owner approval for a device session, run the controlled LEAP Pixel matrix and select or
+  reject its best configuration from output parity, TTFT/total, PSS, CPU/energy, and thermal data.
+  Run threads first at 4,096/cache-off, context second at the winning thread count, and cache last
+  at the winning thread/context.
+- [ ] Build a separate collision-free Android benchmark module pinned first to llama.cpp
+  `ece963f41` / build 10450 and run the exact same GGUF through a direct CPU path. Add an
+  experimental Pixel Mali Vulkan arm only after CPU prompt/token/output parity.
+- [ ] On the Linux RTX A6000 host, convert the pinned S1 BF16 checkpoint—not the GGUF or generic
+  Qwen—to LiteRT-LM with a metadata-verified blockwise-32 INT4/FP32 recipe. Export context 4,096
+  first; explicitly exclude channelwise, block-128, sub-four-bit, and smaller-GGUF arms.
+- [ ] Pass host prompt/token/template/cap and raw semantic-difference review before measuring the
+  exact LiteRT artifact on Pixel CPU/GPU. Do not add a Tensor G2 NPU arm without official support.
+- [ ] Select a replacement only after sustained same-method latency, p90, memory, energy, thermal,
+  deterministic-output, and maintenance-cost comparison against the LEAP reference.
 
 ## Completed: streaming STT and long-transcript cleanup integration
 

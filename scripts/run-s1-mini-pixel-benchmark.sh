@@ -10,10 +10,42 @@ measured_repeats="${S1_MINI_PIXEL_REPEATS:-3}"
 warmup_runs="${S1_MINI_PIXEL_WARMUPS:-1}"
 timeout_seconds="${S1_MINI_PIXEL_TIMEOUT_SECONDS:-1800}"
 power_trace="${S1_MINI_PIXEL_POWER_TRACE:-1}"
+leap_cpu_threads="${S1_MINI_LEAP_CPU_THREADS:-implicit}"
+leap_context_tokens="${S1_MINI_LEAP_CONTEXT_SIZE:-4096}"
+leap_cache_memory_mb="${S1_MINI_LEAP_CACHE_MB:-0}"
 expected_model_sha="3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634"
 
 cd "$repo_dir"
 . "$repo_dir/scripts/android-env.sh"
+
+case "$leap_cpu_threads" in
+    implicit)
+        leap_cpu_threads_extra=0
+        ;;
+    2|3|4)
+        leap_cpu_threads_extra="$leap_cpu_threads"
+        ;;
+    *)
+        echo "S1_MINI_LEAP_CPU_THREADS must be implicit, 2, 3, or 4" >&2
+        exit 1
+        ;;
+esac
+case "$leap_context_tokens" in
+    4096|3072|2560)
+        ;;
+    *)
+        echo "S1_MINI_LEAP_CONTEXT_SIZE must be 4096, 3072, or 2560" >&2
+        exit 1
+        ;;
+esac
+case "$leap_cache_memory_mb" in
+    0|32|64)
+        ;;
+    *)
+        echo "S1_MINI_LEAP_CACHE_MB must be 0, 32, or 64" >&2
+        exit 1
+        ;;
+esac
 
 if [[ ! -f "$model_file" || "$(basename "$model_file")" != "s1-mini-q4_k_m.gguf" ]]; then
     echo "Missing pinned S1-mini Q4_K_M model: $model_file" >&2
@@ -46,7 +78,8 @@ if [[ "$actual_model_sha" != "$expected_model_sha" ]]; then
     exit 1
 fi
 
-run_id="$(date -u +%Y%m%dT%H%M%SZ)-s1-mini-pixel"
+leap_config_suffix="leap-t${leap_cpu_threads}-ctx${leap_context_tokens}-cache${leap_cache_memory_mb}mb"
+run_id="$(date -u +%Y%m%dT%H%M%SZ)-s1-mini-pixel-${leap_config_suffix}"
 package_name="dev.localflow.dictation"
 model_name="s1-mini-q4_k_m.gguf"
 device_temp_model="/data/local/tmp/localflow-s1-mini-q4_k_m.gguf"
@@ -149,7 +182,10 @@ adb shell am start -W \
     --es model_sha256 "$expected_model_sha" \
     --es engine_profile "s1-mini-v1-publisher" \
     --ei measured_repeats "$measured_repeats" \
-    --ei warmup_runs "$warmup_runs"
+    --ei warmup_runs "$warmup_runs" \
+    --ei leap_cpu_threads "$leap_cpu_threads_extra" \
+    --ei leap_context_tokens "$leap_context_tokens" \
+    --ei leap_cache_memory_mb "$leap_cache_memory_mb"
 
 echo "Waiting for exact-contract S1-mini Pixel result: $run_id"
 started_at="$(date +%s)"

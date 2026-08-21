@@ -1043,3 +1043,46 @@
   Q4 quality caveat, S1's raw-ASR/control/thinking/greedy/chunking requirements, valid empty output,
   and both models' redistribution caveats in
   `docs/research/STREAMING_STT_AND_S1_MINI_RUNTIME_CONTRACT_2026-08-21.md`.
+
+## 2026-08-22 — S1-mini Pixel inference optimization plan
+
+- At the owner's direction, defined a three-stage performance program: optimize supported LEAP
+  settings with the exact selected S1 Q4_K_M, compare a direct pinned llama.cpp Android runtime
+  with the same GGUF, then convert the exact BF16 checkpoint to LiteRT-LM blockwise-32 INT4 for
+  Pixel CPU/GPU comparison. Explicitly excluded lower-bit GGUF, channelwise, and block-128 arms.
+- Added `docs/research/S1_MINI_PIXEL_INFERENCE_OPTIMIZATION_PLAN_2026-08-22.md` with the fixed
+  baseline, publisher-contract and evaluation-isolation invariants, common benchmark gate,
+  per-stage tasks, artifact rules, device-consent boundary, selection criteria, and ordered
+  tracker. Linked it from the project handoff and synchronized current state, next steps, and the
+  durable decision log.
+- Completed parallel read-only audits for all three stages. LEAP 0.10.9 exposes CPU threads,
+  context, mmap, memory-only cache, and cached-token statistics but not batch/ubatch. The exact
+  fixed prompt is 78 tokens, making 2,410 the worst permitted one-pass budget; 3,072 and 2,560 are
+  safe candidates while 2,048 is not. Fresh conversations and mmap remain required.
+- Chose an isolated benchmark APK/module as the first direct-runtime boundary because LEAP already
+  packages generic llama/ggml shared libraries and Parakeet owns a separately isolated ggml. Pin
+  llama.cpp `ece963f41` / build 10450 first to match the validated Mac reference; do not float the
+  native runtime or package colliding SONAMEs/symbols.
+- Routed LiteRT conversion to the Linux RTX A6000 host using the exact 1,503,300,328-byte BF16
+  safetensors at SHA-256
+  `69d2057077ab4dc738aaaab75d2a8ffa141e3a09fb9d956198cfce46f381131a`. Require inspected
+  blockwise-32 metadata because the similarly named channelwise INT4 recipe has a documented
+  Qwen3 failure mode. Export context 4,096 first and compare Pixel CPU/GPU only; Tensor G2 NPU is
+  not an available assumption.
+- Implemented Stage 1's host-only debug controls without changing production defaults. The runner
+  accepts only implicit/2/3/4 CPU threads, contexts 4,096/3,072/2,560, and cache-off/four-entry
+  32/64 MiB memory-only arms; invalid values fail before model or device work and every arm has a
+  configuration-addressed run ID.
+- Extended the debug S1 engine with exact prompt+cap context checks, explicit public LEAP options,
+  app-cache-scoped memory caching with disk disabled, fresh-conversation isolation, fixed/cached
+  prompt-token evidence, the SDK-resolved CPU thread count, and complete additive result metadata.
+  Measured jobs are repeat-major with the warmed case rotated last, preventing adjacent identical
+  prompts from biasing the four-entry cache arm. Extended the scorer to preserve legacy files,
+  reject mixed/incomplete/out-of-matrix configurations, and summarize actual cached prompt tokens.
+- Added focused Kotlin and Python coverage. Fourteen relevant Python tests, shell syntax,
+  `git diff --check`, and the complete offline Android `lintDebug testDebugUnitTest assembleDebug`
+  gate pass. The host-only APK remains 88,046,129 bytes and now has SHA-256
+  `bbf420c874d3e4b13ee7a44622c6f2f8d65a02a10f01514dde1e78dd66a348b7`.
+- No model conversion, new model artifact, app install, Pixel interaction, or new measurement
+  occurred. The unrelated untracked `t.txt` was preserved untouched. The immediate task is the
+  owner-approved LEAP Pixel matrix: threads first, context second, cache last.
