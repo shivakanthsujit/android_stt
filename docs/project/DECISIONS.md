@@ -433,6 +433,18 @@ Last updated: 2026-08-22
     external source or different accelerator is silently mixed into the same-runtime CPU test.
     This is a build-boundary decision, not a runtime-selection decision; LEAP remains production
     until device parity and complete matched performance evidence justify replacement.
+64. Retain tuned LEAP and reject pinned direct llama.cpp CPU as a production S1-mini replacement.
+    The isolated runtime proved the exact prompt/token/cap contract and parity-safe output on the
+    matched performance corpora, including 30/30 raw-output matches on a project-authored
+    user-shaped fixture with median 22 raw tokens. It nevertheless ran 9.3% slower at median total
+    latency and 7.2% slower at p90 than LEAP on that owner-shaped comparison, used 8.8% more median
+    process CPU, and reached thermal status 1 while LEAP stayed at 0. Internal `n_batch` and
+    `n_ubatch` remain single-request prompt-token buffers, not product request batching; smaller
+    buffers saved memory but regressed latency. Extra generation/batch threads and flash attention
+    also failed bounded advancement gates. Preserve the standalone direct APK/tooling as negative
+    evidence, do not integrate its llama/ggml libraries into production, and proceed to the exact
+    BF16-to-LiteRT-LM blockwise-32 Stage 3 conversion. A Mali GPU build is optional future research,
+    not the next production step.
 
 ## Hosted API benchmark
 

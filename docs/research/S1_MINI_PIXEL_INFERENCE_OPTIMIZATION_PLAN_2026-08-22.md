@@ -2,7 +2,7 @@
 
 Date: 2026-08-22
 
-Status: Stage 1 selected; Stage 2 initial device contract smoke passed, CPU A/B pending
+Status: Stages 1–2 complete; direct llama.cpp CPU rejected; Stage 3 conversion next
 
 ## Objective
 
@@ -209,7 +209,8 @@ holding the S1 Q4_K_M bytes constant.
   defaults.
 - [x] Load the exact reference GGUF and reproduce the exact templated token IDs, prompt-token
   counts, output caps, greedy sampler, and EOG handling on the project-authored device smoke.
-  Actual token-cap termination and matched LEAP/Mac raw-output parity remain pending.
+  Natural token-cap termination passed 6/6 measured Pixel calls; pinned host and direct Pixel raw
+  output matched 3/3 smoke cases, while matched LEAP differed on one Unicode-spacing case.
 - [x] Record authoritative native prompt-eval and decode timings independently of Kotlin/JNI on
   the initial smoke. Do not use its three-case/single-repeat values as a performance comparison.
 - [x] Use a persistent native model/context handle, clear KV state between requests, and return
@@ -218,12 +219,19 @@ holding the S1 Q4_K_M bytes constant.
 
 ### 2B. CPU matrix
 
-- [ ] Compare the Stage 1 winner with direct llama.cpp at the same context.
-- [ ] Sweep generation threads 2/3/4 first; use 6/8 only as a bounded check of whether LITTLE cores
+- [x] Compare the Stage 1 winner with direct llama.cpp at the same context. Exact raw-output,
+  prompt-token, and cap parity passed 36/36 on the stress corpus and 30/30 on the user-shaped
+  corpus. Direct was 9.3% slower at median total latency on the user-shaped matched run.
+- [x] Sweep generation threads 2/3/4 first; use 6/8 only as a bounded check of whether LITTLE cores
   hurt. Separately sweep batch threads 2/4/6/8 and batch/ubatch 128/256/512 without turning this
-  into an open-ended search.
-- [ ] Record mmap, flash-attention off/on, CPU feature variant, affinity/priority, and KV-cache type.
-- [ ] Repeat the exact best setting from a fresh thermal-0 start before selection.
+  into an open-ended search. Generation 3/4 and batch-thread 4 regressed; the advancement rules
+  stopped 6/8. Internal 512/256 and 256/256 token-buffer arms regressed latency; 128 was stopped.
+- [x] Record mmap, flash-attention off/on, CPU feature variant, affinity/priority, and KV-cache type.
+  The bounded comparison kept mmap on, default KV types, scheduler-managed affinity/priority, and
+  selected `android_armv8.2_2`; flash attention changed one case and regressed sustained p90.
+- [x] Repeat the exact best setting from a fresh thermal-0 start before selection. The repeated
+  direct baseline was 17.6% slower than its first run, then the user-shaped LEAP-first/direct-second
+  confirmation rejected direct by 9.3% median total latency.
 
 ### 2C. Optional GPU probe
 
@@ -253,12 +261,13 @@ The app already packages LEAP's generic llama/ggml shared libraries and a static
 
 ### Stage 2 exit
 
-- [ ] Publish a same-artifact LEAP-versus-direct report with output parity and complete Pixel
+- [x] Publish a same-artifact LEAP-versus-direct report with output parity and complete Pixel
   performance evidence.
-- [ ] Require at least 15% lower median total latency with no p90, PSS, energy, or thermal
-  regression before the added native ownership can displace LEAP; otherwise retain LEAP.
-- [ ] Replace LEAP only if the material benefit justifies owning the native runtime and collision
-  surface; otherwise retain LEAP and preserve the direct probe as evidence.
+- [x] Require at least 15% lower median total latency with no p90, PSS, energy, or thermal
+  regression before the added native ownership can displace LEAP; otherwise retain LEAP. No
+  parity-safe direct arm approached this gate.
+- [x] Retain LEAP and preserve the isolated direct probe as negative evidence. No second
+  llama/ggml stack was added to the production process.
 
 ## Stage 3 — S1-mini LiteRT-LM INT4 CPU/GPU
 
@@ -331,14 +340,15 @@ checkpoint and nominal four-bit deployment precision.
 | 1 | LEAP API/settings audit | complete | supported-option inventory captured above |
 | 2 | LEAP context/cache/CPU host implementation | complete | tests and debug-only parameters |
 | 3 | LEAP Pixel A/B | complete | `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md` |
-| 4 | Direct llama.cpp standalone same-GGUF parity | initial contract smoke passed; full raw-output parity pending | prompt/token/cap/EOG/backend evidence complete; matched control and cap path pending |
-| 5 | Direct llama.cpp Android CPU A/B | pending | same-artifact comparison |
-| 6 | Direct GPU feasibility probe | pending after CPU parity | supported/no-go evidence |
+| 4 | Direct llama.cpp standalone same-GGUF parity | complete | prompt/token/cap/EOG/backend, host, matched control, and cap-path evidence |
+| 5 | Direct llama.cpp Android CPU A/B | complete; no-go | same-artifact stress and user-shaped comparisons; retain LEAP |
+| 6 | Direct GPU feasibility probe | deferred after CPU no-go | revisit only as a separately scoped Mali experiment |
 | 7 | LiteRT-LM S1 BF16 conversion | pending | `.litertlm` hash and conversion manifest |
 | 8 | LiteRT host semantic/parity gate | pending | reviewed raw-difference report |
 | 9 | LiteRT Pixel CPU/GPU A/B | pending owner-approved device run | performance/power report |
 | 10 | Runtime selection and production swap, if earned | pending | decision, tests, rollback path |
 
-The immediate executable task is to close Order 4's remaining cap-path and matched raw-output parity
-gaps, then start Order 5 on a frozen non-evaluation performance corpus. Every Pixel install or
-benchmark still requires the owner's immediate device-session approval.
+The immediate executable task is Order 7: convert the exact pinned S1-mini BF16 snapshot on the
+Linux RTX A6000 host with a metadata-proven blockwise-32 INT4/FP32 LiteRT-LM recipe. Do not use the
+GGUF, generic Qwen weights, channelwise/block-128 recipes, or smaller quantization. Every later
+Pixel install or benchmark still requires the owner's immediate device-session approval.

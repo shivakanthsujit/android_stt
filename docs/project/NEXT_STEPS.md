@@ -62,11 +62,15 @@ Do not add lower-bit GGUF variants.
   `libggml-cpu-android_armv8.2_2.so`; 4/4 rows exactly match host golden prompt bytes and raw/prompt
   token IDs, all fixed deltas/caps match, no cap was reached, and thermal remained 0. This is not a
   matched LEAP/Mac raw-output or performance result.
-- [ ] Before CPU tuning, freeze an explicit non-evaluation shape/length corpus, add an actual
-  device cap-path case, clarify llama.cpp's minimum-one perf decode counter, and persist start
-  thermal status in the manifest. Then tune threads/batch/ubatch/flash under fresh owner approval.
-  Freeze the CPU setting before declared personal-v3/regression parity. Add an experimental Pixel
-  Mali Vulkan arm only after CPU prompt/token/output parity.
+- [x] Complete Stage 2 direct llama.cpp Pixel evidence. A natural cap fixture passed 6/6 measured
+  calls; the bounded thread/internal-token-buffer/flash matrix ran one cleanup request at a time;
+  and every parity-safe arm was rejected. On the final user-shaped 10-case corpus (median 22 raw
+  tokens), direct matched prompt/cap/raw output 30/30 but was 9.3% slower at median total latency,
+  7.2% slower at p90, used 8.8% more median CPU, and reached thermal 1 while LEAP stayed at 0.
+  Retain LEAP; preserve the isolated direct probe as evidence. Report:
+  `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md`.
+- [ ] Treat a direct Pixel Mali Vulkan build as a separately scoped optional experiment, not the
+  next production step. The project-owned CPU runtime failed its displacement gate.
 - [ ] On the Linux RTX A6000 host, convert the pinned S1 BF16 checkpoint—not the GGUF or generic
   Qwen—to LiteRT-LM with a metadata-verified blockwise-32 INT4/FP32 recipe. Export context 4,096
   first; explicitly exclude channelwise, block-128, sub-four-bit, and smaller-GGUF arms.

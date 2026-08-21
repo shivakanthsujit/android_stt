@@ -18,6 +18,7 @@ class RunS1MiniPixelBenchmarkTest(unittest.TestCase):
             "S1_MINI_LEAP_CPU_THREADS",
             "S1_MINI_LEAP_CONTEXT_SIZE",
             "S1_MINI_LEAP_CACHE_MB",
+            "S1_MINI_PIXEL_QUALITY_SCORE",
         ):
             env.pop(variable, None)
         env.update(
@@ -51,6 +52,7 @@ class RunS1MiniPixelBenchmarkTest(unittest.TestCase):
             {"S1_MINI_LEAP_CONTEXT_SIZE": "2560"},
             {"S1_MINI_LEAP_CACHE_MB": "32"},
             {"S1_MINI_LEAP_CACHE_MB": "64"},
+            {"S1_MINI_PIXEL_QUALITY_SCORE": "0"},
         ]
         for configuration in configurations:
             with self.subTest(configuration=configuration):
@@ -69,6 +71,7 @@ class RunS1MiniPixelBenchmarkTest(unittest.TestCase):
             ("S1_MINI_LEAP_CONTEXT_SIZE", "4096-bad", "must be 4096, 3072, or 2560"),
             ("S1_MINI_LEAP_CACHE_MB", "16", "must be 0, 32, or 64"),
             ("S1_MINI_LEAP_CACHE_MB", "64/bad", "must be 0, 32, or 64"),
+            ("S1_MINI_PIXEL_QUALITY_SCORE", "2", "must be 0 or 1"),
         ]
         for variable, value, message in invalid:
             with self.subTest(variable=variable, value=value):
@@ -88,6 +91,12 @@ class RunS1MiniPixelBenchmarkTest(unittest.TestCase):
         self.assertIn('--ei leap_cpu_threads "$leap_cpu_threads_extra"', source)
         self.assertIn('--ei leap_context_tokens "$leap_context_tokens"', source)
         self.assertIn('--ei leap_cache_memory_mb "$leap_cache_memory_mb"', source)
+
+    def test_transcript_only_mode_skips_quality_reference_scorer(self) -> None:
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('quality_score="${S1_MINI_PIXEL_QUALITY_SCORE:-1}"', source)
+        self.assertIn('if [[ "$quality_score" == "1" ]]', source)
+        self.assertIn("Quality scoring skipped for transcript-only cases", source)
 
 
 if __name__ == "__main__":

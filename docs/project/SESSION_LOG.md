@@ -1172,3 +1172,32 @@
   `a9c87772dfa911afc9cf6ea2d2c478952c91f56b7cf68c21532d58834c683fb1`; summary SHA-256 is
   `72906c79413da1542b778f7c37290b4b6a215c3f3700658ef8f28a67a3831406`. The actual cap path,
   matched raw-output parity, non-evaluation CPU matrix, power, and sustained thermal remain next.
+
+## 2026-08-22 — Direct llama.cpp Pixel CPU comparison and no-go
+
+- With explicit owner approval, installed only the text-fed benchmark APKs and ran Stage 2 on the
+  connected Pixel 7. No test opened `AudioRecord`, requested microphone permission, or used live
+  speech. The exact Q4_K_M and publisher contract remained fixed; no smaller quantization ran.
+- Added transcript-only runner support for LEAP controls without expected-output scoring, persisted
+  direct start thermal status, and added project-authored cap, stress, and user-shaped fixtures.
+  The cap path naturally terminated at the publisher limit on 6/6 measured direct calls.
+- Matched smoke prompt counts/caps passed 3/3. Direct/host raw output matched 3/3; LEAP differed on
+  one Unicode spacing choice. The 12-case stress corpus matched direct/LEAP raw output 36/36 and
+  provided bounded thread/internal-token-buffer/flash evidence, but its 126–164-token tail was
+  explicitly reclassified as thermal/decode stress after the owner questioned representativeness.
+- `n_batch`/`n_ubatch` were confirmed as internal token buffers for one request, not concurrent
+  request batching. Every case ran sequentially through one persistent model/context owner. Extra
+  generation threads, four batch threads, smaller buffers, and flash attention all failed bounded
+  advancement gates; 6/8-thread and 128-token expansions were stopped.
+- Added a user-shaped 10-case fixture without copying private-evaluation text or expected outputs.
+  Its exact raw-token counts are 18–26 for eight cases and 51/53 for two cases, median 22. In the
+  thermal-clean LEAP-first/direct-second matched run, prompt counts, caps, and raw outputs matched
+  30/30. Direct median/p90 total was 1,624.0/3,048.0 ms versus LEAP 1,486.0/2,843 ms, median CPU
+  was 8.8% higher, and direct reached thermal 1 on calls 28–30 while LEAP stayed at 0. Direct median
+  PSS was 1.8% lower. It lost 28/30 paired latency requests.
+- Rejected direct llama.cpp CPU as a production replacement and retained tuned LEAP. No Perfetto
+  energy arm was advanced because direct failed earlier latency/repeatability/thermal gates. The
+  optional Mali build is deferred; exact S1 BF16 blockwise-32 LiteRT-LM conversion is next.
+- Full report: `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md`. Raw results,
+  model bytes, APKs, and manifests remain ignored; the unrelated untracked `t.txt` remains
+  untouched.

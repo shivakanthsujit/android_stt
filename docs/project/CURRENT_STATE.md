@@ -140,19 +140,21 @@ Last updated: 2026-08-22
   sooner; thermal status 1 is delayed rather than eliminated. The 32/64 MiB cache arms reused zero
   tokens and regressed latency, CPU, memory, and thermal behavior. Full evidence is in
   `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`. Stage 2's isolated direct
-  llama.cpp host implementation is now complete at pinned commit `ece963f41` / build 10450 with
+  llama.cpp comparison is complete at pinned commit `ece963f41` / build 10450 with
   NDK `28.0.13004108`, CMake `3.31.6`, exact prompt/token/cap evidence, a transcript-only runner,
   and a reproducible 18,701,319-byte Release APK at SHA-256
   `8931caef1a33acc84c9eb173d4d09d986f71ea0f6816716e3a3e93ce05b1bfad`.
-  An owner-approved Pixel 7 smoke selected the `android_armv8.2_2` CPU backend and matched the host
-  golden's prompt bytes, raw token IDs, prompt token IDs, 78-token fixed delta, and caps on 4/4
-  rows while staying thermal 0. Both independent short runs produced identical outputs; the first
-  was retained after exposing and correcting a scorer-only semantic-version/build-number mixup.
-  The smoke had no LEAP/Mac raw-output control and no actual cap hit, so full runtime parity,
-  repeated non-evaluation CPU tuning, power, and sustained thermal evidence remain pending. Direct
-  llama.cpp has not earned a production comparison or swap. Full evidence:
+  Pixel selected `android_armv8.2_2`; the natural cap path passed 6/6 measured calls, and the
+  bounded generation-thread, batch-thread, internal token-buffer, and flash-attention matrix ran
+  strictly one cleanup request at a time. A stress corpus proved 36/36 matched raw-output parity
+  for the baseline but overweighted 126–164-token inputs. The corrected user-shaped corpus has
+  median 22 raw tokens and matches tuned LEAP 30/30 on prompt counts, caps, and raw outputs. Direct
+  was 9.3% slower at median total latency, 7.2% slower at p90, used 8.8% more median process CPU,
+  and reached thermal 1 while LEAP stayed at 0; its median PSS was 1.8% lower. Direct CPU is a no-go
+  and LEAP remains production. Full device evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md`; host/build evidence:
   `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`. No LiteRT
-  conversion has started.
+  conversion has started; exact BF16 blockwise-32 Stage 3 conversion is next.
 - The owner-local FluidVoice 1.6.9 pipeline is now inventoried as a Mac-only reference. Its active
   path is Parakeet TDT v2 Core ML → app filler/dictionary preprocessing → Fluid-1 with bundled
   prompt/template → thinking-markup and app formatting/continuous-dictation postprocessing. The

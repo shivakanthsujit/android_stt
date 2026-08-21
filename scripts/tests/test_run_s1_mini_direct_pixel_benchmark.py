@@ -25,6 +25,7 @@ class RunS1MiniDirectPixelBenchmarkTest(unittest.TestCase):
         self.assertIn('adb push "$prepared_cases"', source)
         self.assertNotIn('adb push "$cases_file"', source)
         self.assertIn('thermal_status" != "0"', source)
+        self.assertIn('manifest["start_thermal_status"]', source)
         self.assertIn("localflow_llamacpp_benchmark", source)
         self.assertIn("localflow_llamacpp_inference", source)
         for extra in (

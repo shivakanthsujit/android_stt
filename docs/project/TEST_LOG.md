@@ -710,3 +710,32 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   corrected run 4/4.
 - This smoke does not prove matched LEAP/Mac raw-output parity, the actual cap path, repeated
   within-run stability, performance, energy, or sustained thermal behavior.
+
+## 2026-08-22 — direct llama.cpp Stage 2 Pixel CPU gate
+
+- Owner-approved, microphone-free Pixel session on `panther` / `33040DLH20004E`. Every accepted
+  arm began at thermal status 0; the screen slept between arms until status returned to 0.
+- Exact direct cap run `20260821T181752Z`: one warmup plus 6 measured calls, 6/6 token-cap finishes,
+  stable outputs/token IDs, no blanks/errors, thermal 0. Raw JSONL SHA-256:
+  `44f6ec86fd152b1efce43f832be2fab05f1be1d9416fbe852068636de2c47294`.
+- Stress-corpus same-GGUF baseline: direct/LEAP prompt counts, caps, and raw outputs match 36/36.
+  Direct baseline raw SHA-256
+  `9f37f3d89d60ac76f062216675bbca3df7dcf7f79ab67ac4126a43808c328394`; LEAP raw SHA-256
+  `0a0b9aaaafb3b0455986f3189c599f5308d38375d263458a43bce215ea742141`.
+  Direct median total was 2,607.8 ms versus LEAP 2,633.0 ms, but peak PSS was about 4% higher and
+  the identical direct confirmation regressed to 3,065.5 ms median.
+- Bounded direct arms completed: generation threads 3/4, batch threads 4, internal token buffers
+  512/256 and 256/256, and flash attention on. Non-flash arms preserved 36/36 baseline output
+  parity. Extra threads and smaller buffers regressed latency/CPU/thermal. Flash changed one case
+  across all repeats and regressed sustained p90; 6/8 threads and 128-token buffers were stopped.
+- Corrected user-shaped matched run used 10 project-authored transcripts with token counts
+  `[22,18,26,23,21,20,22,21,51,53]`. LEAP-first run `20260821T191458Z` remained thermal 0;
+  direct-second run `20260821T191708Z` reached thermal 1 on calls 28–30. Prompt counts, caps, and
+  raw outputs matched 30/30 with zero instability/caps/blanks.
+- User-shaped LEAP versus direct median/p90 total: 1,486.0/2,843 versus 1,624.0/3,048.0 ms. Median
+  TTFT: 741.5 versus 813.0 ms; median CPU: 2,870.0 versus 3,122.5 ms; median PSS: 1,108,521 versus
+  1,088,479 KiB. Direct lost 28/30 paired total-latency calls. Raw SHA-256 values: LEAP
+  `7954f993e09efcd8490ec4a816a98c4f8f194e2f1d12da2ec043a1c519cca80a`, direct
+  `92e0b1a05ca235db6de41d0b918cd59679eda8c92869bd6b3fa3c8d311216045`.
+- The direct load sample in the representative run was anomalous at 9,548 ms versus approximately
+  1 s in other direct runs; it was retained but excluded from per-request latency claims.

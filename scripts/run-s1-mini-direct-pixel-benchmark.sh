@@ -235,6 +235,16 @@ if [[ "$thermal_status" != "0" ]]; then
     echo "Pixel must start at thermal status 0; found ${thermal_status:-unknown}" >&2
     exit 1
 fi
+python3 - "$host_run_manifest" "$thermal_status" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+manifest = json.loads(path.read_text(encoding="utf-8"))
+manifest["start_thermal_status"] = int(sys.argv[2])
+path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
 
 if [[ "$power_trace" == "1" ]]; then
     trace_processor="${S1_DIRECT_TRACE_PROCESSOR:-$repo_dir/.cache/stt-eval/tools/trace_processor_shell}"

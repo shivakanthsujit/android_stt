@@ -2,8 +2,7 @@
 
 Date: 2026-08-22
 
-Status: host implementation complete and initial Pixel contract smoke passed; full matched
-raw-output parity and performance comparison pending
+Status: superseded by completed Pixel CPU comparison; direct runtime rejected
 
 ## Outcome
 
@@ -12,8 +11,9 @@ selected S1-mini Q4_K_M GGUF through a project-owned, pinned llama.cpp CPU runti
 schema, prompt golden, transcript-only staging, native interface, result validation, and Pixel
 runner are ready. An owner-approved initial Pixel smoke proved device-side template/token parity,
 runtime provenance, deterministic repeat behavior across two independent short runs, and the
-selected Pixel ARM backend. Matched LEAP/Mac raw-output parity, cap-path coverage, a repeated
-non-evaluation performance corpus, energy, and sustained thermal evidence remain pending.
+selected Pixel ARM backend. The later owner-approved device campaign closed matched LEAP/host
+parity, the natural cap path, repeated stress and user-shaped performance, and sustained thermal
+evidence. Direct CPU was rejected; see `2026-08-22-s1-mini-direct-llamacpp-pixel.md`.
 
 This checkpoint installed only the separate benchmark APK and staged the exact GGUF plus three
 project-authored non-evaluation smoke strings in its app-private storage. It did not use the
@@ -142,18 +142,14 @@ Retained corrected artifact hashes:
 | raw JSONL | `a9c87772dfa911afc9cf6ea2d2c478952c91f56b7cf68c21532d58834c683fb1` |
 | scorer summary | `72906c79413da1542b778f7c37290b4b6a215c3f3700658ef8f28a67a3831406` |
 
-## Remaining gate
+## Closed by the Pixel comparison
 
-The Unicode smoke output changed script/spacing and omitted the bicycle emoji. The golden contains
-no expected cleanup output and no matched LEAP/Mac control was supplied, so this result cannot be
-called raw-output runtime parity or a quality failure. The next evidence session must freeze a
-non-evaluation shape/length corpus, cover repeated stability and the actual cap path, and persist
-thermal-start evidence before CPU tuning. llama.cpp's perf getter reports an internal minimum
-`n_eval=1` even for immediate EOG, so `perf_decode_tokens` must not be interpreted as the completion
-count for the empty case; the separately recorded completion count is authoritative. PSS/native
-heap values are post-call snapshots rather than within-call sampled peaks.
+The later campaign retained the Unicode spacing difference, proved natural cap termination 6/6,
+and matched direct versus LEAP prompt counts, caps, and raw outputs 30/30 on a user-shaped corpus.
+The bounded CPU matrix and a fresh confirmation found no repeatable 15% median speed win and
+observed latency/CPU/thermal regressions, so LEAP remains production. llama.cpp's perf getter still
+reports an internal minimum `n_eval=1` for immediate EOG; the separately recorded completion count
+is authoritative. PSS/native-heap values remain post-call snapshots rather than within-call peaks.
 
-Personal-v3 and the committed cleanup suites may be used only after tuning is frozen for declared
-regression/parity evidence; blind-v2 remains prohibited. Every later device session still requires
-fresh owner approval. A direct runtime earns production consideration only after matched LEAP
-output, latency, p90, memory, energy, and thermal evidence.
+Full final evidence and retained artifact hashes are in
+`docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md`. Blind-v2 was not used.

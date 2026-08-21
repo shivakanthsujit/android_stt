@@ -10,6 +10,7 @@ measured_repeats="${S1_MINI_PIXEL_REPEATS:-3}"
 warmup_runs="${S1_MINI_PIXEL_WARMUPS:-1}"
 timeout_seconds="${S1_MINI_PIXEL_TIMEOUT_SECONDS:-1800}"
 power_trace="${S1_MINI_PIXEL_POWER_TRACE:-1}"
+quality_score="${S1_MINI_PIXEL_QUALITY_SCORE:-1}"
 leap_cpu_threads="${S1_MINI_LEAP_CPU_THREADS:-implicit}"
 leap_context_tokens="${S1_MINI_LEAP_CONTEXT_SIZE:-4096}"
 leap_cache_memory_mb="${S1_MINI_LEAP_CACHE_MB:-0}"
@@ -46,6 +47,10 @@ case "$leap_cache_memory_mb" in
         exit 1
         ;;
 esac
+if [[ "$quality_score" != "0" && "$quality_score" != "1" ]]; then
+    echo "S1_MINI_PIXEL_QUALITY_SCORE must be 0 or 1" >&2
+    exit 1
+fi
 
 if [[ ! -f "$model_file" || "$(basename "$model_file")" != "s1-mini-q4_k_m.gguf" ]]; then
     echo "Missing pinned S1-mini Q4_K_M model: $model_file" >&2
@@ -71,7 +76,6 @@ if [[ "$power_trace" != "0" && "$power_trace" != "1" ]]; then
     echo "S1_MINI_PIXEL_POWER_TRACE must be 0 or 1" >&2
     exit 1
 fi
-
 actual_model_sha="$(shasum -a 256 "$model_file" | awk '{print $1}')"
 if [[ "$actual_model_sha" != "$expected_model_sha" ]]; then
     echo "S1-mini SHA-256 mismatch: expected $expected_model_sha, found $actual_model_sha" >&2
@@ -207,8 +211,12 @@ done
 
 stop_power_trace
 adb exec-out run-as "$package_name" cat "$device_result" > "$host_result"
-python3 "$repo_dir/scripts/score-cleanup-pixel-results.py" \
-    "$host_result" --cases "$cases_file" --json-out "$host_summary"
+if [[ "$quality_score" == "1" ]]; then
+    python3 "$repo_dir/scripts/score-cleanup-pixel-results.py" \
+        "$host_result" --cases "$cases_file" --json-out "$host_summary"
+else
+    echo "Quality scoring skipped for transcript-only cases; raw result retained."
+fi
 if [[ "$power_trace" == "1" ]]; then
     adb pull "$device_power_trace" "$host_power_trace"
     python3 "$repo_dir/scripts/score-stt-power-trace.py" \
@@ -221,7 +229,9 @@ fi
 
 echo "Prepared cases: $prepared_cases"
 echo "Raw result: $host_result"
-echo "Summary: $host_summary"
+if [[ "$quality_score" == "1" ]]; then
+    echo "Summary: $host_summary"
+fi
 if [[ "$power_trace" == "1" ]]; then
     echo "Power trace: $host_power_trace"
     echo "Power summary: $host_power_summary"
