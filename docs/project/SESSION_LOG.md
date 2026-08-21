@@ -1086,3 +1086,33 @@
 - No model conversion, new model artifact, app install, Pixel interaction, or new measurement
   occurred. The unrelated untracked `t.txt` was preserved untouched. The immediate task is the
   owner-approved LEAP Pixel matrix: threads first, context second, cache last.
+
+## 2026-08-22 — S1-mini LEAP Pixel tuning and production selection
+
+- After explicit owner approval, ran the complete thermal-clean Pixel 7 LEAP matrix with the exact
+  Q4_K_M: implicit plus explicit 2/3/4 threads, contexts 4,096/3,072/2,560, cache off plus memory-only
+  32/64 MiB, an independent winner confirmation, and matched Perfetto control/winner traces. The
+  implicit LEAP advisor resolved to one thread on this device; the scorer now accepts and records
+  implicit resolution 1–4 while explicit arms remain restricted to 2/3/4.
+- Selected explicit two threads, context 2,560, cache off, and mmap on. Matched traced control to
+  winner improved median/p90 total 1,694.5/4,178 → 1,391.5/3,371 ms, TTFT 1,122/1,773 →
+  723/1,071 ms, peak PSS 1,327,967 → 1,188,541 KiB, native heap 1,295,974,128 →
+  1,113,447,856 bytes, and inference compute energy 5.814469 → 5.227675 J/call. Every one of the
+  60 paired outputs matched. Process CPU and instantaneous compute power rose, while total compute
+  energy fell because the selected arm finished sooner; thermal status 1 was delayed, not removed.
+- Rejected three/four threads because small additional median gains cost disproportionate process
+  CPU and four threads regressed total p90. Rejected both cache arms because every warmup/measured
+  call reported zero cached prompt tokens and latency, CPU, memory, and thermal behavior worsened.
+- Retained and excluded one 18-line partial 2,560 run after its Activity lost foreground and Android
+  froze the process. The retained partial SHA-256 is
+  `a195cfa6a4477422f78a0c920b60c0bbd421835600680b5111efa0aba770b089`; the clean rerun completed
+  normally and reproduced the same output.
+- Applied the winner to the production `S1MiniCleanupEngine` without changing model bytes, prompt,
+  template, decoding, chunking, fresh conversations, mmap, or cache policy. Full evidence and
+  artifact hashes: `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`.
+- Final offline `lintDebug testDebugUnitTest assembleDebug` passed: 55 tasks, 1 executed and 54
+  up-to-date. Fourteen focused Python tests, Python compilation, shell syntax, and
+  `git diff --check` pass. The final 88,046,229-byte host APK SHA-256 is
+  `6aaa8adeeeb4a9fdafc398dc36c28e5cb64b4c8917256a16d9953246e943195c`; it was not installed.
+  The benchmark-installed preceding APK remains on the Pixel. The unrelated `t.txt` remains
+  untouched. Stage 2's isolated pinned llama.cpp same-GGUF module is next.

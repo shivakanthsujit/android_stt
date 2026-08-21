@@ -635,3 +635,28 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   so 3,072 and 2,560 are safe candidates while 2,048 is not.
 - Host debug APK: 88,046,129 bytes, SHA-256
   `bbf420c874d3e4b13ee7a44622c6f2f8d65a02a10f01514dde1e78dd66a348b7`. It was not installed.
+
+## 2026-08-22 — S1-mini LEAP tuning on Pixel 7
+
+- Owner explicitly approved the device session. Pixel 7 `panther`, serial `33040DLH20004E`, Android
+  build `CP2A.260705.006`; every accepted arm began at thermal status 0. The runner installed the
+  88,046,129-byte benchmark APK at SHA-256
+  `bbf420c874d3e4b13ee7a44622c6f2f8d65a02a10f01514dde1e78dd66a348b7` and verified the exact
+  484,219,808-byte Q4_K_M on each run.
+- Completed the thread/context/cache matrix, independent winner confirmation, and matched Perfetto
+  control/winner traces. All valid full arms produced stable raw output; the selected traced arm
+  matched the control on 60/60 outputs with zero blanks, cap hits, or fallbacks.
+- Selected explicit two CPU threads, context 2,560, cache off, mmap on. Matched traced median/p90
+  total improved 17.88%/19.32%, peak PSS 10.50%, native heap 14.08%, and inference compute energy
+  10.09%. Median process CPU rose 55.47% and average inference compute power rose 13.76%; thermal
+  status 1 first appeared at call 23 versus call 19 and remained variable across confirmations.
+- Both 32/64 MiB memory-cache arms reported zero cached prompt tokens on every call and were
+  rejected. The invalid foreground-loss partial was retained under ignored results storage and
+  excluded; its SHA-256 is
+  `a195cfa6a4477422f78a0c920b60c0bbd421835600680b5111efa0aba770b089`.
+- Full report: `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`. Final production
+  defaults were verified host-side with `. ./scripts/android-env.sh && ./gradlew --offline
+  lintDebug testDebugUnitTest assembleDebug` (BUILD SUCCESSFUL; 55 tasks, 1 executed), 14/14
+  focused Python tests, Python compilation, shell syntax, and `git diff --check`. Final host APK:
+  88,046,229 bytes, SHA-256
+  `6aaa8adeeeb4a9fdafc398dc36c28e5cb64b4c8917256a16d9953246e943195c`; not installed.

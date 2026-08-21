@@ -13,6 +13,7 @@ Start here when resuming Local Flow in a new session.
 | [Mac-local TTS fixtures](../evaluation/TTS_PIPELINE.md) | Pinned text-to-WAV setup, active personal-conversation suite, fast joined WAV/MP3 runner, hashes, resume, and offline cache |
 | [Pixel Parakeet report](../evaluation/results/2026-08-18-pixel-parakeet-stt-probe.md) | F16/Q4_K/Moonshine measurements, decision, caveats, and reproducibility hashes |
 | [Pixel S1-mini report](../evaluation/results/2026-08-21-s1-mini-v1-pixel.md) | Exact publisher-contract parity, personal-v3 quality, latency, memory, thermal, and power evidence |
+| [Pixel S1-mini LEAP tuning report](../evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md) | Thread/context/cache matrix, matched power traces, selected production settings, and reproducibility hashes |
 | [S1-mini Pixel inference optimization plan](../research/S1_MINI_PIXEL_INFERENCE_OPTIMIZATION_PLAN_2026-08-22.md) | Ordered LEAP tuning, same-GGUF direct llama.cpp, and S1-specific LiteRT-LM CPU/GPU program |
 | [Streaming STT and S1-mini runtime contract](../research/STREAMING_STT_AND_S1_MINI_RUNTIME_CONTRACT_2026-08-21.md) | Realtime EOU model-card constraints, final-only cleanup ordering, 1,000-token sentence chunking, hashes, and release caveats |
 | [Training-machine handoff](../../TRAINING_MACHINE_HANDOFF.md) | Complete RTX A6000 data/training/evaluation workflow |

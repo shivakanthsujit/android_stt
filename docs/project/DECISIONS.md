@@ -414,6 +414,15 @@ Last updated: 2026-08-22
     is outside the plan without official reproducible support. Use a separate direct llama.cpp
     benchmark module first because LEAP already packages generic llama/ggml libraries and Parakeet
     owns another statically isolated ggml; never introduce colliding native SONAMEs or symbols.
+62. Use explicit two CPU threads, a 2,560-token context, cache disabled, and mmap enabled for the
+    production S1-mini LEAP path. The matched Pixel trace preserved 60/60 raw outputs while reducing
+    median/p90 total latency by 17.88%/19.32%, peak PSS by 10.50%, native heap by 14.08%, and
+    inference compute energy by 10.09% versus the implicit/4,096/cache-off control. Reject explicit
+    three/four threads because their small additional median gains cost disproportionate process
+    CPU and, for four threads, worse total p90. Reject the 32/64 MiB cache arms because both reused
+    zero prompt tokens and regressed the complete profile. Retain the 2,410-token worst-case pass
+    calculation and runtime capacity evidence; any prompt, template, cap, or 1,000-token chunk-policy
+    change must revalidate the 150-token margin before keeping context 2,560.
 
 ## Hosted API benchmark
 

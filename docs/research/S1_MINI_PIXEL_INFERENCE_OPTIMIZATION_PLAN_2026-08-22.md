@@ -2,8 +2,7 @@
 
 Date: 2026-08-22
 
-Status: approved sequence, API/runtime audits, and Stage 1 host implementation complete; new Pixel
-measurements not started
+Status: Stage 1 LEAP tuning complete and selected in production; Stage 2 direct llama.cpp pending
 
 ## Objective
 
@@ -119,9 +118,9 @@ empty transcript template. The largest permitted pass therefore requires
 unsafe. Retain a runtime assertion rather than relying only on this static calculation.
 
 - [x] Record the exact maximum templated prompt plus output-cap requirement.
-- [ ] Compare 4,096 control versus safe 3,072 and 2,560 candidates.
-- [ ] Measure load, TTFT, total, PSS, native heap, energy, and output parity.
-- [ ] If a smaller context cannot preserve the 1,000-token pass contract, reject it rather than
+- [x] Compare 4,096 control versus safe 3,072 and 2,560 candidates.
+- [x] Measure load, TTFT, total, PSS, native heap, energy, and output parity.
+- [x] If a smaller context cannot preserve the 1,000-token pass contract, reject it rather than
   silently truncating input or output.
 
 ### 1C. Prefix/cache and conversation study
@@ -134,26 +133,26 @@ conversations because LEAP conversation reuse appends the preceding transcript a
 history and would violate request isolation.
 
 - [x] Inventory the exact LEAP 0.10.9 public cache API and its correctness/lifecycle semantics.
-- [ ] Compare cache-off with explicit memory-only configurations of four entries / 32 MiB and four
+- [x] Compare cache-off with explicit memory-only configurations of four entries / 32 MiB and four
   entries / 64 MiB, with zero disk entries and `diskDisabled=true`.
 - [x] Record `GenerationStats.cachedPromptTokens` so a cache result proves how much prefix work was
   actually reused.
-- [ ] Verify that no preceding transcript or generated output enters a later request.
-- [ ] Compare conversation reuse only if it can reset to the identical single-turn prompt; never
-  trade speed for cross-utterance context contamination.
+- [x] Verify that no preceding transcript or generated output enters a later request.
+- [x] Reject conversation reuse because LEAP's public conversation API appends history and cannot
+  reset to the identical single-turn prompt; never trade speed for cross-utterance contamination.
 
 ### 1D. CPU execution settings
 
 - [x] Inventory LEAP execution controls. `ModelLoadingOptions` exposes `cpuThreads`,
   `cacheOptions`, `contextSize`, and `useMmap`; it does not expose batch or ubatch sizing. Its
-  implicit `CpuThreadAdvisor` recommendation is capped at four threads and falls back to two when
-  topology cannot be read.
-- [ ] At context 4,096/cache-off, compare explicit two, three, and four CPU threads against the
+  implicit `CpuThreadAdvisor` recommendation is capped at four threads, can fall back to two when
+  topology cannot be read, and resolved to one on this Pixel under its memory limiter.
+- [x] At context 4,096/cache-off, compare explicit two, three, and four CPU threads against the
   implicit control and record the resolved configuration.
-- [ ] Use the winning thread count for the context comparison, then the winning thread/context for
+- [x] Use the winning thread count for the context comparison, then the winning thread/context for
   the cache comparison so only one variable changes at a time.
-- [ ] Benchmark only documented settings. Do not depend on reflection or private ABI mutation.
-- [ ] Retain mmap unless a measured alternative materially improves the complete product profile.
+- [x] Benchmark only documented settings. Do not depend on reflection or private ABI mutation.
+- [x] Retain mmap unless a measured alternative materially improves the complete product profile.
 
 ### Stage 1 host runner
 
@@ -182,10 +181,14 @@ is enabled. Each request still uses a fresh conversation and a dedicated cache-d
 
 ### Stage 1 exit
 
-- [ ] Select and document the best exact-contract LEAP configuration, or record that LEAP exposes
-  no useful safe tuning.
-- [ ] Update the reference numbers used by Stages 2 and 3.
-- [ ] Do not conflate memory-only improvement with generation speedup.
+- [x] Select and document explicit two threads, context 2,560, cache off, and mmap on. Production
+  uses this configuration. Full evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`.
+- [x] Update the reference numbers used by Stages 2 and 3: matched traced median/p90 total
+  1,391.5/3,371 ms, TTFT 723/1,071 ms, peak PSS 1,188,541 KiB, native heap 1,113,447,856 bytes,
+  and inference compute energy 5.227675 J/call.
+- [x] Keep memory and generation claims separate. The cache arms reused zero tokens and were
+  rejected; context reduction is what delivered the clear memory benefit.
 
 ## Stage 2 — direct llama.cpp with the same GGUF
 
@@ -325,7 +328,7 @@ checkpoint and nominal four-bit deployment precision.
 | 0 | Freeze invariants, baseline, and benchmark schema | documented | this plan and existing Pixel report |
 | 1 | LEAP API/settings audit | complete | supported-option inventory captured above |
 | 2 | LEAP context/cache/CPU host implementation | complete | tests and debug-only parameters |
-| 3 | LEAP Pixel A/B | pending owner-approved device run | raw results, power trace, report |
+| 3 | LEAP Pixel A/B | complete | `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md` |
 | 4 | Direct llama.cpp standalone same-GGUF parity | pending | pinned build manifest and native timings |
 | 5 | Direct llama.cpp Android CPU A/B | pending | same-artifact comparison |
 | 6 | Direct GPU feasibility probe | pending after CPU parity | supported/no-go evidence |
@@ -334,7 +337,6 @@ checkpoint and nominal four-bit deployment precision.
 | 9 | LiteRT Pixel CPU/GPU A/B | pending owner-approved device run | performance/power report |
 | 10 | Runtime selection and production swap, if earned | pending | decision, tests, rollback path |
 
-The immediate executable task is Order 3: run the predeclared LEAP Pixel A/B in controlled phases,
-starting with the implicit-thread/4,096/cache-off default control and explicit thread arms. This
-runner installs and launches a debug APK, so obtain the owner's immediate device-session approval
-before beginning.
+The immediate executable task is Order 4: build the isolated, pinned direct llama.cpp same-GGUF
+host/Android parity module. A later Pixel install or benchmark still requires the owner's immediate
+device-session approval.

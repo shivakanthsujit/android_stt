@@ -48,10 +48,11 @@ Do not add lower-bit GGUF variants.
   capacity, records cached tokens plus requested/resolved configuration, gives every arm a unique
   run ID, and keeps the scorer backward compatible while rejecting mixed or out-of-matrix
   configurations. Measured repeats are interleaved instead of placing identical prompts adjacent.
-- [ ] After owner approval for a device session, run the controlled LEAP Pixel matrix and select or
-  reject its best configuration from output parity, TTFT/total, PSS, CPU/energy, and thermal data.
-  Run threads first at 4,096/cache-off, context second at the winning thread count, and cache last
-  at the winning thread/context.
+- [x] Run the controlled LEAP Pixel matrix and select explicit two threads, 2,560 context, cache
+  off, and mmap on. The matched trace improves median/p90 total by 17.88%/19.32%, peak PSS by
+  10.50%, and inference compute energy by 10.09% with 60/60 raw parity. Cache reused zero tokens.
+  Production now uses the selected supported LEAP settings. Evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`.
 - [ ] Build a separate collision-free Android benchmark module pinned first to llama.cpp
   `ece963f41` / build 10450 and run the exact same GGUF through a direct CPU path. Add an
   experimental Pixel Mali Vulkan arm only after CPU prompt/token/output parity.

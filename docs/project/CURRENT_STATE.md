@@ -131,15 +131,16 @@ Last updated: 2026-08-22
   first tune supported LEAP settings with the exact Q4_K_M, then compare a pinned direct
   llama.cpp Android build with the same GGUF, then convert the exact BF16 S1 checkpoint to a
   metadata-verified blockwise-32 INT4 LiteRT-LM artifact for Pixel CPU/GPU. Read
-  `docs/research/S1_MINI_PIXEL_INFERENCE_OPTIMIZATION_PLAN_2026-08-22.md`. The three read-only
-  audits and Stage 1 host implementation are complete; no conversion, new model artifact, app
-  install, or Pixel measurement has started. The debug runner now accepts only implicit/2/3/4
-  threads, contexts 4,096/3,072/2,560, and cache-off/four-entry 32/64 MiB memory-only arms. It
-  preserves mmap and fresh conversations, asserts prompt+cap capacity, records cached-token and
-  complete requested/resolved configuration metadata, gives each arm a unique ID, interleaves
-  measured repeats so the memory-cache arm cannot benefit from adjacent identical transcripts,
-  and keeps old result scoring compatible. Production defaults are unchanged. The next step is an
-  explicitly owner-approved Pixel session running threads first, context second, and cache last.
+  `docs/research/S1_MINI_PIXEL_INFERENCE_OPTIMIZATION_PLAN_2026-08-22.md`. Stage 1 is complete.
+  The selected production LEAP configuration is explicit two CPU threads, 2,560 context, cache
+  off, and mmap on; the exact Q4_K_M and publisher contract are unchanged. In matched traces it
+  reduces median/p90 total latency by 17.88%/19.32%, peak PSS by 10.50%, native heap by 14.08%, and
+  inference compute energy by 10.09%. Raw output matches 60/60 with zero repeat instability. It
+  uses 55.47% more median process CPU and 13.76% more average inference compute power, but finishes
+  sooner; thermal status 1 is delayed rather than eliminated. The 32/64 MiB cache arms reused zero
+  tokens and regressed latency, CPU, memory, and thermal behavior. Full evidence is in
+  `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`. The next task is the isolated,
+  pinned direct llama.cpp same-GGUF host/Android parity module; no LiteRT conversion has started.
 - The owner-local FluidVoice 1.6.9 pipeline is now inventoried as a Mac-only reference. Its active
   path is Parakeet TDT v2 Core ML → app filler/dictionary preprocessing → Fluid-1 with bundled
   prompt/template → thinking-markup and app formatting/continuous-dictation postprocessing. The

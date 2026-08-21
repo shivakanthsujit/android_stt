@@ -29,6 +29,7 @@ RUNTIME_CONFIGURATION_FIELDS = (
 
 APPROVED_CONTEXT_SIZES = {4_096, 3_072, 2_560}
 APPROVED_CPU_THREADS = {2, 3, 4}
+APPROVED_IMPLICIT_RESOLVED_CPU_THREADS = {1, 2, 3, 4}
 APPROVED_CACHE_MEMORY_BYTES = {32 * 1_048_576, 64 * 1_048_576}
 FIXED_PROMPT_TOKENS = 78
 CACHE_MAX_ENTRIES = 4
@@ -96,7 +97,7 @@ def runtime_configuration(rows: list[dict]) -> dict | None:
         cpu_threads = configuration["cpu_threads"]
         resolved_cpu_threads = configuration["resolved_cpu_threads"]
         _require_nonnegative_integer(resolved_cpu_threads, "resolved_cpu_threads")
-        if resolved_cpu_threads not in APPROVED_CPU_THREADS:
+        if resolved_cpu_threads not in APPROVED_IMPLICIT_RESOLVED_CPU_THREADS:
             raise ValueError("runtime configuration has unapproved resolved_cpu_threads")
         if configuration["cpu_threads_mode"] == "implicit":
             if cpu_threads is not None:

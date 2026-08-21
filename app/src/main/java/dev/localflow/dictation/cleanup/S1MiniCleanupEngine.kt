@@ -60,16 +60,14 @@ class S1MiniCleanupEngine(
                     modelName = MODEL_NAME,
                     quantizationId = QUANTIZATION,
                 ),
-                options = ModelLoadingOptions(
-                    // Preserve the GGUF-embedded Qwen3 template. enableThinking=false below is
-                    // what creates the empty thinking prefix used for S1-mini training.
-                    chatTemplate = null,
-                    contextSize = MODEL_CONTEXT_TOKENS,
-                    useMmap = true,
-                    cacheOptions = null,
-                ),
+                options = productionModelLoadingOptions(),
             )
-            fixedPromptTokens = runner.getPromptTokensSize(messages(""), true)
+            val measuredFixedPromptTokens = runner.getPromptTokensSize(messages(""), true)
+            require(measuredFixedPromptTokens == EXPECTED_FIXED_PROMPT_TOKENS) {
+                "S1-mini fixed prompt-token drift: expected=$EXPECTED_FIXED_PROMPT_TOKENS, " +
+                    "runtime=$measuredFixedPromptTokens"
+            }
+            fixedPromptTokens = measuredFixedPromptTokens
             modelRunner = runner
             state = CleanupState.READY
             val completedAtNs = SystemClock.elapsedRealtimeNanos()
@@ -131,6 +129,10 @@ class S1MiniCleanupEngine(
             "S1-mini cleanup pass exceeded the recommended input-token ceiling"
         }
         val maxOutputTokens = outputCapForRawTokenCount(rawTokens)
+        require(promptTokens + maxOutputTokens <= MODEL_CONTEXT_TOKENS) {
+            "S1-mini cleanup pass exceeds context: prompt=$promptTokens, " +
+                "max_output=$maxOutputTokens, context=$MODEL_CONTEXT_TOKENS"
+        }
         val startedAtNs = SystemClock.elapsedRealtimeNanos()
         var firstTokenAtNs: Long? = null
         var stats: GenerationStats? = null
@@ -325,10 +327,23 @@ class S1MiniCleanupEngine(
             "You are a text normalizer for speech-to-text transcripts. The input begins with a control line specifying the styling, structure, and context settings; clean the transcript to match those settings and output only the cleaned text."
         const val CONTROL_LINE =
             "[Styling: semi-formal] [Structure: prose] [Context: general]"
-        const val MODEL_CONTEXT_TOKENS = 4_096
+        const val MODEL_CPU_THREADS = 2
+        const val MODEL_CONTEXT_TOKENS = 2_560
+        const val EXPECTED_FIXED_PROMPT_TOKENS = 78
         const val MAX_ALLOWED_OUTPUT_TOKENS = 2_048
         const val MIN_OUTPUT_TOKENS = 32
         const val RECOMMENDED_MAX_RAW_TOKENS = 1_000
+
+        internal fun productionModelLoadingOptions(): ModelLoadingOptions =
+            ModelLoadingOptions(
+                cpuThreads = MODEL_CPU_THREADS,
+                // Preserve the GGUF-embedded Qwen3 template. enableThinking=false during
+                // generation creates the empty thinking prefix used for S1-mini training.
+                chatTemplate = null,
+                contextSize = MODEL_CONTEXT_TOKENS,
+                useMmap = true,
+                cacheOptions = null,
+            )
 
         internal fun outputCapForRawTokenCount(rawTokenCount: Int): Int {
             require(rawTokenCount > 0) { "Raw transcript token count must be positive" }

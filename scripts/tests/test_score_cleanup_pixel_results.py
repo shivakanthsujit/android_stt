@@ -151,7 +151,7 @@ class ScoreCleanupPixelResultsTest(unittest.TestCase):
             self.runtime_configuration,
             cpu_threads_mode="implicit",
             cpu_threads=None,
-            resolved_cpu_threads=2,
+            resolved_cpu_threads=1,
             cache_enabled=False,
             cache_max_memory_bytes=0,
             cache_max_entries=0,
@@ -165,7 +165,7 @@ class ScoreCleanupPixelResultsTest(unittest.TestCase):
 
         self.assertEqual("implicit", summary["cpu_threads_mode"])
         self.assertIsNone(summary["cpu_threads"])
-        self.assertEqual(2, summary["resolved_cpu_threads"])
+        self.assertEqual(1, summary["resolved_cpu_threads"])
 
     def test_rejects_unapproved_runtime_arms(self) -> None:
         invalid_configurations = {
