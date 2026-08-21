@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "chat.h"
+#include "build-info.h"
 #include "common.h"
 #include "ggml-backend.h"
 #include "llama.h"
@@ -513,6 +514,9 @@ json model_info_json(NativeRuntime & runtime) {
         {"supports_enable_thinking", true},
         {"fixed_prompt_tokens", EXPECTED_FIXED_PROMPT_TOKENS},
         {"llama_version", llama_version()},
+        {"llama_build_number", llama_build_number()},
+        {"llama_commit", llama_commit()},
+        {"llama_build_target", llama_build_target()},
         {"native_build_type", S1_NATIVE_BUILD_TYPE},
         {"native_compiler", S1_NATIVE_COMPILER},
         {"native_compile_flags", S1_NATIVE_COMPILE_FLAGS},

@@ -16,7 +16,8 @@ from typing import Any
 MODEL_FILE = "s1-mini-q4_k_m.gguf"
 MODEL_SHA256 = "3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634"
 LLAMA_REVISION = "ece963f41"
-LLAMA_BUILD = "b10450"
+LLAMA_VERSION = "0.1.0-dev"
+LLAMA_BUILD_NUMBER = 10_450
 FIXED_PROMPT_TOKENS = 78
 MODEL_SIZE_BYTES = 484_219_808
 APPLICATION_ID = "dev.localflow.llamacppbenchmark"
@@ -268,7 +269,10 @@ def validate_direct(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "gpu_layers": config["gpu_layers"],
         "supports_enable_thinking": True,
         "fixed_prompt_tokens": FIXED_PROMPT_TOKENS,
-        "llama_version": LLAMA_BUILD,
+        "llama_version": LLAMA_VERSION,
+        "llama_build_number": LLAMA_BUILD_NUMBER,
+        "llama_commit": LLAMA_REVISION,
+        "llama_build_target": "Android aarch64",
         "native_build_type": "Release",
     }
     for field, expected in native_expected.items():

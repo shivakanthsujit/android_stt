@@ -676,10 +676,37 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Pinned source: llama.cpp commit `ece963f41b0b02d7a0d61436ae365762c073a4c8`, tree
   `f59cbdf04f233655507cc98ee9f704b71bfd1403`, build `b10450`; NDK `28.0.13004108`; CMake package
   `3.31.6`, binary `3.31.6-g38307f9`.
-- Release APK: 18,700,783 bytes, SHA-256
-  `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6`. Stripped JNI DSO:
-  131,400 bytes, SHA-256
-  `2d599c96e1caef721ba9086252d486ac5c2dec184d6f15e403fae5ae1ad8c390`. Ignored build manifest:
-  SHA-256 `e13e6ed271e96a8ca7a249fbd47a8cee40735ab70f37f68c3575d41fe618d5bc`.
+- Final smoke-tested Release APK: 18,701,319 bytes, SHA-256
+  `8931caef1a33acc84c9eb173d4d09d986f71ea0f6816716e3a3e93ce05b1bfad`. Stripped JNI DSO:
+  131,936 bytes, SHA-256
+  `5239a148be50160102d7f67397e81c27808a10f1af19b6cc206cb1756c1f3733`. Ignored build manifest:
+  SHA-256 `b0fbfdc3ea95d6c51a25256549325e9b85d3eb6f2bceff4304108021bf9a9f51`.
 - Android prompt-token/output parity and performance remain unmeasured. Full host evidence:
   `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`.
+
+## 2026-08-22 — direct llama.cpp Pixel contract smoke
+
+- Explicit owner approval preceded the session. Target: Google Pixel 7 `panther`, serial
+  `33040DLH20004E`, ARM64. The runner required exactly one authorized matching Pixel and thermal
+  status 0 before inference.
+- Final APK/model/cases SHA-256:
+  `8931caef1a33acc84c9eb173d4d09d986f71ea0f6816716e3a3e93ce05b1bfad`,
+  `3b41ebe2502cbd03e811d5d16b022f5ab551eda58d62597d152f89535003c634`, and
+  `4db5eadbd5020feb90385a8bcc86a7d8c9db65b5d0bc7c0b82e51b5fab357bbc`.
+- Configuration: context 2,560; generation/batch threads 2/2; batch/ubatch 512/512; mmap on; flash
+  attention off; GPU layers zero; one warmup and one measured pass over three non-evaluation cases.
+- Corrected run `20260821T180425Z-s1-direct-c2560-gt2-bt2-b512-u512-mm1-fa0-g0`: 4/4 rows match
+  host-golden rendered prompt bytes plus raw/prompt token IDs; fixed token delta 78 on every row;
+  output caps 36/47/34; zero cap hits; one valid immediate-EOG empty output; thermal 0 throughout.
+- Selected backend: `libggml-cpu-android_armv8.2_2.so`. Load 996 ms; measured median nonblank TTFT
+  507.0 ms; median total 601.1 ms; median prompt evaluation 486.0 ms; median decode 27.85 tok/s;
+  maximum post-call PSS 1,161,540 KiB; maximum post-call native heap 1,108,342,032 bytes.
+- Raw JSONL SHA-256:
+  `a9c87772dfa911afc9cf6ea2d2c478952c91f56b7cf68c21532d58834c683fb1`; scorer summary:
+  `72906c79413da1542b778f7c37290b4b6a215c3f3700658ef8f28a67a3831406`.
+- Initial completed run `20260821T180154Z` was retained at raw JSONL SHA-256
+  `8311354d0d8a1a44c4b868bf9b0a5ed504849925a28389a5664710d69b448b2b` after exposing a
+  scorer-only semantic-version/build-number mismatch. Its outputs/token IDs/finish states match the
+  corrected run 4/4.
+- This smoke does not prove matched LEAP/Mac raw-output parity, the actual cap path, repeated
+  within-run stability, performance, energy, or sustained thermal behavior.

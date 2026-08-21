@@ -2,7 +2,7 @@
 
 Date: 2026-08-22
 
-Status: Stage 1 selected in production; Stage 2 host implementation complete, device parity pending
+Status: Stage 1 selected; Stage 2 initial device contract smoke passed, CPU A/B pending
 
 ## Objective
 
@@ -207,9 +207,11 @@ holding the S1 Q4_K_M bytes constant.
 - [x] Build ARM64 Release with runtime-selected CPU variants, native/OpenMP/llamafile disabled,
   and tests/examples/server omitted. Record the exact resolved flags rather than relying on
   defaults.
-- [ ] Load the exact reference GGUF and reproduce the exact templated token IDs, prompt-token
-  counts, output caps, greedy sampler, stop handling, and raw output.
-- [ ] Record authoritative native prompt-eval and decode timings independently of Kotlin/JNI.
+- [x] Load the exact reference GGUF and reproduce the exact templated token IDs, prompt-token
+  counts, output caps, greedy sampler, and EOG handling on the project-authored device smoke.
+  Actual token-cap termination and matched LEAP/Mac raw-output parity remain pending.
+- [x] Record authoritative native prompt-eval and decode timings independently of Kotlin/JNI on
+  the initial smoke. Do not use its three-case/single-repeat values as a performance comparison.
 - [x] Use a persistent native model/context handle, clear KV state between requests, and return
   prompt/completion counts, first-token/end timestamps, EOG-versus-cap finish, native timings, and
   selected backend/system information.
@@ -329,7 +331,7 @@ checkpoint and nominal four-bit deployment precision.
 | 1 | LEAP API/settings audit | complete | supported-option inventory captured above |
 | 2 | LEAP context/cache/CPU host implementation | complete | tests and debug-only parameters |
 | 3 | LEAP Pixel A/B | complete | `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md` |
-| 4 | Direct llama.cpp standalone same-GGUF parity | host build complete; device parity pending | pinned build manifest complete; Android prompt/output/timing evidence pending |
+| 4 | Direct llama.cpp standalone same-GGUF parity | initial contract smoke passed; full raw-output parity pending | prompt/token/cap/EOG/backend evidence complete; matched control and cap path pending |
 | 5 | Direct llama.cpp Android CPU A/B | pending | same-artifact comparison |
 | 6 | Direct GPU feasibility probe | pending after CPU parity | supported/no-go evidence |
 | 7 | LiteRT-LM S1 BF16 conversion | pending | `.litertlm` hash and conversion manifest |
@@ -337,6 +339,6 @@ checkpoint and nominal four-bit deployment precision.
 | 9 | LiteRT Pixel CPU/GPU A/B | pending owner-approved device run | performance/power report |
 | 10 | Runtime selection and production swap, if earned | pending | decision, tests, rollback path |
 
-The immediate executable task is Order 4's owner-approved device smoke: verify the isolated pinned
-APK's exact prompt/token/cap/output contract and selected ARM backend before performance tuning. A
-Pixel install or benchmark still requires the owner's immediate device-session approval.
+The immediate executable task is to close Order 4's remaining cap-path and matched raw-output parity
+gaps, then start Order 5 on a frozen non-evaluation performance corpus. Every Pixel install or
+benchmark still requires the owner's immediate device-session approval.

@@ -59,7 +59,10 @@ def direct_row(case_id: str, repeat: int, output: str) -> dict:
             "supports_gpu_offload": False,
             "supports_enable_thinking": True,
             "fixed_prompt_tokens": MODULE.FIXED_PROMPT_TOKENS,
-            "llama_version": MODULE.LLAMA_BUILD,
+            "llama_version": MODULE.LLAMA_VERSION,
+            "llama_build_number": MODULE.LLAMA_BUILD_NUMBER,
+            "llama_commit": MODULE.LLAMA_REVISION,
+            "llama_build_target": "Android aarch64",
             "native_build_type": "Release",
             "native_compiler": "Clang",
             "native_compile_flags": "-O3 -DNDEBUG",
@@ -178,6 +181,12 @@ class ScoreS1MiniDirectResultsTest(unittest.TestCase):
         bad = copy.deepcopy(self.rows)
         bad[-1]["native_model_info"]["threads"] = 4
         with self.assertRaisesRegex(ValueError, "mix native_model_info"):
+            MODULE.summarize(bad)
+
+        bad = copy.deepcopy(self.rows)
+        for row in bad:
+            row["native_model_info"]["llama_build_number"] = 10_451
+        with self.assertRaisesRegex(ValueError, "llama_build_number"):
             MODULE.summarize(bad)
 
     def test_rejects_unmatched_leap_control(self) -> None:

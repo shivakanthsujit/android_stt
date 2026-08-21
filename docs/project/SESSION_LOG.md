@@ -1138,12 +1138,37 @@
 - The complete Release unit/build gate passed with 13 JVM tests. Twenty-one Python tooling tests,
   shell syntax, Python compilation, and `git diff --check` pass. APK integrity, 16 KiB alignment,
   v2 signing, ARM64 packaging, JNI exports, and dynamic dependencies were inspected.
-- The reproducible Release APK is 18,700,783 bytes at SHA-256
-  `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6`; its stripped JNI DSO is
-  131,400 bytes at SHA-256
-  `2d599c96e1caef721ba9086252d486ac5c2dec184d6f15e403fae5ae1ad8c390`. The ignored build manifest
-  SHA-256 is `e13e6ed271e96a8ca7a249fbd47a8cee40735ab70f37f68c3575d41fe618d5bc`.
+- The final smoke-tested Release APK is 18,701,319 bytes at SHA-256
+  `8931caef1a33acc84c9eb173d4d09d986f71ea0f6816716e3a3e93ce05b1bfad`; its stripped JNI DSO is
+  131,936 bytes at SHA-256
+  `5239a148be50160102d7f67397e81c27808a10f1af19b6cc206cb1756c1f3733`. The ignored build manifest
+  SHA-256 is `b0fbfdc3ea95d6c51a25256549325e9b85d3eb6f2bceff4304108021bf9a9f51`.
 - No ADB command, app install, Pixel interaction, model conversion, lower-bit quantization, or
   production runtime change occurred. Order 4 remains open for a fresh owner-approved device
   prompt/token/raw-output parity smoke and later CPU comparison. Full host evidence:
   `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`.
+
+## 2026-08-22 — Direct llama.cpp Pixel contract smoke
+
+- After explicit owner approval, installed only the isolated benchmark APK on the connected Pixel
+  7 and staged the exact 484,219,808-byte Q4_K_M plus three project-authored non-evaluation smoke
+  strings in app-private storage. No microphone or production app path was used.
+- Retained initial run `20260821T180154Z` after all four inference rows completed but the scorer
+  rejected `llama_version=0.1.0-dev`: the scorer had incorrectly conflated llama.cpp's semantic
+  version with build `b10450`. Split runtime provenance into semantic version, build number 10450,
+  commit `ece963f41`, and target `Android aarch64`; added negative tests and rebuilt.
+- Corrected run `20260821T180425Z-s1-direct-c2560-gt2-bt2-b512-u512-mm1-fa0-g0` passed. Every
+  warmup/measured row exactly matches the host golden's rendered prompt bytes, raw token IDs, and
+  prompt token IDs; the fixed delta is 78 and all output caps match. All rows ended on EOG, none
+  capped, and filler-only returned a valid empty output.
+- The two independent runs match outputs/token IDs/finish state 4/4. This does not replace a
+  multi-repeat stability run. No LEAP/Mac raw-output control was supplied; Unicode cleanup changed
+  text and omitted the emoji, so quality/runtime parity is deliberately not claimed.
+- Pixel runtime: `libggml-cpu-android_armv8.2_2.so`, 2/2 threads, 512/512 batch, mmap on, flash off,
+  CPU only. Thermal remained 0. Smoke-only results: load 996 ms, 507.0 ms median nonblank TTFT,
+  601.1 ms median total, 486.0 ms median prompt evaluation, 27.85 decode tok/s median, 1,161,540
+  KiB maximum post-call PSS, and 1,108,342,032-byte maximum post-call native heap.
+- Corrected raw JSONL SHA-256 is
+  `a9c87772dfa911afc9cf6ea2d2c478952c91f56b7cf68c21532d58834c683fb1`; summary SHA-256 is
+  `72906c79413da1542b778f7c37290b4b6a215c3f3700658ef8f28a67a3831406`. The actual cap path,
+  matched raw-output parity, non-evaluation CPU matrix, power, and sustained thermal remain next.

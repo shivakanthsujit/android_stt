@@ -41,6 +41,17 @@ class NativeResultContractTest {
     }
 
     @Test
+    fun rejectsNativeBuildProvenanceDrift() {
+        val config = BenchmarkConfig()
+        assertThrows(IllegalArgumentException::class.java) {
+            NativeResultContract.validateModelInfo(
+                validModelInfo(config).put("llama_build_number", 10_451),
+                config,
+            )
+        }
+    }
+
+    @Test
     fun validatesCompleteEogGeneration() {
         val generation = validGeneration()
         val preflight = NativeResultContract.validateTokenization(validTokenization(), "hello")
@@ -119,7 +130,10 @@ class NativeResultContractTest {
             .put("supports_gpu_offload", false)
             .put("supports_enable_thinking", true)
             .put("fixed_prompt_tokens", S1Contract.EXPECTED_FIXED_PROMPT_TOKENS)
-            .put("llama_version", "b10450")
+            .put("llama_version", "0.1.0-dev")
+            .put("llama_build_number", 10_450)
+            .put("llama_commit", "ece963f41")
+            .put("llama_build_target", "Android aarch64")
             .put("native_build_type", "Release")
             .put("native_compiler", "Clang")
             .put("native_compile_flags", "-O3 -DNDEBUG")

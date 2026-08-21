@@ -54,14 +54,19 @@ Do not add lower-bit GGUF variants.
   Production now uses the selected supported LEAP settings. Evidence:
   `docs/evaluation/results/2026-08-22-s1-mini-leap-pixel-tuning.md`.
 - [x] Build a separate collision-free Android benchmark module pinned to llama.cpp `ece963f41` /
-  build 10450, NDK `28.0.13004108`, and CMake `3.31.6`. The 18,700,783-byte host-verified Release
+  build 10450, NDK `28.0.13004108`, and CMake `3.31.6`. The 18,701,319-byte host-verified Release
   APK contains only the isolated llama/ggml CPU stack and has SHA-256
-  `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6`. Evidence:
+  `8931caef1a33acc84c9eb173d4d09d986f71ea0f6816716e3a3e93ce05b1bfad`. Evidence:
   `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`.
-- [ ] With fresh owner approval, run the direct APK's device smoke and exact prompt/token/cap/raw
-  parity gate, then tune its CPU path on an explicit non-evaluation performance corpus. Freeze the
-  CPU setting before declared personal-v3/regression parity. Add an experimental Pixel Mali Vulkan
-  arm only after CPU prompt/token/output parity.
+- [x] Run the direct APK's initial device contract smoke. The Pixel selected
+  `libggml-cpu-android_armv8.2_2.so`; 4/4 rows exactly match host golden prompt bytes and raw/prompt
+  token IDs, all fixed deltas/caps match, no cap was reached, and thermal remained 0. This is not a
+  matched LEAP/Mac raw-output or performance result.
+- [ ] Before CPU tuning, freeze an explicit non-evaluation shape/length corpus, add an actual
+  device cap-path case, clarify llama.cpp's minimum-one perf decode counter, and persist start
+  thermal status in the manifest. Then tune threads/batch/ubatch/flash under fresh owner approval.
+  Freeze the CPU setting before declared personal-v3/regression parity. Add an experimental Pixel
+  Mali Vulkan arm only after CPU prompt/token/output parity.
 - [ ] On the Linux RTX A6000 host, convert the pinned S1 BF16 checkpoint—not the GGUF or generic
   Qwen—to LiteRT-LM with a metadata-verified blockwise-32 INT4/FP32 recipe. Export context 4,096
   first; explicitly exclude channelwise, block-128, sub-four-bit, and smaller-GGUF arms.

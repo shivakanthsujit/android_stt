@@ -2,20 +2,22 @@
 
 Date: 2026-08-22
 
-Status: host implementation and reproducible Release build complete; no Pixel install, Android
-generation, output-parity result, or performance claim yet
+Status: host implementation complete and initial Pixel contract smoke passed; full matched
+raw-output parity and performance comparison pending
 
 ## Outcome
 
-Order 4 now has a collision-isolated Android benchmark implementation that can exercise the exact
+Order 4 now has a collision-isolated Android benchmark implementation that exercises the exact
 selected S1-mini Q4_K_M GGUF through a project-owned, pinned llama.cpp CPU runtime. The host build,
-schema, prompt golden, transcript-only staging, native interface, result validation, and future
-Pixel runner are ready. Device-side template/token parity, raw-output parity, selected Pixel ARM
-backend, stability, latency, memory, energy, and thermal evidence remain pending a fresh
-owner-approved device session.
+schema, prompt golden, transcript-only staging, native interface, result validation, and Pixel
+runner are ready. An owner-approved initial Pixel smoke proved device-side template/token parity,
+runtime provenance, deterministic repeat behavior across two independent short runs, and the
+selected Pixel ARM backend. Matched LEAP/Mac raw-output parity, cap-path coverage, a repeated
+non-evaluation performance corpus, energy, and sustained thermal evidence remain pending.
 
-This checkpoint did not install an APK, invoke ADB, convert a model, use a smaller quantization, or
-change the production LEAP engine.
+This checkpoint installed only the separate benchmark APK and staged the exact GGUF plus three
+project-authored non-evaluation smoke strings in its app-private storage. It did not use the
+microphone, convert a model, use a smaller quantization, or change the production LEAP engine.
 
 ## Isolated runtime boundary
 
@@ -46,14 +48,14 @@ change the production LEAP engine.
 | Android CMake package/binary | `3.31.6` / `3.31.6-g38307f9` |
 | Prompt golden | 3,412 bytes; SHA-256 `a4aa17028124311985afcbd4145bb8569b18c4ff0284f933e75c335dc1d496ec` |
 | CMake configuration | SHA-256 `b1879d46fe236a704e60dbae5d10ac6398db9b9ae7fd4ac6c3804229f602cf7a` |
-| JNI source | SHA-256 `bf7c83e0b8f0d1d78287aa88e995ba73d7a252c7a964a06af036c3fd2f100b74` |
-| Release APK | 18,700,783 bytes; SHA-256 `922dade851572d7a72e1ac36802e9c061862712773acbf756dafe89db7379ad6` |
-| Stripped JNI DSO | 131,400 bytes; SHA-256 `2d599c96e1caef721ba9086252d486ac5c2dec184d6f15e403fae5ae1ad8c390` |
+| JNI source | SHA-256 `8a49979b770705d40987cc552295a2f5cac83388c0aa3194996f2b59046ae3ee` |
+| Release APK | 18,701,319 bytes; SHA-256 `8931caef1a33acc84c9eb173d4d09d986f71ea0f6816716e3a3e93ce05b1bfad` |
+| Stripped JNI DSO | 131,936 bytes; SHA-256 `5239a148be50160102d7f67397e81c27808a10f1af19b6cc206cb1756c1f3733` |
 
 The ignored build-evidence directory is
-`.cache/integration/llamacpp-builds/20260821T175500Z-llamacpp-b10450-android-release/`.
+`.cache/integration/llamacpp-builds/20260821T180352Z-llamacpp-b10450-android-release/`.
 Its `build-manifest.json` SHA-256 is
-`e13e6ed271e96a8ca7a249fbd47a8cee40735ab70f37f68c3575d41fe618d5bc`.
+`b0fbfdc3ea95d6c51a25256549325e9b85d3eb6f2bceff4304108021bf9a9f51`.
 The manifest records every packaged native-library hash plus the resolved CMake cache, configure
 command, and Android Gradle native build model. Model weights, native binaries, and build caches
 remain outside Git.
@@ -96,16 +98,62 @@ token IDs before any performance run is accepted.
 The build emitted only two unused-helper warnings from pinned Minja headers. They do not change
 the generated binary contract and are retained as upstream-source warnings.
 
-## Device gate still required
+## Pixel smoke evidence
 
-The next session must begin with an explicit owner approval immediately before device work. The
-Pixel runner requires an explicit `ANDROID_SERIAL`, exactly one authorized matching Google Pixel,
-ARM64, the exact model/APK, an explicit non-evaluation transcript-only performance corpus, and
-thermal status 0. It retains partial/error artifacts and does not silently retry.
+The owner approved the device session. The runner verified the one authorized Google Pixel 7
+`panther` at serial `33040DLH20004E`, ARM64, the exact APK/model hashes, and thermal status 0 before
+starting inference. Configuration was context 2,560, generation/batch threads 2/2, batch/ubatch
+512/512, mmap on, flash attention off, GPU layers zero, one warmup, and one measured pass through
+three project-authored cases.
 
-The first device step is a one-case/short-corpus smoke that proves model load, exact prompt golden,
-token IDs, output cap, greedy EOG/cap handling, and selected backend. Only after this gate should a
-non-evaluation shape/length corpus tune threads, batch threads, batch/ubatch, and flash attention.
+The first completed run, `20260821T180154Z`, exposed a scorer-only provenance error: the native
+library correctly reported semantic `llama_version=0.1.0-dev`, while the scorer incorrectly
+expected `b10450` in that field. Its four inference rows were retained at SHA-256
+`8311354d0d8a1a44c4b868bf9b0a5ed504849925a28389a5664710d69b448b2b` and were not silently
+discarded. The runtime/result contract was corrected to record semantic version, build number
+`10450`, commit `ece963f41`, and target `Android aarch64` independently.
+
+Corrected run
+`20260821T180425Z-s1-direct-c2560-gt2-bt2-b512-u512-mm1-fa0-g0` passed the strict scorer:
+
+- all four warmup/measured rows and all three unique cases exactly match the host golden's raw
+  token IDs, rendered prompt bytes, and prompt token IDs;
+- prompt-token count minus raw-token count is exactly 78 on every row; raw/prompt/cap counts are
+  3/81/36, 11/89/47, and 1/79/34;
+- all generations ended on EOG, none reached its cap, and the filler-only case produced the valid
+  empty generation expected by the publisher contract;
+- outputs, token IDs, and finish states match the retained first run on 4/4 rows; one repeat per run
+  is not a substitute for the later repeated stability matrix;
+- the Pixel selected `libggml-cpu-android_armv8.2_2.so`, reporting NEON, ARM FMA, FP16 vector
+  arithmetic, DOTPROD, and REPACK; and
+- post-inference thermal status remained 0 for every row.
+
+Smoke-only measurements were 996 ms model load, 507.0 ms median nonblank TTFT, 601.1 ms measured
+median total, 486.0 ms median prompt evaluation, 27.85 decode tokens/s median, 1,161,540 KiB maximum
+post-call PSS snapshot, and 1,108,342,032 bytes maximum post-call native-heap snapshot. These three
+cases and single measured pass are contract smoke evidence, not a LEAP performance comparison.
+
+Retained corrected artifact hashes:
+
+| Artifact | SHA-256 |
+|---|---|
+| transcript-only cases | `4db5eadbd5020feb90385a8bcc86a7d8c9db65b5d0bc7c0b82e51b5fab357bbc` |
+| run manifest | `7795cd8ae834a18a23f3c51a87445a816c4851c01609da34f9c618fc11950424` |
+| raw JSONL | `a9c87772dfa911afc9cf6ea2d2c478952c91f56b7cf68c21532d58834c683fb1` |
+| scorer summary | `72906c79413da1542b778f7c37290b4b6a215c3f3700658ef8f28a67a3831406` |
+
+## Remaining gate
+
+The Unicode smoke output changed script/spacing and omitted the bicycle emoji. The golden contains
+no expected cleanup output and no matched LEAP/Mac control was supplied, so this result cannot be
+called raw-output runtime parity or a quality failure. The next evidence session must freeze a
+non-evaluation shape/length corpus, cover repeated stability and the actual cap path, and persist
+thermal-start evidence before CPU tuning. llama.cpp's perf getter reports an internal minimum
+`n_eval=1` even for immediate EOG, so `perf_decode_tokens` must not be interpreted as the completion
+count for the empty case; the separately recorded completion count is authoritative. PSS/native
+heap values are post-call snapshots rather than within-call sampled peaks.
+
 Personal-v3 and the committed cleanup suites may be used only after tuning is frozen for declared
-regression/parity evidence; blind-v2 remains prohibited. A direct runtime earns production
-consideration only after matched LEAP output, latency, p90, memory, energy, and thermal evidence.
+regression/parity evidence; blind-v2 remains prohibited. Every later device session still requires
+fresh owner approval. A direct runtime earns production consideration only after matched LEAP
+output, latency, p90, memory, energy, and thermal evidence.

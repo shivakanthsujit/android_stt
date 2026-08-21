@@ -40,7 +40,18 @@ internal object NativeResultContract {
         require(info.getInt("fixed_prompt_tokens") == S1Contract.EXPECTED_FIXED_PROMPT_TOKENS) {
             "native fixed prompt-token count mismatch"
         }
-        require(info.getString("llama_version").isNotBlank()) { "llama.cpp version is blank" }
+        require(info.getString("llama_version") == "0.1.0-dev") {
+            "llama.cpp semantic version mismatch"
+        }
+        require(info.getInt("llama_build_number") == 10_450) {
+            "llama.cpp build number mismatch"
+        }
+        require(info.getString("llama_commit") == BuildConfig.LLAMA_CPP_REVISION) {
+            "llama.cpp native commit mismatch"
+        }
+        require(info.getString("llama_build_target") == "Android aarch64") {
+            "llama.cpp native build target mismatch"
+        }
         require(info.getString("native_build_type") == "Release") {
             "native benchmark is not a Release build"
         }
