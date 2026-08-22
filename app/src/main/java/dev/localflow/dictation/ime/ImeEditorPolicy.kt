@@ -14,6 +14,39 @@ data class UndoRecord(
     val committedText: String,
 )
 
+/** Bounded in-memory undo history. Text is still deleted only through [ImeEditorPolicy.canUndo]. */
+class ImeUndoHistory(
+    private val capacity: Int = DEFAULT_CAPACITY,
+) {
+    private val records = ArrayDeque<UndoRecord>()
+
+    init {
+        require(capacity > 0) { "Undo history capacity must be positive" }
+    }
+
+    val size: Int
+        get() = records.size
+
+    fun isEmpty(): Boolean = records.isEmpty()
+
+    fun isNotEmpty(): Boolean = records.isNotEmpty()
+
+    fun push(record: UndoRecord) {
+        records.addLast(record)
+        while (records.size > capacity) records.removeFirst()
+    }
+
+    fun lastOrNull(): UndoRecord? = records.lastOrNull()
+
+    fun removeLast(): UndoRecord = records.removeLast()
+
+    fun clear() = records.clear()
+
+    companion object {
+        internal const val DEFAULT_CAPACITY = 5
+    }
+}
+
 /** Pure editor-safety and bounded-undo policy shared by the IME and host unit tests. */
 object ImeEditorPolicy {
     fun supportsDictation(inputType: Int): Boolean =
@@ -44,4 +77,37 @@ object ImeEditorPolicy {
         record.editor == currentEditor &&
         record.committedText.isNotEmpty() &&
         textBeforeCursor?.toString() == record.committedText
+
+    /** Adds only the boundary spaces needed to join a dictation at the current cursor. */
+    fun textForCommit(
+        dictatedText: String,
+        textBeforeCursor: CharSequence?,
+        textAfterCursor: CharSequence?,
+    ): String {
+        if (dictatedText.isEmpty()) return dictatedText
+
+        val prefix = if (needsBoundarySpace(textBeforeCursor?.lastOrNull(), dictatedText.first())) {
+            " "
+        } else {
+            ""
+        }
+        val suffix = if (needsBoundarySpace(dictatedText.last(), textAfterCursor?.firstOrNull())) {
+            " "
+        } else {
+            ""
+        }
+        return prefix + dictatedText + suffix
+    }
+
+    private fun needsBoundarySpace(left: Char?, right: Char?): Boolean {
+        if (left == null || right == null || left.isWhitespace() || right.isWhitespace()) return false
+        if (left in OPENING_BOUNDARY_CHARACTERS) return false
+        if (right in CLOSING_BOUNDARY_CHARACTERS) return false
+        return true
+    }
+
+    private val OPENING_BOUNDARY_CHARACTERS = setOf('(', '[', '{', '<', '“', '‘', '"')
+    private val CLOSING_BOUNDARY_CHARACTERS = setOf(
+        '.', ',', '!', '?', ';', ':', '%', ')', ']', '}', '>', '”', '’', '\'', '"',
+    )
 }

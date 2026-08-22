@@ -28,21 +28,38 @@
         android:textSize="11sp" />
 
     <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/ime_transcript_title"
+        android:textAllCaps="true"
+        android:textColor="@color/local_flow_muted"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <TextView
         android:id="@+id/imeDetailText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:maxLines="4"
-        android:textColor="@color/local_flow_muted"
-        android:textSize="13sp" />
+        android:layout_marginTop="4dp"
+        android:background="@color/local_flow_surface"
+        android:fadeScrollbars="false"
+        android:gravity="top|start"
+        android:minLines="3"
+        android:maxLines="5"
+        android:overScrollMode="ifContentScrolls"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp"
+        android:scrollbars="vertical"
+        android:text="@string/ime_transcript_waiting"
+        android:textColor="@color/local_flow_text"
+        android:textSize="14sp" />
 
     <Button
         android:id="@+id/imeMainButton"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:contentDescription="@string/ime_main_action_description"
         android:text="@string/ime_load_models"
         android:textSize="17sp" />

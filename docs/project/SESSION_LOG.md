@@ -1269,3 +1269,21 @@
 - With explicit owner approval, uninstalled only `dev.localflow.litertlmbenchmark` after the report
   was retained. Free `/data` space increased from 2,152,216 KiB to 3,214,612 KiB, recovering
   1,062,396 KiB; `dev.localflow.dictation` was verified still installed.
+
+## 2026-08-22 — Daily-driver QoL slice 1
+
+- Added bounded, independently scrollable raw-transcript surfaces to the Activity and voice IME.
+  Live partials follow the tail by default and retain manual position once the owner scrolls up.
+- Replaced the IME's discarded one-shot undo with a five-entry in-memory same-editor history. Each
+  deletion still requires an exact immediate suffix; editor changes or mismatches clear history
+  without deleting text.
+- Added cursor-aware insertion spacing. Consecutive dictations receive exactly one needed boundary
+  space, while empty fields, existing whitespace/newlines, and punctuation avoid duplicates. Any
+  added separator is part of the undo transaction.
+- Added the ordered QoL plan, including clearer states and a real, non-persisted microphone
+  waveform as the next visual slice. Rambler/Gboard informed interaction principles only; no asset,
+  prompt, transcript, or model behavior was copied.
+- Built and owner-authorized-installed the 88,046,641-byte debug APK at SHA-256
+  `cd2227b372a2f4028a6ae725ad28d566c130f7424b4241e3057f2290cb57035d`. Installation preserved
+  all three app-private GGUFs. Local Flow remains enabled; Gboard was current default at the
+  post-install check, so owner selection and live voice verification remain open.

@@ -513,3 +513,9 @@ Last updated: 2026-08-22
 2. Use Views/XML to minimize Activity and future IME integration overhead.
 3. Keep AGP 8.13.2, Gradle 8.13, Kotlin 2.3.20, API 36, and JDK 17 while those are the verified
    Liquid/Moonshine-compatible versions.
+4. Keep live transcript presentation bounded and independently scrollable in both the setup
+   Activity and IME. Auto-follow only while the owner is already at the tail. Retain at most five
+   in-memory same-editor undo records, and delete only when the current immediate suffix matches
+   exactly. Join dictated text to adjacent editor text with a single boundary space only when both
+   boundary characters require one; include the separator in the undo record. This is UI/editor
+   behavior only and must not alter or persist raw STT/model text.

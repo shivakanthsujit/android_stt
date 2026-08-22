@@ -797,3 +797,21 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Owner-approved teardown: `adb uninstall dev.localflow.litertlmbenchmark` returned `Success`;
   package absence and production `dev.localflow.dictation` presence were verified. `/data` free
   space rose by 1,062,396 KiB (about 1.01 GiB).
+
+## 2026-08-22 — Daily-driver QoL slice 1
+
+- `./gradlew --offline :app:testDebugUnitTest`: passed, including editor-boundary spacing,
+  exact-suffix undo, five-entry history, sensitive-editor, and ordinary-editor tests.
+- `./gradlew --offline :app:assembleDebug`: passed.
+- `./gradlew --offline :app:lintDebug`: passed; report written to
+  `app/build/reports/lint-results-debug.html`.
+- `git diff --check`: passed before documentation finalization.
+- Debug APK: 88,046,641 bytes, SHA-256
+  `cd2227b372a2f4028a6ae725ad28d566c130f7424b4241e3057f2290cb57035d`.
+- Owner-authorized `adb install -r` on Pixel 7 serial `33040DLH20004E`: `Success`. Package presence,
+  Local Flow IME enabled state, and the preserved 129,133,984-byte Realtime EOU, 484,219,808-byte
+  S1-mini, and 131,387,520-byte offline Parakeet files were verified read-only. Gboard was current
+  default; Local Flow was not silently selected.
+- Launched only `MainActivity` and inspected its UI hierarchy. The bounded raw transcript field is
+  present; no microphone or model inference ran. Live long-text scrolling and repeated multi-undo
+  still require owner-spoken/interactive verification.

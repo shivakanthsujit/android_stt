@@ -93,6 +93,7 @@
     <string name="ime_processing">Processing…</string>
     <string name="ime_cancel">Cancel</string>
     <string name="ime_undo">Undo</string>
+    <string name="ime_undo_count">Undo (%1$d)</string>
     <string name="ime_next_keyboard">Keyboard</string>
     <string name="ime_main_action_description">Local Flow dictation action</string>
     <string name="ime_sensitive_editor">Dictation is disabled for password or private editor fields.</string>
@@ -109,6 +110,8 @@
     <string name="ime_canceled">Dictation canceled; no text was inserted.</string>
     <string name="ime_undo_unavailable">Undo is unavailable because the editor or surrounding text changed.</string>
     <string name="ime_undone">The last Local Flow insertion was removed.</string>
+    <string name="ime_transcript_title">Transcript</string>
+    <string name="ime_transcript_waiting">Your live local transcript will appear here.</string>
     <string name="ime_raw_detail">Raw: %1$s</string>
     <string name="ime_committed_detail">Inserted: %1$s</string>
 </resources>

@@ -499,12 +499,19 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   inference; never activate the microphone merely because an editor gains focus. Device behavior
   remains to be verified.
 - [x] Commit the non-empty, non-capped cleanup result through `InputConnection`, while keeping the original raw
-  transcript available for review, cancel, or one-step undo.
+  transcript available for scrollable review, cancel, or bounded exact-suffix undo.
 - [x] Detect password/private editor types. Disable dictation there by default, never
   log transcript content, and do not introduce a hosted fallback.
 - [x] Add host-side editor identity checks, focus/window cancellation, service teardown handling,
-  operation invalidation, and exact-suffix bounded Undo. Confirm all paths on-device before treating
-  the lifecycle as complete.
+  operation invalidation, and exact-suffix bounded Undo. The first QoL slice retains up to five
+  same-editor commits and includes any automatically inserted separator in the undo transaction.
+  Confirm all paths on-device before treating the lifecycle as complete.
+- [x] Add cursor-aware commit spacing: empty fields and existing whitespace/punctuation receive no
+  prefix, while consecutive ordinary dictations receive exactly one separating space. Cover both
+  cursor boundaries with host tests.
+- [x] Make raw transcript surfaces bounded and independently scrollable in both Activity and IME.
+  Follow new partials while the owner remains at the tail, but preserve manual scroll position when
+  they scroll upward.
 - [x] Instrument model load, recording, Stop-to-STT, cleanup, and Stop-to-result in the IME with
   transcript-free diagnostics.
 - [ ] Add/measure IME-specific PSS, thermal state, power, and true Stop-to-editor-commit timing on
@@ -516,8 +523,10 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 
 ## Then: daily-driver and qualification work
 
-- [ ] Add clearer listening/processing/error states, cancel/undo polish, retry behavior, and model
-  warm/unload policy based on measured memory and battery cost.
+- [ ] Complete the ordered QoL plan in
+  `docs/research/LOCAL_FLOW_QOL_PLAN_2026-08-22.md`: clearer listening/processing/error hierarchy,
+  a real non-persisted audio waveform, retry behavior, and final cancel/undo visual polish.
+- [ ] Choose model warm/unload policy based on measured memory and battery cost.
 - [ ] Build a consented, evaluation-only human dictation set with multiple speakers, rooms, pace,
   accents, corrections, names, numbers, uncertainty, long-form speech, and interruptions. Keep all
   personal audio/transcripts ignored and publish only sanitized aggregates and hashes.

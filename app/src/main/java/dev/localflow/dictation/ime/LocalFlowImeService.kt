@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.inputmethodservice.InputMethodService
+import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -39,7 +40,7 @@ class LocalFlowImeService : InputMethodService() {
     private var mode = Mode.NEEDS_MODELS
     private var editorIdentity: EditorIdentity? = null
     private var activeEditorIdentity: EditorIdentity? = null
-    private var undoRecord: UndoRecord? = null
+    private val undoHistory = ImeUndoHistory()
     private var operationGeneration = 0L
     private var lastRawText = ""
     private var lastCommittedText = ""
@@ -68,6 +69,8 @@ class LocalFlowImeService : InputMethodService() {
         cancelButton = view.findViewById(R.id.imeCancelButton)
         undoButton = view.findViewById(R.id.imeUndoButton)
         nextKeyboardButton = view.findViewById(R.id.imeNextKeyboardButton)
+        detailText.movementMethod = ScrollingMovementMethod.getInstance()
+        detailText.isVerticalScrollBarEnabled = true
 
         mainButton.setOnClickListener { onMainAction() }
         cancelButton.setOnClickListener { cancelCurrentOperation() }
@@ -84,7 +87,7 @@ class LocalFlowImeService : InputMethodService() {
         val previousIdentity = editorIdentity
         editorIdentity = attribute?.toIdentity()
         if (previousIdentity != editorIdentity) {
-            undoRecord = null
+            undoHistory.clear()
             lastRawText = ""
             lastCommittedText = ""
             lastMetrics = ""
@@ -101,7 +104,7 @@ class LocalFlowImeService : InputMethodService() {
         cancelCurrentOperation()
         editorIdentity = null
         activeEditorIdentity = null
-        undoRecord = null
+        undoHistory.clear()
         lastRawText = ""
         lastCommittedText = ""
         lastMetrics = ""
@@ -168,7 +171,7 @@ class LocalFlowImeService : InputMethodService() {
 
         val identity = info?.toIdentity() ?: return
         activeEditorIdentity = identity
-        undoRecord = null
+        blockedReason = null
         lastRawText = ""
         lastCommittedText = ""
         lastMetrics = ""
@@ -219,7 +222,6 @@ class LocalFlowImeService : InputMethodService() {
                         return@onSuccess
                     }
                     lastRawText = result.sttResult.text
-                    lastCommittedText = result.committedText
                     lastMetrics = getString(
                         R.string.ime_pipeline_metric,
                         result.sttResult.recordingDurationMs,
@@ -235,12 +237,18 @@ class LocalFlowImeService : InputMethodService() {
                     }
 
                     val connection = currentInputConnection
-                    val committed = connection?.commitText(result.committedText, 1) == true
+                    val textToCommit = ImeEditorPolicy.textForCommit(
+                        dictatedText = result.committedText,
+                        textBeforeCursor = connection?.getTextBeforeCursor(1, 0),
+                        textAfterCursor = connection?.getTextAfterCursor(1, 0),
+                    )
+                    lastCommittedText = textToCommit
+                    val committed = connection?.commitText(textToCommit, 1) == true
                     if (!committed) {
                         blockedReason = getString(R.string.ime_commit_failed)
                         mode = Mode.ERROR
                     } else {
-                        undoRecord = UndoRecord(startedForEditor, result.committedText)
+                        undoHistory.push(UndoRecord(startedForEditor, textToCommit))
                         blockedReason = when {
                             result.cleanupError != null -> getString(R.string.ime_committed_raw)
                             result.usedCleanupFallback -> getString(R.string.ime_committed_fallback)
@@ -284,20 +292,21 @@ class LocalFlowImeService : InputMethodService() {
     }
 
     private fun undoLastCommit() {
-        val record = undoRecord ?: return
+        val record = undoHistory.lastOrNull() ?: return
         val connection = currentInputConnection ?: return
         val beforeCursor = connection.getTextBeforeCursor(record.committedText.length, 0)
         if (!ImeEditorPolicy.canUndo(record, editorIdentity, beforeCursor)) {
             blockedReason = getString(R.string.ime_undo_unavailable)
-            undoRecord = null
+            undoHistory.clear()
+            mode = Mode.READY
             render()
             return
         }
         if (connection.deleteSurroundingText(record.committedText.length, 0)) {
-            undoRecord = null
+            undoHistory.removeLast()
             lastCommittedText = ""
             blockedReason = getString(R.string.ime_undone)
-            mode = Mode.READY
+            mode = if (undoHistory.isEmpty()) Mode.READY else Mode.COMMITTED
         } else {
             blockedReason = getString(R.string.ime_undo_unavailable)
         }
@@ -328,7 +337,7 @@ class LocalFlowImeService : InputMethodService() {
                 coordinator.cleanupEngine.state == CleanupState.UNLOADING -> Mode.PROCESSING
             coordinator.speechEngine.state == SpeechToTextEngine.State.READY &&
                 coordinator.cleanupEngine.state == CleanupState.READY -> {
-                if (undoRecord != null) Mode.COMMITTED else Mode.READY
+                if (undoHistory.isNotEmpty()) Mode.COMMITTED else Mode.READY
             }
             coordinator.speechEngine.state == SpeechToTextEngine.State.LOADING ||
                 coordinator.cleanupEngine.state == CleanupState.LOADING -> Mode.LOADING
@@ -364,10 +373,15 @@ class LocalFlowImeService : InputMethodService() {
         )
         mainButton.isEnabled = mode != Mode.LOADING && mode != Mode.PROCESSING
         cancelButton.isEnabled = mode == Mode.RECORDING || mode == Mode.PROCESSING
-        undoButton.isEnabled = undoRecord != null
+        undoButton.isEnabled = undoHistory.isNotEmpty() && mode in UNDO_ENABLED_MODES
+        undoButton.text = if (undoHistory.size > 1) {
+            getString(R.string.ime_undo_count, undoHistory.size)
+        } else {
+            getString(R.string.ime_undo)
+        }
         nextKeyboardButton.isEnabled = shouldOfferSwitchingToNextInputMethod()
 
-        detailText.text = buildList {
+        updateDetailText(buildList {
             blockedReason?.takeIf(String::isNotBlank)?.let(::add)
             lastRawText.takeIf(String::isNotBlank)?.let {
                 add(getString(R.string.ime_raw_detail, it))
@@ -375,8 +389,25 @@ class LocalFlowImeService : InputMethodService() {
             lastCommittedText.takeIf(String::isNotBlank)?.let {
                 add(getString(R.string.ime_committed_detail, it))
             }
-        }.joinToString("\n")
+        }.joinToString("\n").ifBlank { getString(R.string.ime_transcript_waiting) })
         metricsText.text = lastMetrics
+    }
+
+    private fun updateDetailText(text: CharSequence) {
+        val followTail = !detailText.canScrollVertically(1)
+        val previousScrollY = detailText.scrollY
+        detailText.text = text
+        detailText.post {
+            val layoutHeight = detailText.layout?.height ?: return@post
+            val viewportHeight = (
+                detailText.height - detailText.compoundPaddingTop - detailText.compoundPaddingBottom
+                ).coerceAtLeast(0)
+            val maximumScrollY = (layoutHeight - viewportHeight).coerceAtLeast(0)
+            detailText.scrollTo(
+                0,
+                if (followTail) maximumScrollY else previousScrollY.coerceAtMost(maximumScrollY),
+            )
+        }
     }
 
     private fun openSetup() {
@@ -408,5 +439,9 @@ class LocalFlowImeService : InputMethodService() {
         PROCESSING,
         COMMITTED,
         ERROR,
+    }
+
+    companion object {
+        private val UNDO_ENABLED_MODES = setOf(Mode.READY, Mode.COMMITTED, Mode.ERROR)
     }
 }

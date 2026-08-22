@@ -124,8 +124,12 @@
             android:gravity="top|start"
             android:importantForAutofill="no"
             android:inputType="textCapSentences|textMultiLine"
-            android:minHeight="160dp"
+            android:minLines="5"
+            android:maxLines="10"
+            android:nestedScrollingEnabled="true"
+            android:overScrollMode="ifContentScrolls"
             android:padding="16dp"
+            android:scrollbars="vertical"
             android:hint="@string/transcript_placeholder"
             android:textColor="@color/local_flow_text"
             android:textSize="18sp" />

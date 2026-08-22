@@ -200,7 +200,7 @@ class MainActivity : Activity() {
     }
 
     private fun beginDictation() {
-        transcriptText.setText("")
+        updateTranscript("")
         cleanedText.setText(R.string.cleaned_transcript_placeholder)
         cleanupModelInputText.setText(R.string.cleanup_model_input_placeholder)
         modelOutputText.setText(R.string.model_output_placeholder)
@@ -213,12 +213,7 @@ class MainActivity : Activity() {
         dictationButton.isEnabled = false
         engine.start(
             onPartialTranscript = { transcript ->
-                transcriptText.setText(transcript)
-                transcriptText.hint = if (transcript.isBlank()) {
-                    getString(R.string.transcript_listening)
-                } else {
-                    null
-                }
+                updateTranscript(transcript, R.string.transcript_listening)
             },
         ) { result ->
             result.onSuccess {
@@ -237,12 +232,7 @@ class MainActivity : Activity() {
         dictationButton.isEnabled = false
         engine.stop { result ->
             result.onSuccess { sttResult ->
-                transcriptText.setText(sttResult.text)
-                transcriptText.hint = if (sttResult.text.isBlank()) {
-                    getString(R.string.transcript_no_speech)
-                } else {
-                    null
-                }
+                updateTranscript(sttResult.text, R.string.transcript_no_speech)
                 recordingDurationMs = sttResult.recordingDurationMs
                 sttTailMs = sttResult.finalizationLatencyMs
                 renderMetrics()
@@ -290,6 +280,32 @@ class MainActivity : Activity() {
     private fun cleanRawText() {
         val rawText = transcriptText.text.toString().trim()
         cleanText(rawText, pipelineStopPressedAtNs = null)
+    }
+
+    private fun updateTranscript(text: String, emptyHintRes: Int? = null) {
+        val followTail = !transcriptText.canScrollVertically(1)
+        val previousScrollY = transcriptText.scrollY
+        transcriptText.setText(text)
+        transcriptText.hint = if (text.isBlank() && emptyHintRes != null) {
+            getString(emptyHintRes)
+        } else {
+            null
+        }
+        transcriptText.post {
+            val layoutHeight = transcriptText.layout?.height ?: return@post
+            val viewportHeight = (
+                transcriptText.height -
+                    transcriptText.compoundPaddingTop -
+                    transcriptText.compoundPaddingBottom
+                ).coerceAtLeast(0)
+            val maximumScrollY = (layoutHeight - viewportHeight).coerceAtLeast(0)
+            if (followTail) {
+                transcriptText.setSelection(transcriptText.text.length)
+                transcriptText.scrollTo(0, maximumScrollY)
+            } else {
+                transcriptText.scrollTo(0, previousScrollY.coerceAtMost(maximumScrollY))
+            }
+        }
     }
 
     private fun cleanText(

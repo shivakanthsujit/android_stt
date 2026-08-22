@@ -6,9 +6,9 @@ Last updated: 2026-08-22
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: cache-aware streaming Parakeet integrated behind the shared Activity/IME
-  pipeline; the Realtime EOU Q4 artifact and native stream session load on Pixel without opening
-  the microphone, while user-run live speech/partial-output verification remains open
+- Last verified milestone: first daily-driver QoL slice installed on Pixel with bounded transcript
+  surfaces, live tail-follow, five-entry fail-closed undo, and cursor-aware insertion spacing;
+  owner-run live speech/scroll/undo verification remains open
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: minimal voice IME device verification and daily-driver hardening
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
@@ -24,14 +24,17 @@ Last updated: 2026-08-22
 
 - Kotlin/View-based joined integration Activity on a physical Pixel 7.
 - Host-built voice-only `InputMethodService` with Android input-method metadata, enable/select
-  setup controls, explicit Start/Stop, Cancel, conservative immediate Undo, next-keyboard switch,
-  transcript-free timing logs, and live raw partial display. It is installed and enabled on the
-  Pixel, but the new streaming speech path still needs an owner-run interactive check.
+  setup controls, explicit Start/Stop, Cancel, a five-entry conservative Undo history,
+  next-keyboard switch, transcript-free timing logs, and a bounded, independently scrollable live
+  raw-partial surface. It is installed and enabled on the Pixel, but the updated scrolling and
+  streaming speech path still need an owner-run interactive check.
 - Application-scoped `DictationPipelineCoordinator` shares one Parakeet and S1-mini engine pair
   between the Activity and IME; destroying the Activity no longer unloads models needed by the IME.
 - IME editor policy disables dictation for password fields, editors requesting no personalized
   learning, and non-text destinations. A result is committed only to the same editor identity that
-  started the utterance, and Undo deletes only an exact immediate suffix in that editor.
+  started the utterance. Consecutive commits receive a cursor-aware boundary space only when
+  needed, and Undo deletes only an exact immediate suffix—including any inserted separator—in that
+  editor.
 - Moonshine Voice `0.1.2`, English Small Streaming architecture `4`.
 - Model download, persistent no-backup cache, progress display, and offline cache reuse.
 - Raw provisional/final transcript display and monotonic latency metrics.
@@ -50,11 +53,9 @@ Last updated: 2026-08-22
   streaming API. Its ggml dependency is statically isolated from Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined/IME debug APK; current host-verified APK is 88,046,129 bytes with SHA-256
-  `884ef7413d8a338fa3a30332bfbc94ace4ae9076bc17f3e926f5eb40cd4ed7b0`. The immediately preceding
-  streaming build at SHA-256 `015a408704932b49f1735fa31c8e9a1379fbd2ad9aa1da77555757034a910159`
-  is installed on the Pixel; the final host build will not be installed without explicit owner
-  permission.
+- ARM64-only joined/IME debug APK; current host-verified and installed QoL build is 88,046,641
+  bytes with SHA-256
+  `cd2227b372a2f4028a6ae725ad28d566c130f7424b4241e3057f2290cb57035d`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -197,7 +198,9 @@ Last updated: 2026-08-22
   Median STT/cleanup/pipeline totals are 725.0/1,927.5/2,664.5 ms, peak PSS is 1,589,901 KiB, and
   max thermal is 1. Raw and guarded strict/normalized target counts agree at 8/20 and 9/20; the
   only fallback is the genuine retained-recipient correction failure.
-- The IME is installed, enabled, selected, and visually verified in the app's safe text editor.
+- The IME is installed, enabled, and visually verified in the app's safe text editor. After the
+  2026-08-22 QoL reinstall, Gboard is the current default and Local Flow remains available through
+  the keyboard chooser; the reinstall did not clear its app-private model files.
   With microphone permission denied it correctly shows `Microphone setup required` and does not
   expose a recording action. Temporary permission grant and interactive model-load verification
   are in progress; actual speech commit, cancel, undo, focus switching, and cross-app behavior

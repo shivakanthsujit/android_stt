@@ -3,6 +3,7 @@ package dev.localflow.dictation.ime
 import android.text.InputType
 import android.view.inputmethod.EditorInfo
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -60,5 +61,41 @@ class ImeEditorPolicyTest {
         assertFalse(ImeEditorPolicy.canUndo(record, editor.copy(fieldId = 13), "Hello there"))
         assertFalse(ImeEditorPolicy.canUndo(record, editor, "edited there"))
         assertFalse(ImeEditorPolicy.canUndo(null, editor, "Hello there"))
+    }
+
+    @Test
+    fun commitTextAddsOnlyMissingEditorBoundarySpaces() {
+        assertEquals("Hello", ImeEditorPolicy.textForCommit("Hello", null, null))
+        assertEquals(" Hello", ImeEditorPolicy.textForCommit("Hello", "Existing", null))
+        assertEquals("Hello", ImeEditorPolicy.textForCommit("Hello", "Existing ", null))
+        assertEquals("Hello", ImeEditorPolicy.textForCommit("Hello", "\n", null))
+        assertEquals("Hello", ImeEditorPolicy.textForCommit("Hello", "(", null))
+        assertEquals("Hello ", ImeEditorPolicy.textForCommit("Hello", null, "world"))
+        assertEquals("Hello", ImeEditorPolicy.textForCommit("Hello", null, "."))
+        assertEquals("Hello", ImeEditorPolicy.textForCommit("Hello", null, "\""))
+        assertEquals(" Hello ", ImeEditorPolicy.textForCommit("Hello", "left", "right"))
+        assertEquals("", ImeEditorPolicy.textForCommit("", "Existing", "text"))
+    }
+
+    @Test
+    fun undoHistoryLimitSupportsRepeatedImmediateSuffixUndo() {
+        val editor = EditorIdentity("dev.example.notes", 12, InputType.TYPE_CLASS_TEXT)
+        val history = ImeUndoHistory()
+        repeat(ImeUndoHistory.DEFAULT_CAPACITY + 2) { index ->
+            history.push(UndoRecord(editor, "dictation-$index"))
+        }
+
+        assertTrue(history.size == ImeUndoHistory.DEFAULT_CAPACITY)
+        assertTrue(history.lastOrNull()?.committedText == "dictation-6")
+        assertTrue(ImeEditorPolicy.canUndo(history.lastOrNull(), editor, "dictation-6"))
+        history.removeLast()
+        assertTrue(ImeEditorPolicy.canUndo(history.lastOrNull(), editor, "dictation-5"))
+        history.clear()
+        assertTrue(history.isEmpty())
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun undoHistoryRequiresPositiveCapacity() {
+        ImeUndoHistory(capacity = 0)
     }
 }
