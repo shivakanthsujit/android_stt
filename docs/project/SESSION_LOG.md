@@ -1423,3 +1423,17 @@
   failure branch was forcibly injected on-device.
 - No app code, APK, model, personal transcript, audio, or device setting changed in this follow-up.
   The unrelated untracked `t.txt` remains untouched.
+
+## 2026-08-22 — QoL feature freeze and dogfooding handoff
+
+- At the owner's request, declared the installed core QoL experience feature-complete for the
+  current daily-use checkpoint and froze discretionary feature additions while the owner tests it.
+- Kept post-result review, haptics/timer, compact/landscape layout, formal accessibility, broad IME
+  lifecycle checks, and memory/thermal/battery measurements visible as optional qualification and
+  polish rather than blockers to the testing period.
+- Set the next dedicated engineering session to opt-in STT diagnostics/performance work for the
+  intermittent missed-speech report: bounded app-private raw audio, raw STT, cleanup input/output,
+  events, timings, replay, and deletion, disabled in the normal build and excluded from Logcat,
+  Git, evaluation evidence, and training/selection data.
+- No source code, APK, model, device state, personal transcript, or audio changed. The unrelated
+  untracked `t.txt` remains untouched.

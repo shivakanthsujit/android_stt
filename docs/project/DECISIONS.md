@@ -552,3 +552,11 @@ Last updated: 2026-08-22
    a false or missing `InputConnection.commitText()` result as ambiguous: retain and expose the raw
    transcript, never label the attempted payload Inserted, and never retry that editor commit
    automatically. No recovery action may reopen the microphone or discard visible raw text.
+9. Treat the installed recovery/QoL build as the feature-frozen daily-driver baseline after owner
+   acceptance. Dogfood it before discretionary UI additions and prioritize reproducible defects
+   found in ordinary use. Keep post-result review, haptics/timer, compact/landscape layouts, formal
+   accessibility, broader lifecycle qualification, and resource measurements on the backlog rather
+   than making them blockers to this testing period. Address intermittent missed speech in a
+   separate consented diagnostics/performance session whose debug-only, bounded, app-private
+   payload capture is disabled in normal builds and excluded from Logcat, Git, evaluation evidence,
+   and training/selection data.

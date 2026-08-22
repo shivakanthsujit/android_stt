@@ -551,6 +551,16 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 
 ## Then: daily-driver and qualification work
 
+- [x] Declare the current core QoL slice feature-complete for daily use and freeze discretionary
+  additions while the owner dogfoods the installed build. Preserve the optional polish and formal
+  qualification items below; do not treat them as blockers to the current testing period.
+- [ ] Collect owner-reported reliability issues during normal messaging, notes, browser, and
+  long-form use. Prefer fixing reproducible defects over adding new UI during the feature freeze.
+- [ ] After the dogfooding period, start a separate diagnostics/performance session for the
+  intermittent missed-speech concern. Keep the mode debug-only, explicit, bounded, app-private,
+  and disabled in the daily-driver build; capture exact pre-waveform PCM, raw STT, cleanup input/
+  output, stream events, and timings only with consent, then support replay and deletion. Never put
+  personal payloads in Logcat, Git, evaluation evidence, or training/selection data.
 - [ ] Complete the ordered QoL plan in
   `docs/research/LOCAL_FLOW_QOL_PLAN_2026-08-22.md`: clearer listening/processing/error hierarchy,
   a real non-persisted audio waveform, retry behavior, and final cancel/undo visual polish.

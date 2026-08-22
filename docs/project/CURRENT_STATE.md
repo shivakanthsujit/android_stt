@@ -11,7 +11,8 @@ Last updated: 2026-08-22
   passed, and the owner reports that the live build looks and works correctly. Formal TalkBack/
   dynamic-type and broader multi-app lifecycle qualification remain open
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
-- Current phase: minimal voice IME device verification and daily-driver hardening
+- Current phase: QoL feature freeze and owner dogfooding; diagnostics/performance work is deferred
+  to a separate session after real-use feedback
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
   no-go evaluation), 3 (cross-family generic-model quality screen)
 - Active product milestone: minimal voice-only `InputMethodService`
@@ -20,6 +21,10 @@ Last updated: 2026-08-22
   integration; human dictation/streaming qualification remains)
 - Completed integration milestone: the joined path has a pinned, swappable personal-use default
   and supplies the IME under the owner's permissive cleanup insertion policy
+- Current product checkpoint: the owner accepts the installed core QoL experience as feature-
+  complete for daily use. Freeze discretionary feature work while the owner dogfoods it. Remaining
+  accessibility, landscape, post-result review, haptic/timer, broad lifecycle, and resource
+  measurements stay recorded as optional qualification/polish rather than blockers to testing.
 
 ## Working functionality
 
