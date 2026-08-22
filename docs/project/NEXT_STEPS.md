@@ -532,13 +532,16 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   `docs/research/LOCAL_FLOW_QOL_PLAN_2026-08-22.md`: clearer listening/processing/error hierarchy,
   a real non-persisted audio waveform, retry behavior, and final cancel/undo visual polish.
 - [x] Add a persistent, accessible state hierarchy tied to the actual recording lifecycle. The
-  separate state dot remains visible while the transcript scrolls; recording is red, processing is
-  amber, ready is green, and the waveform accepts data only in `RECORDING`. Host verification and
-  static Pixel visual QA pass; live color/state and TalkBack verification remains in the Pixel gate.
+  separate state dot remains visible while the transcript scrolls; recording is muted dusty rose,
+  processing is amber, ready is green, and the waveform accepts data only in `RECORDING`. Host
+  verification and static Pixel visual QA pass; live color/state and TalkBack verification remains
+  in the Pixel gate.
 - [x] Add the real non-persisted waveform plumbing and lightweight custom view. Derive a throttled
-  RMS/peak envelope directly from live `AudioRecord` chunks, retain no PCM, clear immediately on
-  Stop/Cancel/failure, and keep it presentation-only. Live amplitude, reduced-motion/accessibility,
-  and drawing-cost verification remains open on Pixel.
+  display-only envelope directly from live `AudioRecord` chunks, retain no PCM, clear immediately
+  on Stop/Cancel/failure, and keep it presentation-only. After owner feedback, add an 80 Hz
+  high-pass, -32 dB noise gate, slow attack/release, five-level quantization, and slimmer 24-bar
+  rendering so idle noise stays quiet and speech detail is obscured. Final idle-room calibration,
+  accessibility, and drawing-cost verification remains open on Pixel.
 - [ ] Choose model warm/unload policy based on measured memory and battery cost.
 - [ ] Build a consented, evaluation-only human dictation set with multiple speakers, rooms, pace,
   accents, corrections, names, numbers, uncertainty, long-form speech, and interruptions. Keep all

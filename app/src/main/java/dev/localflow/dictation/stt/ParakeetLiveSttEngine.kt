@@ -69,6 +69,7 @@ class ParakeetLiveSttEngine(
     private var micStartedAtNs = 0L
     private var stopPressedAtNs = 0L
     private var lastAudioLevelAtNs = 0L
+    private val audioLevelMeter = AudioLevelMeter()
 
     override fun load(callback: (Result<Unit>) -> Unit) {
         if (state == SpeechToTextEngine.State.READY) {
@@ -321,7 +322,7 @@ class ParakeetLiveSttEngine(
                                 shortSamples[index] / 32768.0f
                             }
                             capturedSampleCount.addAndGet(read)
-                            publishAudioLevelIfDue(chunk)
+                            publishAudioLevelIfDue(audioLevelMeter.process(chunk))
                             streamQueue.put(chunk)
                         } else if (!stopRequested.get()) {
                             error("Microphone read failed with code $read")
@@ -420,6 +421,7 @@ class ParakeetLiveSttEngine(
         captureError = null
         streamingError = null
         lastAudioLevelAtNs = 0L
+        audioLevelMeter.reset()
         synchronized(streamLock) {
             streamingTranscript.clear()
             preferredCleanupBoundaries.clear()
@@ -450,11 +452,10 @@ class ParakeetLiveSttEngine(
         mainHandler.post { onAudioLevel(0f) }
     }
 
-    private fun publishAudioLevelIfDue(chunk: FloatArray) {
+    private fun publishAudioLevelIfDue(level: Float) {
         val nowNs = SystemClock.elapsedRealtimeNanos()
         if (nowNs - lastAudioLevelAtNs < AUDIO_LEVEL_INTERVAL_NS) return
         lastAudioLevelAtNs = nowNs
-        val level = AudioLevelMeter.displayLevel(chunk)
         mainHandler.post {
             if (state == SpeechToTextEngine.State.RECORDING) onAudioLevel(level)
         }

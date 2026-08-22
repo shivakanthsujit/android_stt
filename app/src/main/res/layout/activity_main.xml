@@ -125,7 +125,7 @@
         <dev.localflow.dictation.ui.AudioWaveformView
             android:id="@+id/activityWaveform"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="36dp"
             android:layout_marginTop="8dp"
             android:importantForAccessibility="no"
             android:paddingVertical="6dp" />

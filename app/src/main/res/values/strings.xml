@@ -90,7 +90,7 @@
     <string name="ime_status_error">Local voice input error</string>
     <string name="ime_brand">LOCAL FLOW</string>
     <string name="ime_on_device">ON DEVICE</string>
-    <string name="ime_support_recording">Microphone active · audio stays on this device</string>
+    <string name="ime_support_recording">Microphone active · scrolling won’t pause listening</string>
     <string name="ime_support_processing">Microphone off · finishing locally</string>
     <string name="ime_support_ready">Private, local, and ready when you are</string>
     <string name="ime_support_loading">Preparing the local pipeline</string>

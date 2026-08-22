@@ -815,3 +815,18 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Launched only `MainActivity` and inspected its UI hierarchy. The bounded raw transcript field is
   present; no microphone or model inference ran. Live long-text scrolling and repeated multi-undo
   still require owner-spoken/interactive verification.
+
+## 2026-08-22 — QoL palette and waveform refinement
+
+- `./gradlew --offline testDebugUnitTest lintDebug assembleDebug`: passed. The audio-level suite
+  covers silent input, a gated -40 dB-class tone, smoothed voice-class input, steady-DC rejection,
+  and filter/envelope reset.
+- Debug APK: 88,047,120 bytes, SHA-256
+  `8fb78d6c686ba5088285be787b202d840e712274404f0dda4e041e9bbd28d115`.
+- `adb install -r` on Pixel 7 serial `33040DLH20004E`: `Success`; existing app data was preserved.
+- Brought `MainActivity` forward and captured a static screenshot. Muted periwinkle controls,
+  dusty-rose recording resources, and the thinner/shorter idle waveform render correctly. No
+  microphone or model inference was initiated by this static check.
+- Owner live-use evidence preceding the refinement confirms transcript text and the Listening state
+  remain active during manual scrolling, as intended. Final post-refinement idle-room gating,
+  speaking response, TalkBack, copy gesture, and processing-state checks remain interactive work.

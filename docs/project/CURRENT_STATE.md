@@ -6,10 +6,10 @@ Last updated: 2026-08-22
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: second daily-driver QoL slice installed on Pixel with tap-to-copy
-  transcripts, lifecycle-driven listening/processing states, a real non-persisted audio waveform,
-  and refreshed Activity/IME styling; owner-run live speech/scroll/copy/waveform verification
-  remains open
+- Last verified milestone: refined second daily-driver QoL slice installed on Pixel with tap-to-copy
+  transcripts, lifecycle-driven listening/processing states, a strongly filtered low-detail voice
+  activity display, and a muted Activity/IME palette; owner-run copy/TalkBack/final-state
+  verification remains open
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: minimal voice IME device verification and daily-driver hardening
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
@@ -44,10 +44,12 @@ Last updated: 2026-08-22
   live tail-follow resumes after returning to the bottom. A normal tap copies the current
   transcript while Android's drag gesture continues to scroll. Separate lifecycle-driven state
   dots keep listening, processing, ready, and error states visible outside the transcript viewport.
-- Both Activity and IME now render a bounded 20 Hz RMS/peak envelope from live `AudioRecord`
-  chunks. It retains no PCM, is not logged or persisted, accepts levels only while the engine is in
-  `RECORDING`, and clears immediately when recording stops or is canceled. Live amplitude and
-  drawing-cost verification on Pixel remains open.
+- Both Activity and IME now render a bounded low-detail voice-activity envelope from live
+  `AudioRecord` chunks. A display-only 80 Hz high-pass removes DC/rumble, a firm -32 dB noise gate
+  suppresses idle room sound, slow attack/release smoothing and five-level quantization obscure
+  speech detail, and the 24 thin bars update at no more than 20 Hz. It retains no PCM, is not logged
+  or persisted, accepts levels only while the engine is in `RECORDING`, and clears immediately when
+  recording stops or is canceled. The filter never changes audio delivered to Parakeet.
 - Debug-only, microphone-free STT benchmark Activity that accepts checksum-verified 16 kHz PCM16
   WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
   native heap, and thermal status.
@@ -65,7 +67,7 @@ Last updated: 2026-08-22
   calls using app trace slices.
 - ARM64-only joined/IME debug APK; current host-verified and installed QoL build is 88,047,120
   bytes with SHA-256
-  `4c6688e55d5f1c024da125c55ec6c387609fd288e5103bb02f5aed0b41b255b4`.
+  `8fb78d6c686ba5088285be787b202d840e712274404f0dda4e041e9bbd28d115`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -220,6 +222,11 @@ Last updated: 2026-08-22
   hierarchy, persistent state dot, waveform surface, transcript copy affordance, and reachable
   Cancel/Undo/keyboard controls. The owner still needs to verify live waveform motion, tap-to-copy
   clipboard contents, scroll-not-copy behavior, TalkBack wording, and recording/processing colors.
+- Owner use found the initial blue/red palette too saturated, the 28-bar waveform too bulky, and
+  the ungated RMS/peak display too responsive to idle room noise. The installed refinement uses
+  muted periwinkle/dusty-rose controls, a shorter 24-stroke display, and the stronger filtered
+  envelope above. Owner observation also confirmed that live words and the Listening state continue
+  during transcript scrolling; this is intentional because scrolling remains presentation-only.
 - A first consented in-app voice attempt reached Parakeet and S1-mini. S1 produced a non-empty,
   complete cleanup but the installed guardrail falsely classified compact `ten PM` → `10pm` and
   `nine PM` → `9pm` rendering as new lexical content. The superseding personal-use runtime policy

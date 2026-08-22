@@ -1311,3 +1311,24 @@
   Pixel screenshots verified both refreshed surfaces. Owner-run live waveform, clipboard,
   scroll-versus-tap, TalkBack, and recording/processing state checks remain open.
 - The unrelated untracked `t.txt` was left untouched.
+
+## 2026-08-22 — QoL palette and waveform refinement
+
+- Incorporated owner feedback from live use: the initial saturated blue/red controls were too
+  dominant, the waveform columns were too bulky, and idle room noise produced visible movement.
+  Replaced the palette with muted periwinkle/dusty-rose tones and reduced the Activity/IME waveform
+  heights to 36/30 dp.
+- Replaced the direct RMS/peak presentation with a deliberately low-detail activity meter. It runs
+  an 80 Hz first-order display-only high-pass, a firm -32 dB noise gate, slow attack/release,
+  five-step quantization, and a 24-bar 1.6 dp rendering at no more than 20 Hz. The filtering does
+  not mutate Parakeet's audio, retain PCM, log levels, or persist history.
+- Clarified the recording subtitle to `Microphone active · scrolling won’t pause listening`.
+  Owner observation that words and Listening remain live while scrolling matches the established
+  presentation-only scroll contract; recording must not pause merely because the transcript is
+  being reviewed.
+- Expanded host tests to cover silence, gated quiet input, smoothed voice activity, steady-DC
+  rejection, and state reset. `testDebugUnitTest`, `lintDebug`, and `assembleDebug` pass. Installed
+  the 88,047,120-byte APK at SHA-256
+  `8fb78d6c686ba5088285be787b202d840e712274404f0dda4e041e9bbd28d115` over the existing Pixel
+  package and statically verified the muted Activity palette and slimmer idle waveform.
+- The unrelated untracked `t.txt` remains untouched.

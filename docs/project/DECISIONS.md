@@ -526,8 +526,11 @@ Last updated: 2026-08-22
    scroll position; do not use a cosmetic waveform or glow as proof that the microphone is active.
 6. Make transcript reuse explicit and local: a normal tap on the Activity or IME transcript copies
    only the current raw transcript, while the platform's touch-slop drag remains scrolling and no
-   placeholder/label/history is copied. Visualize live microphone amplitude only from a throttled
-   RMS/peak envelope computed on project-owned `AudioRecord` chunks. Retain no PCM, never log or
-   persist levels, deliver them only while the real engine state is `RECORDING`, and reset the
-   bounded view immediately on Stop, Cancel, failure, or teardown. The separate lifecycle state
-   indicator—not waveform motion—is authoritative for microphone state.
+   placeholder/label/history is copied. Visualize live microphone activity only from a strongly
+   filtered, throttled envelope computed on project-owned `AudioRecord` chunks: remove rumble/DC,
+   gate idle room noise, smooth attack/release, and quantize coarsely so it does not closely expose
+   speech dynamics. Retain no PCM, never log or persist levels, deliver them only while the real
+   engine state is `RECORDING`, and reset the bounded view immediately on Stop, Cancel, failure, or
+   teardown. The separate lifecycle state indicator—not waveform motion—is authoritative for
+   microphone state. Scrolling intentionally leaves recording active and the Listening state
+   visible because it changes only presentation.

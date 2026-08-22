@@ -1,7 +1,7 @@
 <resources>
-    <color name="local_flow_primary">#5457D9</color>
-    <color name="local_flow_primary_dark">#3E40A8</color>
-    <color name="local_flow_primary_soft">#ECECFF</color>
+    <color name="local_flow_primary">#7276B2</color>
+    <color name="local_flow_primary_dark">#565A8B</color>
+    <color name="local_flow_primary_soft">#F0F0F9</color>
     <color name="local_flow_background">#F4F5FA</color>
     <color name="local_flow_surface">#FFFFFF</color>
     <color name="local_flow_surface_tinted">#F9F9FD</color>
@@ -9,9 +9,10 @@
     <color name="local_flow_muted">#656A76</color>
     <color name="local_flow_outline">#E1E3EC</color>
     <color name="local_flow_outline_strong">#C9CCD8</color>
-    <color name="local_flow_recording">#D93D47</color>
-    <color name="local_flow_processing">#D98B16</color>
-    <color name="local_flow_success">#26865B</color>
-    <color name="local_flow_error">#C92A3A</color>
+    <color name="local_flow_recording">#B96870</color>
+    <color name="local_flow_recording_wave">#C58E93</color>
+    <color name="local_flow_processing">#B8874F</color>
+    <color name="local_flow_success">#4E806B</color>
+    <color name="local_flow_error">#A95661</color>
     <color name="local_flow_on_primary">#FFFFFF</color>
 </resources>

@@ -35,8 +35,11 @@ Local Flow remains Pixel 7-first, fully local, explicit Start/Stop, and final-on
      even while the transcript is manually scrolled away from the tail.
    - Keep Cancel, Undo, and keyboard switching reachable without accidental activation.
 3. **Real audio waveform**
-   - Feed a throttled RMS/peak envelope from project-owned `AudioRecord` chunks to a lightweight
-     custom view. Never persist audio or amplitude history and never simulate microphone activity.
+   - Feed a throttled, deliberately low-detail voice-activity envelope from project-owned
+     `AudioRecord` chunks to a lightweight custom view. Apply strong rumble/DC filtering, an idle
+     noise gate, slow smoothing, and coarse quantization so it communicates activity without
+     closely representing speech. Never persist audio or amplitude history and never simulate
+     microphone activity.
    - Pause/reset it immediately on Stop, Cancel, permission loss, or lifecycle teardown.
    - Verify drawing cost, accessibility, and reduced-motion behavior on Pixel before keeping it.
 4. **Recovery and revision polish**
