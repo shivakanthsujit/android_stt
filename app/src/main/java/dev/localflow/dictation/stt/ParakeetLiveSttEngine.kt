@@ -26,6 +26,7 @@ class ParakeetLiveSttEngine(
     private val modelFile: File,
     private val expectedModelSha256: String,
     private val onStateChanged: (SpeechToTextEngine.State) -> Unit,
+    private val onAudioLevel: (Float) -> Unit = {},
 ) : SpeechToTextEngine {
     private val appContext = context.applicationContext
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -67,6 +68,7 @@ class ParakeetLiveSttEngine(
 
     private var micStartedAtNs = 0L
     private var stopPressedAtNs = 0L
+    private var lastAudioLevelAtNs = 0L
 
     override fun load(callback: (Result<Unit>) -> Unit) {
         if (state == SpeechToTextEngine.State.READY) {
@@ -319,6 +321,7 @@ class ParakeetLiveSttEngine(
                                 shortSamples[index] / 32768.0f
                             }
                             capturedSampleCount.addAndGet(read)
+                            publishAudioLevelIfDue(chunk)
                             streamQueue.put(chunk)
                         } else if (!stopRequested.get()) {
                             error("Microphone read failed with code $read")
@@ -416,6 +419,7 @@ class ParakeetLiveSttEngine(
         capturedSampleCount.set(0)
         captureError = null
         streamingError = null
+        lastAudioLevelAtNs = 0L
         synchronized(streamLock) {
             streamingTranscript.clear()
             preferredCleanupBoundaries.clear()
@@ -443,6 +447,17 @@ class ParakeetLiveSttEngine(
                     .onFailure { LocalFlowLog.error("Android microphone stop failed", it) }
             }
         }
+        mainHandler.post { onAudioLevel(0f) }
+    }
+
+    private fun publishAudioLevelIfDue(chunk: FloatArray) {
+        val nowNs = SystemClock.elapsedRealtimeNanos()
+        if (nowNs - lastAudioLevelAtNs < AUDIO_LEVEL_INTERVAL_NS) return
+        lastAudioLevelAtNs = nowNs
+        val level = AudioLevelMeter.displayLevel(chunk)
+        mainHandler.post {
+            if (state == SpeechToTextEngine.State.RECORDING) onAudioLevel(level)
+        }
     }
 
     private fun updateState(newState: SpeechToTextEngine.State) {
@@ -457,6 +472,7 @@ class ParakeetLiveSttEngine(
         const val AUDIO_RECORD_BUFFER_BYTES = 8_192
         const val CAPTURE_JOIN_TIMEOUT_MS = 1_000L
         const val STREAM_JOIN_TIMEOUT_MS = 30_000L
+        const val AUDIO_LEVEL_INTERVAL_NS = 50_000_000L
         val END_OF_STREAM = FloatArray(0)
     }
 }

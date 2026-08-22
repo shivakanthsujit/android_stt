@@ -79,16 +79,32 @@
             android:layout_marginTop="8dp"
             android:text="@string/ime_choose_keyboard" />
 
-        <TextView
-            android:id="@+id/statusText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:background="@color/local_flow_surface"
-            android:padding="16dp"
-            android:text="@string/status_model_not_loaded"
-            android:textColor="@color/local_flow_text"
-            android:textSize="16sp" />
+            android:background="@drawable/local_flow_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <View
+                android:id="@+id/speechStateIndicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:background="@drawable/local_flow_indicator"
+                android:importantForAccessibility="no" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="@string/status_model_not_loaded"
+                android:textColor="@color/local_flow_text"
+                android:textSize="16sp" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/loadModelButton"
@@ -106,21 +122,47 @@
             android:text="@string/start_dictation"
             android:textSize="17sp" />
 
-        <TextView
+        <dev.localflow.dictation.ui.AudioWaveformView
+            android:id="@+id/activityWaveform"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:importantForAccessibility="no"
+            android:paddingVertical="6dp" />
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="@string/raw_transcript"
-            android:textColor="@color/local_flow_text"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/raw_transcript"
+                android:textColor="@color/local_flow_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/transcript_tap_to_copy"
+                android:textColor="@color/local_flow_primary"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <EditText
             android:id="@+id/transcriptText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="@color/local_flow_surface"
+            android:background="@drawable/local_flow_transcript"
+            android:clickable="true"
+            android:contentDescription="@string/transcript_tap_to_copy"
+            android:focusable="true"
             android:gravity="top|start"
             android:importantForAutofill="no"
             android:inputType="textCapSentences|textMultiLine"

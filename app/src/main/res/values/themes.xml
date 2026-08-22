@@ -7,5 +7,16 @@
         <item name="android:windowBackground">@color/local_flow_background</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:buttonStyle">@style/Widget.LocalFlow.Button</item>
+    </style>
+
+    <style name="Widget.LocalFlow.Button" parent="android:style/Widget.Material.Button">
+        <item name="android:backgroundTint">@color/local_flow_primary</item>
+        <item name="android:textColor">@color/local_flow_primary_button_text</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

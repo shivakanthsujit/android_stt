@@ -30,6 +30,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class DictationPipelineCoordinator(context: Context) {
     private val appContext = context.applicationContext
     private val stateListeners = CopyOnWriteArraySet<(SpeechToTextEngine.State) -> Unit>()
+    private val audioLevelListeners = CopyOnWriteArraySet<(Float) -> Unit>()
     private val loadMutex = Mutex()
     private val finishMutex = Mutex()
     private val closeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -39,6 +40,7 @@ class DictationPipelineCoordinator(context: Context) {
         modelFile = IntegrationModels.parakeetFile(appContext),
         expectedModelSha256 = IntegrationModels.PARAKEET_SHA256,
         onStateChanged = ::publishSpeechState,
+        onAudioLevel = ::publishAudioLevel,
     )
 
     val cleanupEngine: CleanupEngine = S1MiniCleanupEngine(
@@ -54,6 +56,14 @@ class DictationPipelineCoordinator(context: Context) {
 
     fun removeSpeechStateListener(listener: (SpeechToTextEngine.State) -> Unit) {
         stateListeners -= listener
+    }
+
+    fun addAudioLevelListener(listener: (Float) -> Unit) {
+        audioLevelListeners += listener
+    }
+
+    fun removeAudioLevelListener(listener: (Float) -> Unit) {
+        audioLevelListeners -= listener
     }
 
     suspend fun loadModels(
@@ -140,6 +150,10 @@ class DictationPipelineCoordinator(context: Context) {
 
     private fun publishSpeechState(state: SpeechToTextEngine.State) {
         stateListeners.forEach { listener -> listener(state) }
+    }
+
+    private fun publishAudioLevel(level: Float) {
+        audioLevelListeners.forEach { listener -> listener(level) }
     }
 
     private fun Throwable.rootMessage(): String {

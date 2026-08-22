@@ -6,9 +6,10 @@ Last updated: 2026-08-22
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: first daily-driver QoL slice installed on Pixel with bounded transcript
-  surfaces, live tail-follow, five-entry fail-closed undo, and cursor-aware insertion spacing;
-  owner-run live speech/scroll/undo verification remains open
+- Last verified milestone: second daily-driver QoL slice installed on Pixel with tap-to-copy
+  transcripts, lifecycle-driven listening/processing states, a real non-persisted audio waveform,
+  and refreshed Activity/IME styling; owner-run live speech/scroll/copy/waveform verification
+  remains open
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: minimal voice IME device verification and daily-driver hardening
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
@@ -25,9 +26,10 @@ Last updated: 2026-08-22
 - Kotlin/View-based joined integration Activity on a physical Pixel 7.
 - Host-built voice-only `InputMethodService` with Android input-method metadata, enable/select
   setup controls, explicit Start/Stop, Cancel, a five-entry conservative Undo history,
-  next-keyboard switch, transcript-free timing logs, and a bounded, independently scrollable live
-  raw-partial surface. It is installed and enabled on the Pixel, but the updated scrolling and
-  streaming speech path still need an owner-run interactive check.
+  next-keyboard switch, transcript-free timing logs, a bounded independently scrollable live
+  raw-partial surface, and tap-to-copy for the current raw transcript. It is installed and enabled
+  on the Pixel, but scrolling-versus-copy and the streaming speech path still need an owner-run
+  interactive check.
 - Application-scoped `DictationPipelineCoordinator` shares one Parakeet and S1-mini engine pair
   between the Activity and IME; destroying the Activity no longer unloads models needed by the IME.
 - IME editor policy disables dictation for password fields, editors requesting no personalized
@@ -39,9 +41,13 @@ Last updated: 2026-08-22
 - Model download, persistent no-backup cache, progress display, and offline cache reuse.
 - Raw provisional/final transcript display and monotonic latency metrics.
 - Manual transcript scrolling affects only the viewport: recording and streaming STT continue, and
-  live tail-follow resumes after returning to the bottom. The keyboard currently has textual
-  `Listening locally…` state, but a stronger persistent recording indicator remains the first QoL
-  task for the next session.
+  live tail-follow resumes after returning to the bottom. A normal tap copies the current
+  transcript while Android's drag gesture continues to scroll. Separate lifecycle-driven state
+  dots keep listening, processing, ready, and error states visible outside the transcript viewport.
+- Both Activity and IME now render a bounded 20 Hz RMS/peak envelope from live `AudioRecord`
+  chunks. It retains no PCM, is not logged or persisted, accepts levels only while the engine is in
+  `RECORDING`, and clears immediately when recording stops or is canceled. Live amplitude and
+  drawing-cost verification on Pixel remains open.
 - Debug-only, microphone-free STT benchmark Activity that accepts checksum-verified 16 kHz PCM16
   WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
   native heap, and thermal status.
@@ -57,9 +63,9 @@ Last updated: 2026-08-22
   streaming API. Its ggml dependency is statically isolated from Moonshine/LEAP's packaged ggml.
 - Optional Perfetto power mode that attributes Pixel CPU/GPU/memory rail energy to measured model
   calls using app trace slices.
-- ARM64-only joined/IME debug APK; current host-verified and installed QoL build is 88,046,641
+- ARM64-only joined/IME debug APK; current host-verified and installed QoL build is 88,047,120
   bytes with SHA-256
-  `cd2227b372a2f4028a6ae725ad28d566c130f7424b4241e3057f2290cb57035d`.
+  `4c6688e55d5f1c024da125c55ec6c387609fd288e5103bb02f5aed0b41b255b4`.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.
@@ -209,6 +215,11 @@ Last updated: 2026-08-22
   expose a recording action. Temporary permission grant and interactive model-load verification
   are in progress; actual speech commit, cancel, undo, focus switching, and cross-app behavior
   remain open.
+- The 2026-08-22 second QoL build was installed over the existing package without clearing data.
+  Pixel screenshots verified the refreshed Activity card/button hierarchy and IME ready/loading
+  hierarchy, persistent state dot, waveform surface, transcript copy affordance, and reachable
+  Cancel/Undo/keyboard controls. The owner still needs to verify live waveform motion, tap-to-copy
+  clipboard contents, scroll-not-copy behavior, TalkBack wording, and recording/processing colors.
 - A first consented in-app voice attempt reached Parakeet and S1-mini. S1 produced a non-empty,
   complete cleanup but the installed guardrail falsely classified compact `ten PM` → `10pm` and
   `nine PM` → `9pm` rendering as new lexical content. The superseding personal-use runtime policy

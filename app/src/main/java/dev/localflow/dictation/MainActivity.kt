@@ -2,7 +2,10 @@ package dev.localflow.dictation
 
 import android.Manifest
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
+import android.content.res.ColorStateList
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -13,6 +16,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import dev.localflow.dictation.cleanup.CleanupBatchRunner
 import dev.localflow.dictation.cleanup.CleanupEngine
 import dev.localflow.dictation.cleanup.CleanupPromptVariant
@@ -20,6 +24,7 @@ import dev.localflow.dictation.cleanup.CleanupResult
 import dev.localflow.dictation.cleanup.CleanupState
 import dev.localflow.dictation.ime.LocalFlowImeService
 import dev.localflow.dictation.stt.SpeechToTextEngine
+import dev.localflow.dictation.ui.AudioWaveformView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -27,6 +32,8 @@ import kotlinx.coroutines.launch
 
 class MainActivity : Activity() {
     private lateinit var statusText: TextView
+    private lateinit var speechStateIndicator: View
+    private lateinit var waveformView: AudioWaveformView
     private lateinit var transcriptText: EditText
     private lateinit var cleanupStatusText: TextView
     private lateinit var cleanupModelInputText: TextView
@@ -65,12 +72,15 @@ class MainActivity : Activity() {
     private val cleanupEngine: CleanupEngine
         get() = pipelineCoordinator.cleanupEngine
     private val speechStateListener: (SpeechToTextEngine.State) -> Unit = ::renderState
+    private val audioLevelListener: (Float) -> Unit = { level -> waveformView.pushLevel(level) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         statusText = findViewById(R.id.statusText)
+        speechStateIndicator = findViewById(R.id.speechStateIndicator)
+        waveformView = findViewById(R.id.activityWaveform)
         transcriptText = findViewById(R.id.transcriptText)
         cleanupStatusText = findViewById(R.id.cleanupStatusText)
         cleanupModelInputText = findViewById(R.id.cleanupModelInputText)
@@ -111,8 +121,10 @@ class MainActivity : Activity() {
                 else -> Unit
             }
         }
+        transcriptText.setOnClickListener { copyTranscript() }
 
         pipelineCoordinator.addSpeechStateListener(speechStateListener)
+        pipelineCoordinator.addAudioLevelListener(audioLevelListener)
         renderState(engine.state)
         renderCleanupState(cleanupEngine.state)
         statusText.setText(
@@ -145,6 +157,7 @@ class MainActivity : Activity() {
             }
         }
         pipelineCoordinator.removeSpeechStateListener(speechStateListener)
+        pipelineCoordinator.removeAudioLevelListener(audioLevelListener)
         uiJob.cancel()
         super.onDestroy()
     }
@@ -400,6 +413,27 @@ class MainActivity : Activity() {
     }
 
     private fun renderState(state: SpeechToTextEngine.State) {
+        waveformView.setActive(state == SpeechToTextEngine.State.RECORDING)
+        speechStateIndicator.backgroundTintList = ColorStateList.valueOf(
+            getColor(
+                when (state) {
+                    SpeechToTextEngine.State.RECORDING -> R.color.local_flow_recording
+                    SpeechToTextEngine.State.FINALIZING -> R.color.local_flow_processing
+                    SpeechToTextEngine.State.READY -> R.color.local_flow_success
+                    SpeechToTextEngine.State.FAILED -> R.color.local_flow_error
+                    else -> R.color.local_flow_muted
+                },
+            ),
+        )
+        dictationButton.backgroundTintList = ColorStateList.valueOf(
+            getColor(
+                if (state == SpeechToTextEngine.State.RECORDING) {
+                    R.color.local_flow_recording
+                } else {
+                    R.color.local_flow_primary
+                },
+            ),
+        )
         loadModelButton.visibility = if (
             state == SpeechToTextEngine.State.UNLOADED ||
             state == SpeechToTextEngine.State.LOADING ||
@@ -521,6 +555,26 @@ class MainActivity : Activity() {
 
     private fun inputMethodManager(): InputMethodManager =
         getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+
+    private fun copyTranscript() {
+        val transcript = transcriptText.text.toString().trim()
+        if (transcript.isEmpty()) {
+            announceCopyResult(R.string.transcript_nothing_to_copy)
+            return
+        }
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(
+            ClipData.newPlainText(getString(R.string.transcript_clipboard_label), transcript),
+        )
+        announceCopyResult(R.string.transcript_copied)
+    }
+
+    private fun announceCopyResult(messageRes: Int) {
+        transcriptText.announceForAccessibility(getString(messageRes))
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.S_V2) {
+            Toast.makeText(this, messageRes, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun showError(error: Throwable) {
         LocalFlowLog.error("Benchmark UI error", error)

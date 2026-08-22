@@ -1290,3 +1290,24 @@
 - Handoff clarification: scrolling the transcript pauses only automatic tail-follow; capture and
   STT continue, and tail-follow resumes at the bottom. The owner requested a stronger visible
   listening indicator, now recorded as the first task for the next session.
+
+## 2026-08-22 — Daily-driver QoL slice 2
+
+- Added tap-to-copy to the Activity and IME transcript surfaces. The copied payload is only the
+  current raw transcript (or the last inserted text when no raw IME transcript remains); blank
+  placeholders and `Raw`/`Inserted` presentation labels are never copied. Android's normal
+  click-cancellation after a touch-slop drag continues to distinguish scrolling from a tap.
+- Reworked the keyboard into a calmer on-device hierarchy: compact Local Flow/privacy header,
+  rounded lifecycle card, persistent state dot, concise supporting copy, bounded transcript card,
+  dominant Start/Stop action, and reachable Cancel/Undo/keyboard controls. Recording uses the red
+  action/state treatment; processing/loading is amber and ready is green.
+- Added a real microphone waveform shared by Activity and IME. The capture thread computes a
+  bounded RMS/peak display value at no more than 20 Hz, posts only that scalar to the UI, retains no
+  PCM, logs/persists nothing, and resets the bounded 28-bar view as soon as capture stops. Added
+  pure host tests for silence, monotonic loudness, and out-of-range bounding.
+- `testDebugUnitTest`, `lintDebug`, and `assembleDebug` pass. Installed the final 88,047,120-byte
+  APK at SHA-256 `4c6688e55d5f1c024da125c55ec6c387609fd288e5103bb02f5aed0b41b255b4`
+  over the existing Pixel package; app-private models and IME enablement were preserved. Static
+  Pixel screenshots verified both refreshed surfaces. Owner-run live waveform, clipboard,
+  scroll-versus-tap, TalkBack, and recording/processing state checks remain open.
+- The unrelated untracked `t.txt` was left untouched.

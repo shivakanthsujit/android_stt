@@ -7,6 +7,10 @@
     <string name="start_dictation">Start dictation</string>
     <string name="stop_dictation">Stop dictation</string>
     <string name="raw_transcript">Raw transcript</string>
+    <string name="transcript_tap_to_copy">Scroll to review · tap to copy</string>
+    <string name="transcript_clipboard_label">Local Flow transcript</string>
+    <string name="transcript_copied">Transcript copied</string>
+    <string name="transcript_nothing_to_copy">There is no transcript to copy yet</string>
     <string name="cleanup_benchmark">S1-mini cleanup and joined output</string>
     <string name="load_cleanup_model">Load staged S1-mini</string>
     <string name="retry_cleanup_model_load">Retry cleanup model load</string>
@@ -84,6 +88,13 @@
     <string name="ime_status_processing">Transcribing and cleaning locally…</string>
     <string name="ime_status_committed">Text committed</string>
     <string name="ime_status_error">Local voice input error</string>
+    <string name="ime_brand">LOCAL FLOW</string>
+    <string name="ime_on_device">ON DEVICE</string>
+    <string name="ime_support_recording">Microphone active · audio stays on this device</string>
+    <string name="ime_support_processing">Microphone off · finishing locally</string>
+    <string name="ime_support_ready">Private, local, and ready when you are</string>
+    <string name="ime_support_loading">Preparing the local pipeline</string>
+    <string name="ime_support_attention">Action needed before dictation can start</string>
     <string name="ime_integration_warning">Preferred local S1-mini pipeline. Review inserted text while device qualification continues.</string>
     <string name="ime_open_setup">Open Local Flow setup</string>
     <string name="ime_load_models">Load local models</string>
@@ -111,6 +122,7 @@
     <string name="ime_undo_unavailable">Undo is unavailable because the editor or surrounding text changed.</string>
     <string name="ime_undone">The last Local Flow insertion was removed.</string>
     <string name="ime_transcript_title">Transcript</string>
+    <string name="ime_transcript_copy_hint">SCROLL · TAP TO COPY</string>
     <string name="ime_transcript_waiting">Your live local transcript will appear here.</string>
     <string name="ime_raw_detail">Raw: %1$s</string>
     <string name="ime_committed_detail">Inserted: %1$s</string>

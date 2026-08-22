@@ -513,6 +513,10 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   Follow new partials while the owner remains at the tail, but preserve manual scroll position when
   they scroll upward. Scrolling must never pause microphone capture or STT; returning to the bottom
   resumes tail-follow.
+- [x] Make a normal tap on either scrollable transcript surface copy the current raw transcript to
+  Android's clipboard. Keep Android's touch-slop/drag behavior for scrolling, copy no placeholder
+  or labels, and expose the action through the clickable accessibility surface. Owner-run
+  scroll-versus-copy and clipboard-content verification remains open.
 - [x] Instrument model load, recording, Stop-to-STT, cleanup, and Stop-to-result in the IME with
   transcript-free diagnostics.
 - [ ] Add/measure IME-specific PSS, thermal state, power, and true Stop-to-editor-commit timing on
@@ -527,9 +531,14 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 - [ ] Complete the ordered QoL plan in
   `docs/research/LOCAL_FLOW_QOL_PLAN_2026-08-22.md`: clearer listening/processing/error hierarchy,
   a real non-persisted audio waveform, retry behavior, and final cancel/undo visual polish.
-- [ ] First next-session UI task: add a persistent, accessible indicator tied to the actual
-  recording state. Keep it visible while the transcript is scrolled, distinguish listening from
-  processing, and never animate it when `AudioRecord` is inactive.
+- [x] Add a persistent, accessible state hierarchy tied to the actual recording lifecycle. The
+  separate state dot remains visible while the transcript scrolls; recording is red, processing is
+  amber, ready is green, and the waveform accepts data only in `RECORDING`. Host verification and
+  static Pixel visual QA pass; live color/state and TalkBack verification remains in the Pixel gate.
+- [x] Add the real non-persisted waveform plumbing and lightweight custom view. Derive a throttled
+  RMS/peak envelope directly from live `AudioRecord` chunks, retain no PCM, clear immediately on
+  Stop/Cancel/failure, and keep it presentation-only. Live amplitude, reduced-motion/accessibility,
+  and drawing-cost verification remains open on Pixel.
 - [ ] Choose model warm/unload policy based on measured memory and battery cost.
 - [ ] Build a consented, evaluation-only human dictation set with multiple speakers, rooms, pace,
   accents, corrections, names, numbers, uncertainty, long-form speech, and interruptions. Keep all

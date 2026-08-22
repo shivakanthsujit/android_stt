@@ -5,60 +5,140 @@
     android:background="@color/local_flow_background"
     android:orientation="vertical"
     android:paddingHorizontal="16dp"
-    android:paddingTop="14dp"
-    android:paddingBottom="12dp">
+    android:paddingTop="12dp"
+    android:paddingBottom="10dp">
 
-    <TextView
-        android:id="@+id/imeStatusText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/ime_status_models_needed"
-        android:textColor="@color/local_flow_text"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-    <TextView
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:letterSpacing="0.12"
+            android:text="@string/ime_brand"
+            android:textColor="@color/local_flow_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/local_flow_privacy_pill"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:text="@string/ime_on_device"
+            android:textColor="@color/local_flow_primary_dark"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:gravity="center"
-        android:text="@string/ime_integration_warning"
-        android:textColor="@color/local_flow_muted"
-        android:textSize="11sp" />
+        android:layout_marginTop="10dp"
+        android:background="@drawable/local_flow_card"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="12dp">
 
-    <TextView
+        <View
+            android:id="@+id/imeStateIndicator"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:background="@drawable/local_flow_indicator"
+            android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/imeStatusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ime_status_models_needed"
+                android:textColor="@color/local_flow_text"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/imeSupportingText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/ime_support_attention"
+                android:textColor="@color/local_flow_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <dev.localflow.dictation.ui.AudioWaveformView
+        android:id="@+id/imeWaveform"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginTop="6dp"
+        android:importantForAccessibility="no"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="5dp" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/ime_transcript_title"
-        android:textAllCaps="true"
-        android:textColor="@color/local_flow_muted"
-        android:textSize="11sp"
-        android:textStyle="bold" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ime_transcript_title"
+            android:textAllCaps="true"
+            android:textColor="@color/local_flow_muted"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ime_transcript_copy_hint"
+            android:textColor="@color/local_flow_primary"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/imeDetailText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:background="@color/local_flow_surface"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/local_flow_transcript"
+        android:clickable="true"
+        android:contentDescription="@string/transcript_tap_to_copy"
         android:fadeScrollbars="false"
+        android:focusable="true"
         android:gravity="top|start"
         android:minLines="3"
         android:maxLines="5"
         android:overScrollMode="ifContentScrolls"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="10dp"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="11dp"
         android:scrollbars="vertical"
         android:text="@string/ime_transcript_waiting"
         android:textColor="@color/local_flow_text"
-        android:textSize="14sp" />
+        android:textSize="15sp" />
 
     <Button
         android:id="@+id/imeMainButton"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="60dp"
         android:layout_marginTop="10dp"
         android:contentDescription="@string/ime_main_action_description"
         android:text="@string/ime_load_models"
@@ -67,43 +147,50 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/imeCancelButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="46dp"
             android:layout_weight="1"
+            android:backgroundTint="@color/local_flow_surface"
             android:enabled="false"
-            android:text="@string/ime_cancel" />
+            android:text="@string/ime_cancel"
+            android:textColor="@color/local_flow_primary_dark" />
 
         <Button
             android:id="@+id/imeUndoButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
+            android:backgroundTint="@color/local_flow_surface"
             android:enabled="false"
-            android:text="@string/ime_undo" />
+            android:text="@string/ime_undo"
+            android:textColor="@color/local_flow_primary_dark" />
 
         <Button
             android:id="@+id/imeNextKeyboardButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:text="@string/ime_next_keyboard" />
+            android:backgroundTint="@color/local_flow_surface"
+            android:text="@string/ime_next_keyboard"
+            android:textColor="@color/local_flow_primary_dark" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/imeMetricsText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="5dp"
         android:fontFamily="monospace"
         android:gravity="center"
         android:maxLines="2"
         android:textColor="@color/local_flow_muted"
-        android:textSize="11sp" />
+        android:textSize="10sp" />
+
 </LinearLayout>

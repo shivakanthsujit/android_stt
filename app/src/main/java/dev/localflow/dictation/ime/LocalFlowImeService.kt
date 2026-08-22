@@ -1,14 +1,18 @@
 package dev.localflow.dictation.ime
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.inputmethodservice.InputMethodService
 import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import dev.localflow.dictation.DictationPipelineCoordinator
 import dev.localflow.dictation.LocalFlowApplication
 import dev.localflow.dictation.LocalFlowLog
@@ -16,6 +20,7 @@ import dev.localflow.dictation.MainActivity
 import dev.localflow.dictation.R
 import dev.localflow.dictation.cleanup.CleanupState
 import dev.localflow.dictation.stt.SpeechToTextEngine
+import dev.localflow.dictation.ui.AudioWaveformView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,7 +30,10 @@ import kotlinx.coroutines.launch
 /** Minimal voice-only IME backed by the application-scoped local dictation pipeline. */
 class LocalFlowImeService : InputMethodService() {
     private lateinit var statusText: TextView
+    private lateinit var stateIndicator: View
+    private lateinit var supportingText: TextView
     private lateinit var detailText: TextView
+    private lateinit var waveformView: AudioWaveformView
     private lateinit var metricsText: TextView
     private lateinit var mainButton: Button
     private lateinit var cancelButton: Button
@@ -48,22 +56,32 @@ class LocalFlowImeService : InputMethodService() {
     private var blockedReason: String? = null
 
     private val speechStateListener: (SpeechToTextEngine.State) -> Unit = { state ->
+        if (::waveformView.isInitialized) {
+            waveformView.setActive(state == SpeechToTextEngine.State.RECORDING)
+        }
         if (state == SpeechToTextEngine.State.FAILED && mode != Mode.PROCESSING) {
             mode = Mode.ERROR
             blockedReason = getString(R.string.ime_model_error)
             render()
         }
     }
+    private val audioLevelListener: (Float) -> Unit = { level ->
+        if (::waveformView.isInitialized) waveformView.pushLevel(level)
+    }
 
     override fun onCreate() {
         super.onCreate()
         coordinator.addSpeechStateListener(speechStateListener)
+        coordinator.addAudioLevelListener(audioLevelListener)
     }
 
     override fun onCreateInputView(): View {
         val view = layoutInflater.inflate(R.layout.ime_voice, null)
         statusText = view.findViewById(R.id.imeStatusText)
+        stateIndicator = view.findViewById(R.id.imeStateIndicator)
+        supportingText = view.findViewById(R.id.imeSupportingText)
         detailText = view.findViewById(R.id.imeDetailText)
+        waveformView = view.findViewById(R.id.imeWaveform)
         metricsText = view.findViewById(R.id.imeMetricsText)
         mainButton = view.findViewById(R.id.imeMainButton)
         cancelButton = view.findViewById(R.id.imeCancelButton)
@@ -71,6 +89,7 @@ class LocalFlowImeService : InputMethodService() {
         nextKeyboardButton = view.findViewById(R.id.imeNextKeyboardButton)
         detailText.movementMethod = ScrollingMovementMethod.getInstance()
         detailText.isVerticalScrollBarEnabled = true
+        detailText.setOnClickListener { copyTranscript() }
 
         mainButton.setOnClickListener { onMainAction() }
         cancelButton.setOnClickListener { cancelCurrentOperation() }
@@ -121,6 +140,7 @@ class LocalFlowImeService : InputMethodService() {
     override fun onDestroy() {
         cancelCurrentOperation()
         coordinator.removeSpeechStateListener(speechStateListener)
+        coordinator.removeAudioLevelListener(audioLevelListener)
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -361,6 +381,25 @@ class LocalFlowImeService : InputMethodService() {
                 Mode.ERROR -> R.string.ime_status_error
             },
         )
+        val indicatorColor = when (mode) {
+            Mode.RECORDING -> R.color.local_flow_recording
+            Mode.PROCESSING, Mode.LOADING -> R.color.local_flow_processing
+            Mode.READY, Mode.COMMITTED -> R.color.local_flow_success
+            Mode.ERROR, Mode.BLOCKED -> R.color.local_flow_error
+            Mode.NEEDS_PERMISSION, Mode.NEEDS_MODELS -> R.color.local_flow_muted
+        }
+        stateIndicator.backgroundTintList = ColorStateList.valueOf(getColor(indicatorColor))
+        waveformView.setActive(mode == Mode.RECORDING)
+        supportingText.setText(
+            when (mode) {
+                Mode.RECORDING -> R.string.ime_support_recording
+                Mode.PROCESSING -> R.string.ime_support_processing
+                Mode.READY, Mode.COMMITTED -> R.string.ime_support_ready
+                Mode.LOADING -> R.string.ime_support_loading
+                Mode.BLOCKED, Mode.NEEDS_PERMISSION, Mode.NEEDS_MODELS, Mode.ERROR ->
+                    R.string.ime_support_attention
+            },
+        )
         mainButton.setText(
             when (mode) {
                 Mode.BLOCKED, Mode.NEEDS_PERMISSION -> R.string.ime_open_setup
@@ -372,6 +411,15 @@ class LocalFlowImeService : InputMethodService() {
             },
         )
         mainButton.isEnabled = mode != Mode.LOADING && mode != Mode.PROCESSING
+        mainButton.backgroundTintList = ColorStateList.valueOf(
+            getColor(
+                if (mode == Mode.RECORDING) {
+                    R.color.local_flow_recording
+                } else {
+                    R.color.local_flow_primary
+                },
+            ),
+        )
         cancelButton.isEnabled = mode == Mode.RECORDING || mode == Mode.PROCESSING
         undoButton.isEnabled = undoHistory.isNotEmpty() && mode in UNDO_ENABLED_MODES
         undoButton.text = if (undoHistory.size > 1) {
@@ -415,6 +463,26 @@ class LocalFlowImeService : InputMethodService() {
             Intent(this, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
+    }
+
+    private fun copyTranscript() {
+        val transcript = lastRawText.trim().ifEmpty { lastCommittedText.trim() }
+        if (transcript.isEmpty()) {
+            announceCopyResult(R.string.transcript_nothing_to_copy)
+            return
+        }
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(
+            ClipData.newPlainText(getString(R.string.transcript_clipboard_label), transcript),
+        )
+        announceCopyResult(R.string.transcript_copied)
+    }
+
+    private fun announceCopyResult(messageRes: Int) {
+        detailText.announceForAccessibility(getString(messageRes))
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.S_V2) {
+            Toast.makeText(this, messageRes, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun EditorInfo.toIdentity(): EditorIdentity = EditorIdentity(

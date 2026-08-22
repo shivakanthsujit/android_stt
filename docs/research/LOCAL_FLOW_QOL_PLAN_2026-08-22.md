@@ -23,6 +23,9 @@ Local Flow remains Pixel 7-first, fully local, explicit Start/Stop, and final-on
      tail-follow automatically when the owner returns to the bottom.
    - Keep up to five same-editor insertion undo records. Delete only an exact immediate suffix;
      clear history on an editor change or any surrounding-text mismatch.
+   - A normal tap on either transcript surface copies its current raw text to the Android
+     clipboard. Preserve the platform drag/touch-slop path for scrolling and never copy placeholder
+     text, labels, prior transcript history, or model/evaluation diagnostics.
    - Join consecutive dictations with a boundary space only when the text immediately around the
      cursor requires it. Include any added separator in the exact undo transaction.
 2. **Clearer, calmer keyboard states**
@@ -58,3 +61,4 @@ Local Flow remains Pixel 7-first, fully local, explicit Start/Stop, and final-on
   whitespace, and punctuation boundaries do not receive a duplicate or inappropriate space.
 - No audio, transcript history, expected cleanup output, or evaluation corpus is added to logs or
   storage.
+- A tap copies the current raw transcript; a drag scrolls it without copying or changing capture.
