@@ -30,6 +30,12 @@ Last updated: 2026-08-22
   raw-partial surface, and tap-to-copy for the current raw transcript. It is installed and enabled
   on the Pixel. The owner reports that the current live QoL interaction check passes; the broader
   cancel/fallback/undo/focus-switching and cross-app lifecycle matrix remains open.
+- The next fail-safe recovery slice is host-verified but not yet installed because the Pixel is
+  disconnected. Permission and missing/invalid artifacts route to setup; runtime model/STT failures
+  route to model reload; cleanup failure inserts the raw transcript once and reloads only for a
+  future dictation; and an editor that does not confirm `commitText()` gets no automatic retry.
+  Every failure preserves the visible raw transcript, and attempted text is labeled Inserted only
+  after the editor confirms success.
 - Application-scoped `DictationPipelineCoordinator` shares one Parakeet and S1-mini engine pair
   between the Activity and IME; destroying the Activity no longer unloads models needed by the IME.
 - IME editor policy disables dictation for password fields, editors requesting no personalized
@@ -70,6 +76,8 @@ Last updated: 2026-08-22
 - ARM64-only joined/IME debug APK; current host-verified and installed QoL build is 88,047,120
   bytes with SHA-256
   `8e102a5c27b2ba39ceaad89f8b1f5bfcdcdf888e0401e2ad6fe6f1858a52b708`.
+  The newer recovery build has the same byte size and host SHA-256
+  `f92f164a0639204c024c03807f68eac778e709815fdc4ace576c5d13e803d6d1`; it remains undeployed.
 - Microphone permission is requested from the Activity.
 - The model stays loaded between utterances.
 - Android `AudioRecord` is created and started only after **Start Dictation**.

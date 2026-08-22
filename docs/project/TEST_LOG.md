@@ -852,3 +852,15 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   fallback, performance, or intermittent-speech diagnostics have completed.
 - No personal transcript/audio, screenshot, model output, or new device artifact was retained in
   the repository for this check.
+
+## 2026-08-22 — fail-safe recovery host gate
+
+- `:app:testDebugUnitTest`, `:app:lintDebug`, and `:app:assembleDebug` pass offline. The unit suite
+  has 56 tests with zero failures/errors, including four new recovery-policy cases and typed
+  missing/hash-invalid artifact checks.
+- Recovery tests verify permission/artifact setup routing, model/STT/cleanup reload routing, raw
+  transcript preservation, and the invariant that an editor commit is never retried.
+- Debug APK: 88,047,120 bytes, SHA-256
+  `f92f164a0639204c024c03807f68eac778e709815fdc4ace576c5d13e803d6d1`.
+- The Pixel was disconnected at the owner's direction. No install, ADB mutation, microphone use,
+  model load, personal transcript, or device recovery-state test occurred; deployment is pending.

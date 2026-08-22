@@ -573,9 +573,11 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 - [x] Complete the current QoL live interaction check: tap versus drag, long transcript scrolling
   while recording, waveform behavior, and Start/Stop plus processing-state presentation all pass
   by owner report. Keep formal TalkBack/dynamic-type and the broader IME lifecycle matrix separate.
-- [ ] Add fail-safe recovery actions. Distinguish missing models, permission loss, STT failure, and
-  cleanup failure; offer the smallest relevant retry while preserving any visible raw transcript,
-  never reopening the microphone automatically, and never committing the same result twice.
+- [x] Add fail-safe recovery actions. Typed policy distinguishes permission, missing/invalid
+  artifacts, runtime model load, STT, cleanup, and editor-commit failure. It preserves visible raw
+  text, opens setup only for permission/artifacts, reloads only for runtime recovery, inserts raw
+  once when cleanup fails, and never retries an unconfirmed editor commit. Host unit/lint/build
+  gates pass; install and exercise the recovery labels when the disconnected Pixel returns.
 - [ ] Add a compact post-result review affordance. Let the owner switch the local transcript card
   between raw and inserted text and copy either one without retaining history or changing the
   permissive insertion policy. Consider exact-suffix Replace/Redo only if editor identity and

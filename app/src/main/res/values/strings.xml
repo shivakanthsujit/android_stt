@@ -42,7 +42,9 @@
     <string name="status_finished">Finished locally. Ready for another dictation.</string>
     <string name="status_downloading_model">Downloading speech model: %1$d%%</string>
     <string name="status_downloading_model_file">Downloading speech model: %1$d%% · %2$s</string>
-    <string name="status_error">Error: %1$s</string>
+    <string name="status_model_artifact_unavailable">The staged Parakeet model is missing or invalid. Restage the verified model, then retry.</string>
+    <string name="status_model_load_error">Parakeet could not load. Retry the local model before starting another dictation.</string>
+    <string name="status_stt_error">Speech recognition stopped. Any visible raw transcript was kept. Try a new dictation; reload Parakeet if the problem repeats.</string>
     <string name="status_cleanup_model_not_loaded">S1-mini is not loaded. Stage the verified Q4_K_M GGUF, then load it.</string>
     <string name="status_cleanup_loading" tools:ignore="TypographyDashes">Verifying and loading S1-mini by Superwhisper Q4_K_M…</string>
     <string name="status_cleanup_downloading">Verifying staged cleanup model: %1$d%%</string>
@@ -53,7 +55,8 @@
     <string name="status_cleanup_fallback">Cleanup unavailable (%1$s); showing the raw transcript.</string>
     <string name="status_cleanup_preprocessing_only">The cleanup model was not run.</string>
     <string name="status_cleanup_empty_input">Enter or dictate raw text before cleaning.</string>
-    <string name="status_cleanup_error">Cleanup error: %1$s</string>
+    <string name="status_cleanup_artifact_unavailable">The staged S1-mini model is missing or invalid. The raw transcript was kept; restage the model, then retry.</string>
+    <string name="status_cleanup_runtime_error">S1-mini stopped. The raw transcript was kept; reload the cleanup model before trying cleanup again.</string>
     <string name="retry_model_load">Retry model load</string>
     <string name="transcript_placeholder">Your local transcript will appear here.</string>
     <string name="transcript_listening">Listening…</string>
@@ -110,13 +113,15 @@
     <string name="ime_sensitive_editor">Dictation is disabled for password or private editor fields.</string>
     <string name="ime_unsupported_editor">This editor does not accept normal text input.</string>
     <string name="ime_permission_required">Grant microphone permission in the Local Flow setup app.</string>
-    <string name="ime_model_error">The local model pipeline failed. Retry loading or open setup.</string>
+    <string name="ime_models_missing_or_invalid">A staged local model is missing or invalid. Open setup, restage the verified models, then try again.</string>
+    <string name="ime_model_load_failed">The local models could not load. Reload them before dictating again.</string>
+    <string name="ime_stt_failed">Speech recognition stopped. Any visible raw transcript is still available; reload the local models before trying again.</string>
+    <string name="ime_cleanup_failed_raw">Cleanup stopped, so the raw local transcript was inserted. Reload the local models before the next dictation.</string>
     <string name="ime_cleanup_load_progress">Verifying S1-mini: %1$d%%</string>
     <string name="ime_model_load_metric">Model load: %1$d ms</string>
     <string name="ime_pipeline_metric">recording %1$d ms · STT %2$d ms · cleanup %3$d ms · stop-to-result %4$d ms</string>
     <string name="ime_no_speech">No speech was detected; nothing was inserted.</string>
-    <string name="ime_commit_failed">The editor rejected the local transcript.</string>
-    <string name="ime_committed_raw">Cleanup was unavailable; the raw local transcript was inserted.</string>
+    <string name="ime_commit_failed">The editor did not confirm insertion. The raw transcript was kept and will not be inserted again automatically.</string>
     <string name="ime_committed_fallback">S1-mini returned no usable complete output; the raw local transcript was inserted.</string>
     <string name="ime_canceled">Dictation canceled; no text was inserted.</string>
     <string name="ime_undo_unavailable">Undo is unavailable because the editor or surrounding text changed.</string>
@@ -126,4 +131,8 @@
     <string name="ime_transcript_waiting">Your live local transcript will appear here.</string>
     <string name="ime_raw_detail">Raw: %1$s</string>
     <string name="ime_committed_detail">Inserted: %1$s</string>
+    <string name="ime_reload_models">Reload local models</string>
+    <string name="ime_continue">Continue</string>
+    <string name="ime_status_commit_error">Text was not inserted</string>
+    <string name="ime_support_recovery">Your transcript stays available while you recover</string>
 </resources>

@@ -28,12 +28,16 @@ object IntegrationModels {
     fun sottoFile(context: Context): File = modelDirectory(context).resolve(SOTTO_FILE_NAME)
 
     fun requireVerified(file: File, expectedSha256: String, displayName: String) {
-        require(file.isFile) {
-            "$displayName is not staged at ${file.absolutePath}. Run the integration model " +
-                "staging script first."
+        if (!file.isFile) {
+            throw MissingModelArtifactException(
+                "$displayName is not staged at ${file.absolutePath}. Run the integration model " +
+                    "staging script first.",
+            )
         }
-        require(expectedSha256.length == 64) {
-            "$displayName has no finalized deployment hash"
+        if (expectedSha256.length != 64) {
+            throw InvalidModelArtifactException(
+                "$displayName has no finalized deployment hash",
+            )
         }
         val actual = file.inputStream().buffered().use { input ->
             val digest = MessageDigest.getInstance("SHA-256")
@@ -45,10 +49,18 @@ object IntegrationModels {
             }
             digest.digest().joinToString("") { byte -> "%02x".format(byte) }
         }
-        require(actual == expectedSha256) {
-            "$displayName SHA-256 mismatch: expected $expectedSha256, found $actual"
+        if (actual != expectedSha256) {
+            throw InvalidModelArtifactException(
+                "$displayName SHA-256 mismatch: expected $expectedSha256, found $actual",
+            )
         }
     }
 
     private const val HASH_BUFFER_BYTES = 1024 * 1024
 }
+
+sealed class ModelArtifactException(message: String) : IllegalArgumentException(message)
+
+class MissingModelArtifactException(message: String) : ModelArtifactException(message)
+
+class InvalidModelArtifactException(message: String) : ModelArtifactException(message)

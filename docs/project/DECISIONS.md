@@ -546,3 +546,9 @@ Last updated: 2026-08-22
    enabled, disabled, loading, and processing state. Use 36 thin waveform strokes as the selected
    density while retaining the strong filtering and low-detail envelope; stroke count is visual
    presentation only and does not increase captured or retained audio detail.
+8. Make recovery stage-specific and fail-safe. Permission loss and missing/hash-invalid artifacts
+   open setup; runtime model/STT failures reload the local pipeline; cleanup failure may insert the
+   already available raw transcript exactly once and offer reload only for future dictation. Treat
+   a false or missing `InputConnection.commitText()` result as ambiguous: retain and expose the raw
+   transcript, never label the attempted payload Inserted, and never retry that editor commit
+   automatically. No recovery action may reopen the microphone or discard visible raw text.

@@ -17,7 +17,11 @@ import dev.localflow.dictation.DictationPipelineCoordinator
 import dev.localflow.dictation.LocalFlowApplication
 import dev.localflow.dictation.LocalFlowLog
 import dev.localflow.dictation.MainActivity
+import dev.localflow.dictation.PipelineFailureKind
+import dev.localflow.dictation.PipelineFailureStage
 import dev.localflow.dictation.R
+import dev.localflow.dictation.RecoveryAction
+import dev.localflow.dictation.RecoveryPolicy
 import dev.localflow.dictation.cleanup.CleanupState
 import dev.localflow.dictation.stt.SpeechToTextEngine
 import dev.localflow.dictation.ui.AudioWaveformView
@@ -54,15 +58,23 @@ class LocalFlowImeService : InputMethodService() {
     private var lastCommittedText = ""
     private var lastMetrics = ""
     private var blockedReason: String? = null
+    private var recoveryFailure: PipelineFailureKind? = null
+    private var recoveryAction = RecoveryAction.NONE
 
     private val speechStateListener: (SpeechToTextEngine.State) -> Unit = { state ->
         if (::waveformView.isInitialized) {
             waveformView.setActive(state == SpeechToTextEngine.State.RECORDING)
         }
-        if (state == SpeechToTextEngine.State.FAILED && mode != Mode.PROCESSING) {
-            mode = Mode.ERROR
-            blockedReason = getString(R.string.ime_model_error)
-            render()
+        if (
+            state == SpeechToTextEngine.State.FAILED &&
+            mode != Mode.PROCESSING &&
+            mode != Mode.LOADING &&
+            mode != Mode.ERROR
+        ) {
+            presentFailure(
+                PipelineFailureStage.STT,
+                IllegalStateException("Parakeet entered the failed state"),
+            )
         }
     }
     private val audioLevelListener: (Float) -> Unit = { level ->
@@ -110,6 +122,7 @@ class LocalFlowImeService : InputMethodService() {
             lastRawText = ""
             lastCommittedText = ""
             lastMetrics = ""
+            clearRecovery()
         }
         refreshAvailability(attribute)
     }
@@ -146,16 +159,21 @@ class LocalFlowImeService : InputMethodService() {
     }
 
     private fun onMainAction() {
+        if (recoveryAction != RecoveryAction.NONE) {
+            performRecoveryAction()
+            return
+        }
         when (mode) {
             Mode.BLOCKED, Mode.NEEDS_PERMISSION -> openSetup()
-            Mode.NEEDS_MODELS, Mode.ERROR -> loadModels()
+            Mode.NEEDS_MODELS -> loadModels()
             Mode.READY, Mode.COMMITTED -> startDictation()
             Mode.RECORDING -> stopAndCommit()
-            Mode.LOADING, Mode.PROCESSING -> Unit
+            Mode.LOADING, Mode.PROCESSING, Mode.ERROR -> Unit
         }
     }
 
     private fun loadModels() {
+        clearRecovery()
         mode = Mode.LOADING
         blockedReason = null
         render()
@@ -173,13 +191,12 @@ class LocalFlowImeService : InputMethodService() {
                 }
             }.onSuccess { result ->
                 lastMetrics = getString(R.string.ime_model_load_metric, result.durationMs)
+                clearRecovery()
                 mode = Mode.READY
                 render()
             }.onFailure { error ->
                 LocalFlowLog.error("IME model load failed", error)
-                blockedReason = error.rootMessage()
-                mode = Mode.ERROR
-                render()
+                presentFailure(PipelineFailureStage.MODEL_LOAD, error)
             }
         }
     }
@@ -191,6 +208,7 @@ class LocalFlowImeService : InputMethodService() {
 
         val identity = info?.toIdentity() ?: return
         activeEditorIdentity = identity
+        clearRecovery()
         blockedReason = null
         lastRawText = ""
         lastCommittedText = ""
@@ -215,9 +233,7 @@ class LocalFlowImeService : InputMethodService() {
                 }.onFailure { error ->
                     if (generation == operationGeneration) {
                         LocalFlowLog.error("IME dictation start failed", error)
-                        blockedReason = error.rootMessage()
-                        mode = Mode.ERROR
-                        render()
+                        presentFailure(PipelineFailureStage.STT, error)
                     }
                 }
         }
@@ -229,9 +245,7 @@ class LocalFlowImeService : InputMethodService() {
         render()
         val generation = operationGeneration
         val startedForEditor = activeEditorIdentity ?: run {
-            blockedReason = getString(R.string.ime_commit_failed)
-            mode = Mode.ERROR
-            render()
+            presentEditorCommitFailure()
             return
         }
         serviceScope.launch {
@@ -250,6 +264,8 @@ class LocalFlowImeService : InputMethodService() {
                         result.stopToCompletionMs,
                     )
                     if (result.committedText.isEmpty()) {
+                        clearRecovery()
+                        activeEditorIdentity = null
                         blockedReason = getString(R.string.ime_no_speech)
                         mode = Mode.READY
                         render()
@@ -262,18 +278,25 @@ class LocalFlowImeService : InputMethodService() {
                         textBeforeCursor = connection?.getTextBeforeCursor(1, 0),
                         textAfterCursor = connection?.getTextAfterCursor(1, 0),
                     )
-                    lastCommittedText = textToCommit
                     val committed = connection?.commitText(textToCommit, 1) == true
                     if (!committed) {
-                        blockedReason = getString(R.string.ime_commit_failed)
-                        mode = Mode.ERROR
+                        lastCommittedText = ""
+                        presentEditorCommitFailure()
                     } else {
+                        lastCommittedText = textToCommit
                         undoHistory.push(UndoRecord(startedForEditor, textToCommit))
                         blockedReason = when {
-                            result.cleanupError != null -> getString(R.string.ime_committed_raw)
+                            result.cleanupError != null -> {
+                                setRecovery(PipelineFailureKind.CLEANUP)
+                                getString(R.string.ime_cleanup_failed_raw)
+                            }
                             result.usedCleanupFallback -> getString(R.string.ime_committed_fallback)
-                            else -> null
+                            else -> {
+                                clearRecovery()
+                                null
+                            }
                         }
+                        activeEditorIdentity = null
                         mode = Mode.COMMITTED
                         LocalFlowLog.info(
                             "IME committed locally: recording=${result.sttResult.recordingDurationMs}ms, " +
@@ -281,14 +304,12 @@ class LocalFlowImeService : InputMethodService() {
                                 "tail=${result.stopToCompletionMs}ms, " +
                                 "fallback=${result.usedCleanupFallback}",
                         )
+                        render()
                     }
-                    render()
                 }.onFailure { error ->
                     if (generation == operationGeneration) {
                         LocalFlowLog.error("IME pipeline failed", error)
-                        blockedReason = error.rootMessage()
-                        mode = Mode.ERROR
-                        render()
+                        presentFailure(PipelineFailureStage.STT, error)
                     } else {
                         refreshAvailability()
                     }
@@ -299,6 +320,7 @@ class LocalFlowImeService : InputMethodService() {
     private fun cancelCurrentOperation() {
         operationGeneration += 1
         activeEditorIdentity = null
+        clearRecovery()
         if (coordinator.speechEngine.state == SpeechToTextEngine.State.RECORDING) {
             coordinator.cancelDictation { result ->
                 result.onFailure { LocalFlowLog.error("IME cancel failed", it) }
@@ -363,6 +385,14 @@ class LocalFlowImeService : InputMethodService() {
                 coordinator.cleanupEngine.state == CleanupState.LOADING -> Mode.LOADING
             else -> Mode.NEEDS_MODELS
         }
+        when (mode) {
+            Mode.BLOCKED, Mode.NEEDS_PERMISSION -> clearRecovery()
+            Mode.READY, Mode.COMMITTED -> if (recoveryAction == RecoveryAction.OPEN_SETUP) {
+                clearRecovery()
+                blockedReason = null
+            }
+            else -> Unit
+        }
         render()
     }
 
@@ -378,7 +408,11 @@ class LocalFlowImeService : InputMethodService() {
                 Mode.RECORDING -> R.string.ime_status_recording
                 Mode.PROCESSING -> R.string.ime_status_processing
                 Mode.COMMITTED -> R.string.ime_status_committed
-                Mode.ERROR -> R.string.ime_status_error
+                Mode.ERROR -> if (recoveryFailure == PipelineFailureKind.EDITOR_COMMIT) {
+                    R.string.ime_status_commit_error
+                } else {
+                    R.string.ime_status_error
+                }
             },
         )
         val indicatorColor = when (mode) {
@@ -396,21 +430,30 @@ class LocalFlowImeService : InputMethodService() {
                 Mode.PROCESSING -> R.string.ime_support_processing
                 Mode.READY, Mode.COMMITTED -> R.string.ime_support_ready
                 Mode.LOADING -> R.string.ime_support_loading
-                Mode.BLOCKED, Mode.NEEDS_PERMISSION, Mode.NEEDS_MODELS, Mode.ERROR ->
+                Mode.ERROR -> R.string.ime_support_recovery
+                Mode.BLOCKED, Mode.NEEDS_PERMISSION, Mode.NEEDS_MODELS ->
                     R.string.ime_support_attention
             },
         )
         mainButton.setText(
-            when (mode) {
-                Mode.BLOCKED, Mode.NEEDS_PERMISSION -> R.string.ime_open_setup
-                Mode.NEEDS_MODELS, Mode.ERROR -> R.string.ime_load_models
-                Mode.READY, Mode.COMMITTED -> R.string.ime_start
-                Mode.RECORDING -> R.string.ime_stop
-                Mode.LOADING -> R.string.ime_loading
-                Mode.PROCESSING -> R.string.ime_processing
+            when (recoveryAction) {
+                RecoveryAction.OPEN_SETUP -> R.string.ime_open_setup
+                RecoveryAction.LOAD_MODELS -> R.string.ime_reload_models
+                RecoveryAction.DISMISS -> R.string.ime_continue
+                RecoveryAction.NONE -> when (mode) {
+                    Mode.BLOCKED, Mode.NEEDS_PERMISSION -> R.string.ime_open_setup
+                    Mode.NEEDS_MODELS -> R.string.ime_load_models
+                    Mode.READY, Mode.COMMITTED -> R.string.ime_start
+                    Mode.RECORDING -> R.string.ime_stop
+                    Mode.LOADING -> R.string.ime_loading
+                    Mode.PROCESSING -> R.string.ime_processing
+                    Mode.ERROR -> R.string.ime_continue
+                }
             },
         )
-        mainButton.isEnabled = mode != Mode.LOADING && mode != Mode.PROCESSING
+        mainButton.isEnabled = mode != Mode.LOADING &&
+            mode != Mode.PROCESSING &&
+            (mode != Mode.ERROR || recoveryAction != RecoveryAction.NONE)
         mainButton.backgroundTintList = ColorStateList.valueOf(
             getColor(
                 if (mode == Mode.RECORDING) {
@@ -459,6 +502,62 @@ class LocalFlowImeService : InputMethodService() {
         }
     }
 
+    private fun presentFailure(stage: PipelineFailureStage, error: Throwable) {
+        val failure = RecoveryPolicy.classify(stage, error)
+        setRecovery(failure)
+        blockedReason = getString(
+            when (failure) {
+                PipelineFailureKind.PERMISSION -> R.string.ime_permission_required
+                PipelineFailureKind.MODEL_ARTIFACT -> R.string.ime_models_missing_or_invalid
+                PipelineFailureKind.MODEL_LOAD -> R.string.ime_model_load_failed
+                PipelineFailureKind.STT -> R.string.ime_stt_failed
+                PipelineFailureKind.CLEANUP -> R.string.ime_cleanup_failed_raw
+                PipelineFailureKind.EDITOR_COMMIT -> R.string.ime_commit_failed
+            },
+        )
+        mode = Mode.ERROR
+        render()
+    }
+
+    private fun presentEditorCommitFailure() {
+        setRecovery(PipelineFailureKind.EDITOR_COMMIT)
+        activeEditorIdentity = null
+        blockedReason = getString(R.string.ime_commit_failed)
+        mode = Mode.ERROR
+        render()
+    }
+
+    private fun setRecovery(failure: PipelineFailureKind) {
+        val directive = RecoveryPolicy.directive(failure)
+        check(directive.preserveRawTranscript) {
+            "Recovery policy must preserve the visible raw transcript"
+        }
+        check(!directive.mayRetryEditorCommit) {
+            "Recovery policy must never retry an editor commit"
+        }
+        recoveryFailure = failure
+        recoveryAction = directive.action
+    }
+
+    private fun clearRecovery() {
+        recoveryFailure = null
+        recoveryAction = RecoveryAction.NONE
+    }
+
+    private fun performRecoveryAction() {
+        when (recoveryAction) {
+            RecoveryAction.OPEN_SETUP -> openSetup()
+            RecoveryAction.LOAD_MODELS -> loadModels()
+            RecoveryAction.DISMISS -> {
+                clearRecovery()
+                blockedReason = null
+                activeEditorIdentity = null
+                refreshAvailability()
+            }
+            RecoveryAction.NONE -> Unit
+        }
+    }
+
     private fun openSetup() {
         startActivity(
             Intent(this, MainActivity::class.java)
@@ -491,12 +590,6 @@ class LocalFlowImeService : InputMethodService() {
         fieldId = fieldId,
         inputType = inputType,
     )
-
-    private fun Throwable.rootMessage(): String {
-        var root = this
-        while (root.cause != null && root.cause !== root) root = root.cause!!
-        return root.message ?: root.javaClass.simpleName
-    }
 
     private enum class Mode {
         BLOCKED,

@@ -193,7 +193,9 @@ class MainActivity : Activity() {
                 modelLoadDurationMs = elapsedMillisSince(modelLoadStartedAtNs)
                 renderMetrics()
                 statusText.setText(R.string.status_model_ready)
-            }.onFailure(::showError)
+            }.onFailure { error ->
+                showSpeechError(PipelineFailureStage.MODEL_LOAD, error)
+            }
         }
     }
 
@@ -234,7 +236,7 @@ class MainActivity : Activity() {
                 statusText.setText(R.string.status_listening)
             }.onFailure {
                 activityOwnsRecording = false
-                showError(it)
+                showSpeechError(PipelineFailureStage.STT, it)
             }
         }
     }
@@ -263,7 +265,9 @@ class MainActivity : Activity() {
                 } else if (sttResult.text.isNotBlank()) {
                     cleanupStatusText.setText(R.string.status_cleanup_load_for_pipeline)
                 }
-            }.onFailure(::showError)
+            }.onFailure { error ->
+                showSpeechError(PipelineFailureStage.STT, error)
+            }
         }
     }
 
@@ -286,7 +290,9 @@ class MainActivity : Activity() {
                 cleanupStatusText.setText(R.string.status_cleanup_ready)
                 renderCleanupState(CleanupState.READY)
                 renderMetrics()
-            }.onFailure(::showCleanupError)
+            }.onFailure { error ->
+                showCleanupError(error)
+            }
         }
     }
 
@@ -577,28 +583,42 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun showError(error: Throwable) {
+    private fun showSpeechError(stage: PipelineFailureStage, error: Throwable) {
         LocalFlowLog.error("Benchmark UI error", error)
-        statusText.text = getString(R.string.status_error, error.rootMessage())
+        val failure = RecoveryPolicy.classify(stage, error)
+        statusText.setText(
+            when (failure) {
+                PipelineFailureKind.PERMISSION -> R.string.status_microphone_permission_denied
+                PipelineFailureKind.MODEL_ARTIFACT ->
+                    R.string.status_model_artifact_unavailable
+                PipelineFailureKind.MODEL_LOAD -> R.string.status_model_load_error
+                PipelineFailureKind.STT -> R.string.status_stt_error
+                else -> R.string.status_stt_error
+            },
+        )
         renderState(engine.state)
+        if (failure == PipelineFailureKind.MODEL_ARTIFACT) {
+            loadModelButton.setText(R.string.retry_model_load)
+        }
+        if (failure == PipelineFailureKind.PERMISSION) renderImeSetupState()
     }
 
     private fun showCleanupError(error: Throwable) {
         LocalFlowLog.error("Cleanup benchmark UI error", error)
-        cleanupStatusText.text = getString(R.string.status_cleanup_error, error.rootMessage())
+        cleanupStatusText.setText(
+            when (
+                RecoveryPolicy.classify(PipelineFailureStage.CLEANUP, error)
+            ) {
+                PipelineFailureKind.MODEL_ARTIFACT ->
+                    R.string.status_cleanup_artifact_unavailable
+                else -> R.string.status_cleanup_runtime_error
+            },
+        )
         renderCleanupState(currentCleanupState())
     }
 
     private fun elapsedMillisSince(startedAtNs: Long): Long =
         (SystemClock.elapsedRealtimeNanos() - startedAtNs).coerceAtLeast(0L) / 1_000_000L
-
-    private fun Throwable.rootMessage(): String {
-        var root = this
-        while (root.cause != null && root.cause !== root) {
-            root = root.cause!!
-        }
-        return root.message ?: root.javaClass.simpleName
-    }
 
     private companion object {
         const val MICROPHONE_PERMISSION_REQUEST = 1001

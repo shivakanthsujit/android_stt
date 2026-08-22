@@ -59,7 +59,7 @@ class IntegrationModelsTest {
                     displayName = "fixture",
                 )
             }.exceptionOrNull()
-            assertTrue(failure is IllegalArgumentException)
+            assertTrue(failure is InvalidModelArtifactException)
             assertTrue(failure?.message.orEmpty().contains("SHA-256 mismatch"))
         } finally {
             file.delete()
@@ -76,7 +76,7 @@ class IntegrationModelsTest {
                 displayName = "fixture",
             )
         }.exceptionOrNull()
-        assertTrue(failure is IllegalArgumentException)
+        assertTrue(failure is MissingModelArtifactException)
         assertTrue(!file.exists())
     }
 }

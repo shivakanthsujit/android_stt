@@ -1383,3 +1383,20 @@
   report beyond what was checked.
 - No app code, APK, model, device state, personal transcript, or audio capture changed. The
   unrelated untracked `t.txt` remains untouched.
+
+## 2026-08-22 — fail-safe recovery slice host-ready
+
+- Replaced the IME's generic “every error loads models” behavior with typed recovery for permission,
+  missing/hash-invalid artifacts, runtime model load, STT, cleanup, and editor-commit failures.
+  Setup is offered only when setup can help; runtime failures reload; cleanup failure inserts raw
+  once and reloads only for future work; every path keeps visible raw text.
+- Fixed the ambiguous editor-commit path so attempted text is not labeled Inserted before
+  `commitText()` returns success. A false/missing result preserves the raw transcript, offers a
+  non-mutating Continue action, and can never repeat the commit automatically.
+- Added typed model-artifact exceptions, friendly Activity/IME status copy, a shared pure recovery
+  policy, and four focused tests. The complete 56-test unit suite, lint, and debug assembly pass.
+  The 88,047,120-byte APK has SHA-256
+  `f92f164a0639204c024c03807f68eac778e709815fdc4ace576c5d13e803d6d1`.
+- The owner reported that the Pixel is disconnected and asked to wait before deployment. No device
+  state, model, microphone, transcript, or audio changed. Installation and device recovery-label
+  checks remain pending; unrelated untracked `t.txt` remains untouched.
