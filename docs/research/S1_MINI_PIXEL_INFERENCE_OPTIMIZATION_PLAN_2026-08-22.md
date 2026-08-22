@@ -343,12 +343,12 @@ checkpoint and nominal four-bit deployment precision.
 | 4 | Direct llama.cpp standalone same-GGUF parity | complete | prompt/token/cap/EOG/backend, host, matched control, and cap-path evidence |
 | 5 | Direct llama.cpp Android CPU A/B | complete; no-go | same-artifact stress and user-shaped comparisons; retain LEAP |
 | 6 | Direct GPU feasibility probe | deferred after CPU no-go | revisit only as a separately scoped Mali experiment |
-| 7 | LiteRT-LM S1 BF16 conversion | pending | `.litertlm` hash and conversion manifest |
-| 8 | LiteRT host semantic/parity gate | pending | reviewed raw-difference report |
-| 9 | LiteRT Pixel CPU/GPU A/B | pending owner-approved device run | performance/power report |
-| 10 | Runtime selection and production swap, if earned | pending | decision, tests, rollback path |
+| 7 | LiteRT-LM S1 BF16 conversion | complete | exact block-32 artifact, manifest, and structural inspection |
+| 8 | LiteRT host semantic/parity gate | complete for device screening | exact prompt host CPU/GPU smoke; Android tokenizer API limitation recorded |
+| 9 | LiteRT Pixel CPU/GPU A/B | complete; no-go before sustained/power | English user-shaped CPU/GPU screen and verified OpenCL logs |
+| 10 | Runtime selection and production swap, if earned | complete; retain LEAP | LiteRT and direct rejected; no production swap |
 
-The immediate executable task is Order 7: convert the exact pinned S1-mini BF16 snapshot on the
-Linux RTX A6000 host with a metadata-proven blockwise-32 INT4/FP32 LiteRT-LM recipe. Do not use the
-GGUF, generic Qwen weights, channelwise/block-128 recipes, or smaller quantization. Every later
-Pixel install or benchmark still requires the owner's immediate device-session approval.
+Orders 7–10 are closed. The exact conversion succeeded, but Pixel CPU/GPU screening rejected the
+artifact before sustained/power work: both lost all ten English user-shaped latency pairs and
+regressed memory materially. Tuned LEAP remains production. See
+`docs/evaluation/results/2026-08-22-s1-mini-litert-pixel.md`.

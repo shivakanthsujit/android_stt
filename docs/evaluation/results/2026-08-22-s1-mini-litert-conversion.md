@@ -149,11 +149,9 @@ and small reports are mirrored under ignored local path
 `.cache/integration/s1-mini-litert-v1/20260822T062056Z/`; the complete intermediates remain under
 `/data/rise/android_stt/litert-conversion/` on Dante.
 
-## Next gate
+## Pixel follow-up
 
-1. Add an isolated Android LiteRT-LM probe without changing the production LEAP engine.
-2. Run the frozen project-authored, user-shaped transcript-only cases and manually review every raw difference versus
-   BF16/current Q4. Do not tune from committed evaluation cases or use blind-v2.
-3. On Pixel, re-prove prompt/token/cap identity through the Android runtime, then compare the same
-   artifact on CPU and GPU against tuned LEAP with matched thermal, memory, and power evidence.
-   Tensor G2 NPU remains out of scope.
+The isolated Android follow-up is complete. On the frozen English user-shaped fixture, LiteRT CPU
+and fully delegated Mali/OpenCL GPU both lost 10/10 paired total-latency comparisons against tuned
+LEAP and materially regressed PSS. Stage 3 stopped before sustained/power work and retained LEAP.
+See `docs/evaluation/results/2026-08-22-s1-mini-litert-pixel.md`.

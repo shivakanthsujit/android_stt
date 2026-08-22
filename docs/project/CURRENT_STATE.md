@@ -161,9 +161,15 @@ Last updated: 2026-08-22
   Qwen3 metadata, the source Jinja template, and stop IDs. An isolated LiteRT-LM JVM 0.16.1 smoke
   now loads the exact bundle on both CPU and Apple M2 GPU/WebGPU, proves the 404-byte rendered
   cleanup prompt exactly, and returns `Hello there` on both arms for the project-authored
-  `um hello there` input. This is host viability only: no Pixel runtime measurement has occurred,
-  so tuned LEAP remains production. Full conversion/runtime evidence:
-  `docs/evaluation/results/2026-08-22-s1-mini-litert-conversion.md`.
+  `um hello there` input. The isolated Android 0.16.1 probe is also complete on the frozen English
+  user-shaped fixture. CPU was 448.2% slower at median total latency and used 42.4% more median PSS
+  than the thermal-clean LEAP reference; GPU was 91.0% slower and used 142.9% more PSS despite
+  genuine full-main-model Mali/OpenCL delegation. Both lost all 10 paired latency cases and stayed
+  at thermal 0. LiteRT exact raw output matched LEAP only 1/10, mostly due omitted final periods;
+  CPU also introduced `water the balcony, herbs`. Stage 3 is a no-go, no smaller-context export or
+  power arm is advanced, and tuned LEAP remains production. Evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-litert-conversion.md` and
+  `docs/evaluation/results/2026-08-22-s1-mini-litert-pixel.md`.
 - The owner-local FluidVoice 1.6.9 pipeline is now inventoried as a Mac-only reference. Its active
   path is Parakeet TDT v2 Core ML → app filler/dictionary preprocessing → Fluid-1 with bundled
   prompt/template → thinking-markup and app formatting/continuous-dictation postprocessing. The

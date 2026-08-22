@@ -1243,3 +1243,26 @@
 - Dante, Pixel, microphone, committed evaluation corpora, expected outputs, private transcripts,
   and production LEAP were untouched during the host smoke. Next is an isolated Android probe and
   matched Pixel CPU/GPU evidence.
+
+## 2026-08-22 — LiteRT-LM Pixel English representative no-go
+
+- Added an isolated `:litertlm-android-benchmark` app pinned to LiteRT-LM Android 0.16.1. The
+  ARM64 release APK declares no permissions, stages the hash-verified model app-privately, verifies
+  exact rendered prompt bytes, sends one request at a time with fresh conversations, and captures
+  callback TTFT because native benchmark counters are disabled.
+- At the owner's direction, removed the Japanese/Unicode stress row from the active LiteRT fixture
+  and excluded its prior smoke result from selection. The final comparison uses only the frozen
+  ten-case English user-shaped fixture (median 22 raw tokens).
+- CPU and GPU representative runs both stayed thermal 0. Against LEAP repeat 0 on the same fixture,
+  CPU median total/TTFT/PSS regressed 448.2%/457.3%/42.4%; GPU regressed
+  91.0%/5.8%/142.9%. Each lost 10/10 paired total-latency calls.
+- Logcat proves GPU loaded OpenCL and delegated every main prefill/decode node through `LITERT_CL`;
+  the external embedder and unavailable optional sampler remained CPU. The result is not silent
+  CPU fallback.
+- Exact output parity was 1/10; most differences were missing final periods. GPU preserved the
+  English reminder, while CPU added an awkward comma in `water the balcony, herbs`. No thinking
+  markup, loop, crash, or thermal event occurred.
+- Rejected LiteRT CPU/GPU and retained tuned LEAP. No sustained, power, smaller-context conversion,
+  or production integration arm is advanced. The isolated package remains installed pending owner
+  approval to remove roughly 1.0 GiB of app-private model/cache evidence.
+- Full report: `docs/evaluation/results/2026-08-22-s1-mini-litert-pixel.md`.

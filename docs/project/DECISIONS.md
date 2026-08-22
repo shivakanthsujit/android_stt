@@ -461,6 +461,15 @@ Last updated: 2026-08-22
     evidence: native benchmark counters were disabled, the GPU sampler fell back to the linked C
     implementation, and neither result predicts Pixel 7 performance. Keep LEAP production until
     matched Pixel CPU/GPU output, latency, p90, memory, energy, and thermal gates pass.
+67. Reject the exact blockwise-32 S1 LiteRT-LM artifact as a Pixel production replacement. On the
+    owner-shaped English fixture, CPU median total/PSS regressed 448.2%/42.4% versus the
+    thermal-clean LEAP reference; fully delegated Mali/OpenCL GPU regressed 91.0%/142.9%. Both
+    lost all 10 paired latency calls at thermal status 0. Exact raw-output parity was 1/10, mostly
+    terminal-period differences, and CPU introduced one awkward comma. The personal-use runtime
+    policy remains unchanged—non-empty, non-capped generations are inserted—but this artifact is
+    not integrated. Do not spend another conversion/run on a 2,560 context or power trace because
+    the total-latency and memory gaps are already decisive. Exclude the Japanese/Unicode stress row
+    from this and future selection because the owner does not use that workload.
 
 ## Hosted API benchmark
 

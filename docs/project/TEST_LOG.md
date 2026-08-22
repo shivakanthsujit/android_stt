@@ -775,3 +775,22 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - LiteRT-LM JVM native benchmark counters reported disabled. Only one-shot wall times were retained;
   no TTFT/token-rate or performance-selection claim was made. No ADB, Pixel, microphone, evaluation
   corpus, expected output, or private transcript was used.
+
+## 2026-08-22 — S1-mini LiteRT-LM Pixel CPU/GPU
+
+- `./gradlew :litertlm-android-benchmark:testDebugUnitTest
+  :litertlm-android-benchmark:assembleRelease`: passed; 3/3 unit tests.
+- Python validator/fixture tests: 2/2 passed; shell syntax, Python compile, and diff checks passed.
+- Release APK: 28,687,212 bytes, SHA-256
+  `6873d1ca1977ae40b31e55ded9d546db242fcd5e4efb56a33388b3993ead16e9`; ARM64-only,
+  no permissions, optional OpenCL/vndksupport declarations present.
+- CPU English representative: 11 rows (one warmup plus ten measured), exact prompt/cap validation,
+  thermal max 0, median TTFT/total 3,764.5/7,559.5 ms, median PSS 1,571,406.5 KiB.
+- GPU English representative: 11 rows, exact prompt/cap validation, thermal max 0, median TTFT/total
+  714.5/2,633.5 ms, median PSS 2,680,072 KiB. Logs prove complete `LITERT_CL` delegation for main
+  prefill/decode graphs and the documented CPU sampler fallback.
+- Paired against the same-fixture thermal-clean LEAP repeat 0, CPU/GPU total latency lost 10/10;
+  median total regressions were 448.2%/91.0%, PSS regressions 42.4%/142.9%.
+- The Japanese/Unicode stress row was removed and excluded from the verdict at the owner's request.
+  No microphone, evaluation corpus, expected output, private transcript, production app mutation,
+  sustained arm, or power trace was used.

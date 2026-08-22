@@ -81,9 +81,14 @@ Do not add lower-bit GGUF variants.
 - [x] Pass the initial host LiteRT-LM CPU/GPU load and byte-exact prompt/template/cap smoke. Both
   arms returned `Hello there` for the authored 3-token filler input; native JVM benchmark counters
   were unavailable and are explicitly not inferred from wall time.
-- [ ] Add an isolated Android LiteRT-LM probe, re-prove prompt/token/cap identity, and run the frozen
-  user-shaped transcript-only cases on Pixel CPU/GPU against tuned LEAP. Do not add a Tensor G2 NPU
-  arm without official support or tune from evaluation/private prompts.
+- [x] Add an isolated, permissionless Android LiteRT-LM probe and run the frozen English
+  user-shaped cases on Pixel CPU/GPU. Exact rendered prompts and caps passed; CPU/GPU lost 10/10
+  paired latency calls. CPU median total/PSS regressed 448.2%/42.4%; genuine Mali/OpenCL GPU
+  regressed 91.0%/142.9%. Reject both and retain LEAP. The owner excluded the nonrepresentative
+  Japanese/Unicode stress row from selection and future tests.
+- [ ] Optionally uninstall `dev.localflow.litertlmbenchmark` after evidence handoff to recover about
+  1.0 GiB of Pixel storage. Do not remove it silently; app-private model/cache evidence will be
+  deleted. No further LiteRT performance arm is warranted.
 - [ ] Select a replacement only after sustained same-method latency, p90, memory, energy, thermal,
   deterministic-output, and maintenance-cost comparison against the LEAP reference.
 

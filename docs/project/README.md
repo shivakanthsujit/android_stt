@@ -17,6 +17,7 @@ Start here when resuming Local Flow in a new session.
 | [Direct llama.cpp Pixel comparison](../evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md) | Same-GGUF cap/parity evidence, single-request CPU matrix, user-shaped matched A/B, no-go decision, and hashes |
 | [Direct llama.cpp host readiness](../evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md) | Isolated runtime, pinned build manifest, exact prompt/token device smoke, and host artifact identities |
 | [S1-mini LiteRT-LM conversion](../evaluation/results/2026-08-22-s1-mini-litert-conversion.md) | Exact BF16 source gate, pinned block-32 INT4 conversion, bundle inspection, host CPU/GPU contract smoke, and hashes |
+| [S1-mini LiteRT-LM Pixel comparison](../evaluation/results/2026-08-22-s1-mini-litert-pixel.md) | English user-shaped CPU/GPU results, verified Mali/OpenCL delegation, no-go decision, and hashes |
 | [S1-mini Pixel inference optimization plan](../research/S1_MINI_PIXEL_INFERENCE_OPTIMIZATION_PLAN_2026-08-22.md) | Ordered LEAP tuning, same-GGUF direct llama.cpp, and S1-specific LiteRT-LM CPU/GPU program |
 | [Streaming STT and S1-mini runtime contract](../research/STREAMING_STT_AND_S1_MINI_RUNTIME_CONTRACT_2026-08-21.md) | Realtime EOU model-card constraints, final-only cleanup ordering, 1,000-token sentence chunking, hashes, and release caveats |
 | [Training-machine handoff](../../TRAINING_MACHINE_HANDOFF.md) | Complete RTX A6000 data/training/evaluation workflow |
