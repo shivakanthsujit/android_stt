@@ -577,7 +577,8 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   artifacts, runtime model load, STT, cleanup, and editor-commit failure. It preserves visible raw
   text, opens setup only for permission/artifacts, reloads only for runtime recovery, inserts raw
   once when cleanup fails, and never retries an unconfirmed editor commit. Host unit/lint/build
-  gates pass; install and exercise the recovery labels when the disconnected Pixel returns.
+  gates pass, and the APK is installed with app data and IME enablement preserved. Static setup UI
+  verification passes; exercise the recovery labels during a consented live failure-path check.
 - [ ] Add a compact post-result review affordance. Let the owner switch the local transcript card
   between raw and inserted text and copy either one without retaining history or changing the
   permissive insertion policy. Consider exact-suffix Replace/Redo only if editor identity and

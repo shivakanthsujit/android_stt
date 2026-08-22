@@ -864,3 +864,19 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   `f92f164a0639204c024c03807f68eac778e709815fdc4ace576c5d13e803d6d1`.
 - The Pixel was disconnected at the owner's direction. No install, ADB mutation, microphone use,
   model load, personal transcript, or device recovery-state test occurred; deployment is pending.
+
+## 2026-08-22 — fail-safe recovery Pixel deployment
+
+- Owner-authorized `adb install -r` of the 88,047,120-byte recovery APK on Pixel 7 `panther`,
+  serial `33040DLH20004E`: `Success`. APK SHA-256:
+  `f92f164a0639204c024c03807f68eac778e709815fdc4ace576c5d13e803d6d1`.
+- Package presence passed. The app-private Realtime EOU and S1-mini files remained exactly
+  129,133,984 and 484,219,808 bytes after installation. Local Flow remained in
+  `enabled_input_methods`; Gboard remained `default_input_method`.
+- `MainActivity` cold launch returned `Status: ok` in 479 ms. A read-only UI hierarchy inspection
+  found microphone permission `yes`, keyboard enabled `yes`, keyboard selected `no`, the unloaded
+  Parakeet setup state, disabled Start dictation, and the clickable transcript surface labeled
+  `Scroll to review · tap to copy`.
+- This was a static, non-recording deployment check. No model load, microphone, inference,
+  deliberate recovery failure, personal transcript, audio capture, screenshot, or payload log was
+  used. Live recovery labels and actions remain an interactive owner check.

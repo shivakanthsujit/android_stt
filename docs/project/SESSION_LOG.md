@@ -1400,3 +1400,16 @@
 - The owner reported that the Pixel is disconnected and asked to wait before deployment. No device
   state, model, microphone, transcript, or audio changed. Installation and device recovery-label
   checks remain pending; unrelated untracked `t.txt` remains untouched.
+
+## 2026-08-22 — fail-safe recovery build deployed
+
+- After the owner reported that the Pixel was connected, installed the host-verified recovery APK
+  in place with `adb install -r`; installation returned `Success`.
+- Read-only post-install checks confirmed package presence, preserved 129,133,984-byte Realtime EOU
+  and 484,219,808-byte S1-mini app-private models, and preserved Local Flow IME enablement. Gboard
+  remained the selected keyboard; installation did not silently switch the default IME.
+- Cold-launched only `MainActivity`. Its UI hierarchy rendered the setup state and the accessible
+  `Scroll to review · tap to copy` transcript surface. No model was loaded, no microphone or
+  inference ran, no failure was injected, and no personal transcript/audio was captured.
+- Live permission/artifact/runtime/cleanup/editor failure-path verification remains open. The
+  unrelated untracked `t.txt` remains untouched.
