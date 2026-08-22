@@ -51,7 +51,7 @@ class AudioWaveformView @JvmOverloads constructor(
         val maximumHeight = (height - paddingTop - paddingBottom).toFloat()
             .coerceAtLeast(minimumHeight) * 0.76f
         val centerY = height / 2f
-        paint.strokeWidth = 1.6f * density
+        paint.strokeWidth = 1.35f * density
         paint.color = context.getColor(
             if (active) R.color.local_flow_recording_wave else R.color.local_flow_outline_strong,
         )
@@ -65,7 +65,7 @@ class AudioWaveformView @JvmOverloads constructor(
     }
 
     private companion object {
-        const val BAR_COUNT = 24
+        const val BAR_COUNT = 36
         const val DETAIL_STEPS = 5f
         const val DISPLAY_SMOOTHING = 0.42f
     }

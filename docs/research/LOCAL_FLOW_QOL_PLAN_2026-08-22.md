@@ -43,14 +43,31 @@ Local Flow remains Pixel 7-first, fully local, explicit Start/Stop, and final-on
    - Pause/reset it immediately on Stop, Cancel, permission loss, or lifecycle teardown.
    - Verify drawing cost, accessibility, and reduced-motion behavior on Pixel before keeping it.
 4. **Recovery and revision polish**
-   - Add explicit retry for recoverable model/processing failures.
-   - Evaluate a local raw-versus-cleaned review control without placing provisional text in the
-     destination editor or weakening the insertion policy.
-   - Consider redo only if the exact editor/cursor transaction can remain fail-closed.
-5. **Daily-driver Pixel gate**
+   - Classify permission, missing/invalid model, STT, cleanup, and editor-commit failures and expose
+     only the relevant retry. Never restart the microphone automatically or double-commit a result.
+   - Preserve a visible raw transcript across recoverable processing errors without persisting it.
+   - Add a compact raw-versus-inserted review control that can copy either representation without
+     weakening the personal-use insertion policy or placing provisional text in the destination.
+   - Consider exact-suffix Replace/Redo only if editor identity, cursor, and surrounding-text
+     transactions can remain fail-closed.
+5. **Daily-driver ergonomics and accessibility**
+   - Add restrained haptics for Start, Stop, Cancel, Undo, commit, and failure. Never play sounds
+     that could enter an active recording.
+   - Add an elapsed recording timer and explicit transcript-finalization/cleanup phases without
+     fake progress percentages or transcript-bearing diagnostics.
+   - Add a compact/landscape arrangement that preserves the dominant Stop action, lifecycle state,
+     transcript scrolling/copy, Cancel, Undo, and keyboard switching while showing more of the host
+     editor. Collapse diagnostic timings by default.
+   - Verify TalkBack state/action announcements, dynamic type, contrast, touch targets, and reduced
+     motion. Keep the waveform decorative for accessibility; the textual lifecycle state remains
+     authoritative.
+   - Improve setup recovery for permission denial and missing/hash-invalid staged models, then
+     choose model warm/unload behavior from measured memory and battery cost.
+6. **Daily-driver Pixel gate**
    - Check long live transcript scrolling, manual scroll hold, repeated dictations and multi-undo,
      cancel, focus switching, password/private fields, model failure, rotation/keyboard hiding,
-     TalkBack labels, memory, thermal behavior, and true Stop-to-editor-commit latency.
+     landscape layout, TalkBack labels, memory, thermal behavior, battery cost, and true
+     Stop-to-editor-commit latency.
 
 ## First slice acceptance
 

@@ -434,6 +434,7 @@ class MainActivity : Activity() {
                 },
             ),
         )
+        dictationButton.setTextColor(getColor(R.color.local_flow_on_primary))
         loadModelButton.visibility = if (
             state == SpeechToTextEngine.State.UNLOADED ||
             state == SpeechToTextEngine.State.LOADING ||

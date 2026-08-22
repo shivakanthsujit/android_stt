@@ -420,6 +420,7 @@ class LocalFlowImeService : InputMethodService() {
                 },
             ),
         )
+        mainButton.setTextColor(getColor(R.color.local_flow_on_primary))
         cancelButton.isEnabled = mode == Mode.RECORDING || mode == Mode.PROCESSING
         undoButton.isEnabled = undoHistory.isNotEmpty() && mode in UNDO_ENABLED_MODES
         undoButton.text = if (undoHistory.size > 1) {

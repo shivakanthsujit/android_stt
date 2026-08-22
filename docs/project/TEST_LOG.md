@@ -830,3 +830,13 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Owner live-use evidence preceding the refinement confirms transcript text and the Listening state
   remain active during manual scrolling, as intended. Final post-refinement idle-room gating,
   speaking response, TalkBack, copy gesture, and processing-state checks remain interactive work.
+
+## 2026-08-22 — Primary contrast and waveform density
+
+- `./gradlew --offline testDebugUnitTest lintDebug assembleDebug`: passed.
+- Debug APK: 88,047,120 bytes, SHA-256
+  `8e102a5c27b2ba39ceaad89f8b1f5bfcdcdf888e0401e2ad6fe6f1858a52b708`.
+- `adb install -r` on Pixel 7 serial `33040DLH20004E`: `Success`; existing app data was preserved.
+- Static `MainActivity` screenshot verifies explicit light primary-button text and the denser
+  36-stroke idle waveform. The selected IME/setup status was also rendered correctly. No
+  microphone or model inference ran; live dusty-rose Stop contrast remains owner verification.

@@ -142,6 +142,7 @@
         android:layout_marginTop="10dp"
         android:contentDescription="@string/ime_main_action_description"
         android:text="@string/ime_load_models"
+        android:textColor="@color/local_flow_on_primary"
         android:textSize="17sp" />
 
     <LinearLayout

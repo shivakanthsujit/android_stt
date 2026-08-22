@@ -534,3 +534,8 @@ Last updated: 2026-08-22
    teardown. The separate lifecycle state indicator—not waveform motion—is authoritative for
    microphone state. Scrolling intentionally leaves recording active and the Listening state
    visible because it changes only presentation.
+7. Do not inherit primary Start/Stop text contrast from platform Button state styling. Explicitly
+   render light text over the muted blue ready surface and dusty-rose recording surface in every
+   enabled, disabled, loading, and processing state. Use 36 thin waveform strokes as the selected
+   density while retaining the strong filtering and low-detail envelope; stroke count is visual
+   presentation only and does not increase captured or retained audio detail.

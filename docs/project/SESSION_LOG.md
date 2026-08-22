@@ -1332,3 +1332,22 @@
   `8fb78d6c686ba5088285be787b202d840e712274404f0dda4e041e9bbd28d115` over the existing Pixel
   package and statically verified the muted Activity palette and slimmer idle waveform.
 - The unrelated untracked `t.txt` remains untouched.
+
+## 2026-08-22 — Primary contrast, waveform density, and QoL roadmap
+
+- Fixed owner-reported dark text over blue/red primary actions by explicitly applying light text to
+  the Activity dictation button and IME main action in both XML and every runtime state render. This
+  covers Start, Stop, Load, loading, and processing instead of relying on Android's state theme.
+- Increased the filtered waveform from 24 to 36 strokes while reducing each stroke from 1.6 to
+  1.35 dp. The -32 dB gate, high-pass, slow envelope, five-level quantization, 20 Hz ceiling,
+  non-persistence, and separation from Parakeet audio remain unchanged.
+- Expanded the durable QoL roadmap with concrete recovery, raw-versus-inserted review, fail-closed
+  Replace/Redo evaluation, restrained haptics, recording timer and real processing phases,
+  TalkBack/dynamic-type/reduced-motion checks, compact/landscape layout, actionable setup/model
+  health, and measured warm/unload policy.
+- `testDebugUnitTest`, `lintDebug`, and `assembleDebug` pass. Installed the 88,047,120-byte APK at
+  SHA-256 `8e102a5c27b2ba39ceaad89f8b1f5bfcdcdf888e0401e2ad6fe6f1858a52b708`
+  over the Pixel package and statically verified light blue-button text plus the denser idle
+  waveform. Live red Stop-state contrast remains an owner check; no microphone was opened for
+  static QA.
+- The unrelated untracked `t.txt` remains untouched.

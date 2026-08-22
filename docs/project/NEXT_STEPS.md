@@ -539,9 +539,33 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 - [x] Add the real non-persisted waveform plumbing and lightweight custom view. Derive a throttled
   display-only envelope directly from live `AudioRecord` chunks, retain no PCM, clear immediately
   on Stop/Cancel/failure, and keep it presentation-only. After owner feedback, add an 80 Hz
-  high-pass, -32 dB noise gate, slow attack/release, five-level quantization, and slimmer 24-bar
+  high-pass, -32 dB noise gate, slow attack/release, five-level quantization, and slimmer 36-bar
   rendering so idle noise stays quiet and speech detail is obscured. Final idle-room calibration,
   accessibility, and drawing-cost verification remains open on Pixel.
+- [x] Enforce readable primary-action contrast independently of Android's Button state theme.
+  Start/Stop and loading/processing use explicit light text over the muted blue or dusty-rose
+  surface in XML and at every runtime state render. Static Pixel verification passes; confirm the
+  live red Stop state during the next owner dictation.
+- [ ] Add fail-safe recovery actions. Distinguish missing models, permission loss, STT failure, and
+  cleanup failure; offer the smallest relevant retry while preserving any visible raw transcript,
+  never reopening the microphone automatically, and never committing the same result twice.
+- [ ] Add a compact post-result review affordance. Let the owner switch the local transcript card
+  between raw and inserted text and copy either one without retaining history or changing the
+  permissive insertion policy. Consider exact-suffix Replace/Redo only if editor identity and
+  surrounding-text checks can remain fail-closed.
+- [ ] Polish tactile and accessible feedback. Add restrained haptics for Start, Stop, Cancel, Undo,
+  commit, and failure; verify TalkBack action/state announcements, dynamic type, contrast, minimum
+  touch targets, and reduced-motion behavior. Do not add spoken/audio feedback that can leak into
+  an active recording.
+- [ ] Add compact and landscape keyboard layouts. Keep Stop and the lifecycle indicator dominant,
+  collapse diagnostics by default, retain transcript scrolling/copy, and prevent the IME from
+  obscuring more of the destination editor than necessary.
+- [ ] Add a transcript-free recording timer and clearer Stop-to-result phase progress. Show elapsed
+  listening time plus `Finalizing transcript` and `Cleaning locally` phases without estimating fake
+  completion percentages or logging transcript content.
+- [ ] Improve setup/model health. Detect missing or hash-invalid staged files with a direct setup
+  action, make permission recovery actionable, and choose a warm/unload policy from measured Pixel
+  memory and battery cost rather than a fixed guess.
 - [ ] Choose model warm/unload policy based on measured memory and battery cost.
 - [ ] Build a consented, evaluation-only human dictation set with multiple speakers, rooms, pace,
   accents, corrections, names, numbers, uncertainty, long-form speech, and interruptions. Keep all
