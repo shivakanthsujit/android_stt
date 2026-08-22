@@ -1201,3 +1201,45 @@
 - Full report: `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md`. Raw results,
   model bytes, APKs, and manifests remain ignored; the unrelated untracked `t.txt` remains
   untouched.
+
+## 2026-08-22 — Exact S1 BF16 to LiteRT-LM block-32 conversion
+
+- Brought Dante online and verified Linux x86_64, 120 GiB available RAM, 9.3 TB available disk,
+  and the RTX A6000 before creating a dedicated workspace. Transferred only the exact S1-mini BF16
+  snapshot outside Git; all 12 source files matched revision
+  `65f84bcda1d13df582c4a8443c1c5aa53c0c66db`, including the 1,503,300,328-byte weights at SHA-256
+  `69d2057077ab4dc738aaaab75d2a8ffa141e3a09fb9d956198cfce46f381131a`.
+- Added a Linux-only Python 3.11 uv lock, exact conversion contract, source/recipe canary, guarded
+  exporter, FlatBuffer inspector, detached-run launcher, and six fail-closed tests. The final lock
+  uses LiteRT Torch 0.9.3, AI Edge Quantizer 0.8.0, and pins `backports-strenum==1.2.8` to avoid the
+  unconstrained 1.3.1 release's intentional Python 3.11 exclusion. All 85 packages pass `uv pip
+  check`; the full freeze is retained outside Git.
+- Converted with `dynamic_wi4b32_afp32`, context 4,096, prefill shapes 128/256/512/1024/1152, float
+  activations/KV, external embedder, and retained intermediates. The run completed in 5m46s with
+  exit 0. Final bundle: 436,596,864 bytes, SHA-256
+  `8748cd01c614db17454fc02b87ef3fc46558f8c5e796dbb85a6f5be6eb01a403`.
+- Structural inspection passed: main 1,152 plus embedder 2 INT4 tensors, 1,154/1,154 block size 32,
+  FLOAT16 scale references, and FLOAT32 KV signatures. Official `litert-lm-peek` confirms bundle
+  version 1.6.0, Qwen3 metadata, context 4,096, stop IDs 151643/151645, and the embedded source
+  Jinja template.
+- No evaluation corpus, expected/model output, GGUF, generic Qwen weights, Pixel, microphone, or
+  production runtime was used. LEAP stays production. Full conversion evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-litert-conversion.md`. The unrelated untracked
+  `t.txt` remains untouched.
+
+## 2026-08-22 — LiteRT-LM host runtime contract smoke
+
+- Added the isolated `:litertlm-host-smoke` Kotlin/JVM module, pinned LiteRT-LM JVM 0.16.1, and
+  three fail-closed unit tests for the exact S1 prompt and input-relative cap. The probe verifies
+  the bundle size/hash and refuses generation if the runtime-rendered prompt differs by any byte.
+- Loaded the exact artifact on CPU/XNNPACK with two threads and on Apple M2 GPU/Metal WebGPU. Both
+  rendered the 404-byte prompt at SHA-256
+  `0b546eb4a221629272391b80cbf55e5cf26af3f9ff9df2305923d1362b4c99fb` and returned
+  `Hello there` for project-authored `um hello there`.
+- Native benchmark counters were disabled in the JVM engine settings. Retained the explicit error
+  and wall-clock smoke durations; made no TTFT/token-rate or Pixel-performance claim. The GPU
+  sampler alone fell back to the linked C implementation because the optional WebGPU sampler DSO
+  was absent.
+- Dante, Pixel, microphone, committed evaluation corpora, expected outputs, private transcripts,
+  and production LEAP were untouched during the host smoke. Next is an isolated Android probe and
+  matched Pixel CPU/GPU evidence.

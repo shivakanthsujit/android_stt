@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "LocalFlow"
 include(":app")
 include(":llamacpp-benchmark")
+include(":litertlm-host-smoke")

@@ -153,8 +153,17 @@ Last updated: 2026-08-22
   and reached thermal 1 while LEAP stayed at 0; its median PSS was 1.8% lower. Direct CPU is a no-go
   and LEAP remains production. Full device evidence:
   `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md`; host/build evidence:
-  `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`. No LiteRT
-  conversion has started; exact BF16 blockwise-32 Stage 3 conversion is next.
+  `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-host-readiness.md`. Stage 3's exact
+  BF16 conversion is now complete. Dante produced a 436,596,864-byte 4,096-context LiteRT-LM
+  bundle at SHA-256 `8748cd01c614db17454fc02b87ef3fc46558f8c5e796dbb85a6f5be6eb01a403`
+  using `dynamic_wi4b32_afp32`. Inspection proves 1,154/1,154 INT4 tensors use block size 32 with
+  FLOAT16 scales, while every KV signature remains FLOAT32. The official bundle inspector confirms
+  Qwen3 metadata, the source Jinja template, and stop IDs. An isolated LiteRT-LM JVM 0.16.1 smoke
+  now loads the exact bundle on both CPU and Apple M2 GPU/WebGPU, proves the 404-byte rendered
+  cleanup prompt exactly, and returns `Hello there` on both arms for the project-authored
+  `um hello there` input. This is host viability only: no Pixel runtime measurement has occurred,
+  so tuned LEAP remains production. Full conversion/runtime evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-litert-conversion.md`.
 - The owner-local FluidVoice 1.6.9 pipeline is now inventoried as a Mac-only reference. Its active
   path is Parakeet TDT v2 Core ML → app filler/dictionary preprocessing → Fluid-1 with bundled
   prompt/template → thinking-markup and app formatting/continuous-dictation postprocessing. The

@@ -445,6 +445,22 @@ Last updated: 2026-08-22
     evidence, do not integrate its llama/ggml libraries into production, and proceed to the exact
     BF16-to-LiteRT-LM blockwise-32 Stage 3 conversion. A Mali GPU build is optional future research,
     not the next production step.
+65. Accept the 2026-08-22 Dante LiteRT-LM artifact only as a Stage 3 conversion candidate, not as a
+    runtime replacement. It must originate from exact S1 BF16 revision
+    `65f84bcda1d13df582c4a8443c1c5aa53c0c66db`, use the named
+    `dynamic_wi4b32_afp32` recipe at context 4,096, and pass FlatBuffer inspection proving every
+    INT4 tensor is block size 32 and every KV signature is FLOAT32. The accepted conversion
+    candidate is 436,596,864 bytes at SHA-256
+    `8748cd01c614db17454fc02b87ef3fc46558f8c5e796dbb85a6f5be6eb01a403`. Keep it outside Git and
+    retain tuned LEAP until exact runtime prompt/token/cap, raw-output, Pixel CPU/GPU, memory,
+    energy, thermal, and maintenance gates pass.
+66. Advance the exact LiteRT-LM artifact from structural inspection to an isolated Android probe
+    after its host JVM 0.16.1 contract smoke. CPU/XNNPACK and Apple M2 GPU/WebGPU both loaded the
+    exact 436,596,864-byte bundle, rendered the frozen 404-byte prompt identically, and returned
+    `Hello there` for the same authored input. Treat the one-shot Mac wall times only as viability
+    evidence: native benchmark counters were disabled, the GPU sampler fell back to the linked C
+    implementation, and neither result predicts Pixel 7 performance. Keep LEAP production until
+    matched Pixel CPU/GPU output, latency, p90, memory, energy, and thermal gates pass.
 
 ## Hosted API benchmark
 

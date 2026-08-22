@@ -739,3 +739,39 @@ Conclusion: the model remains warm, while microphone capture is active only betw
   `92e0b1a05ca235db6de41d0b918cd59679eda8c92869bd6b3fa3c8d311216045`.
 - The direct load sample in the representative run was anomalous at 9,548 ms versus approximately
   1 s in other direct runs; it was retained but excluded from per-request latency claims.
+
+## 2026-08-22 — S1-mini LiteRT-LM conversion gate on Dante
+
+- `python3 -m unittest scripts.tests.test_s1_mini_litert_conversion -v`: 6/6 passed.
+- `bash -n scripts/conversion/setup_litert_conversion_env.sh
+  scripts/conversion/run_s1_mini_litert_export.sh`: passed.
+- `python3 -m py_compile scripts/conversion/*.py`: passed.
+- `git diff --check`: passed.
+- Remote exact-source preflight: passed for all 12 files at S1 revision
+  `65f84bcda1d13df582c4a8443c1c5aa53c0c66db`.
+- Remote `uv pip check`: all 85 packages compatible after the locked
+  `backports-strenum==1.2.8` correction.
+- Remote installed-recipe canary: passed; recipe SHA-256
+  `adb077a5b1cc04af108cf9c27f6555f5d71fe67b773b53741490f32a167598ba`.
+- Remote export run `s1-mini-block32-ctx4096-20260822T062056Z`: exit 0; 436,596,864-byte bundle,
+  SHA-256 `8748cd01c614db17454fc02b87ef3fc46558f8c5e796dbb85a6f5be6eb01a403`.
+- Remote bundle inspection: passed; 2 TFLite sections, 1,154/1,154 INT4 tensors block size 32,
+  FLOAT16 scales, all KV signatures FLOAT32. Inspection report SHA-256
+  `d5a09a89f7b25f6bac63879462e1b2e5b3ed19588cbfe4d416e7e3e64f931b7b`.
+- Local copied-artifact hash recheck matched Dante exactly. No ADB, microphone, evaluation corpus,
+  or runtime generation test ran during conversion.
+
+## 2026-08-22 — S1-mini LiteRT-LM JVM host smoke
+
+- `./gradlew :litertlm-host-smoke:test`: 3/3 passed.
+- CPU/XNNPACK, 2 threads: exact bundle and rendered-prompt gates passed; `um hello there` became
+  `Hello there`; report SHA-256
+  `51b00827ab6022cb8a20ba4ee2ec27dc6bc6de5b032b43e8a6b44f0df93ebb9c`.
+- Apple M2 GPU/Metal WebGPU: exact bundle and rendered-prompt gates passed; output matched CPU;
+  report SHA-256 `93ba99ad8ef542512a17cbb4a3a929f06ca6f2b951cad922bdfb026ddedd9a82`.
+- Runtime-rendered prompt: 404 bytes; SHA-256
+  `0b546eb4a221629272391b80cbf55e5cf26af3f9ff9df2305923d1362b4c99fb`;
+  source raw/prompt/cap counts 3/81/36.
+- LiteRT-LM JVM native benchmark counters reported disabled. Only one-shot wall times were retained;
+  no TTFT/token-rate or performance-selection claim was made. No ADB, Pixel, microphone, evaluation
+  corpus, expected output, or private transcript was used.

@@ -71,11 +71,19 @@ Do not add lower-bit GGUF variants.
   `docs/evaluation/results/2026-08-22-s1-mini-direct-llamacpp-pixel.md`.
 - [ ] Treat a direct Pixel Mali Vulkan build as a separately scoped optional experiment, not the
   next production step. The project-owned CPU runtime failed its displacement gate.
-- [ ] On the Linux RTX A6000 host, convert the pinned S1 BF16 checkpoint—not the GGUF or generic
+- [x] On the Linux RTX A6000 host, convert the pinned S1 BF16 checkpoint—not the GGUF or generic
   Qwen—to LiteRT-LM with a metadata-verified blockwise-32 INT4/FP32 recipe. Export context 4,096
-  first; explicitly exclude channelwise, block-128, sub-four-bit, and smaller-GGUF arms.
-- [ ] Pass host prompt/token/template/cap and raw semantic-difference review before measuring the
-  exact LiteRT artifact on Pixel CPU/GPU. Do not add a Tensor G2 NPU arm without official support.
+  first; explicitly exclude channelwise, block-128, sub-four-bit, and smaller-GGUF arms. The
+  436,596,864-byte bundle has SHA-256
+  `8748cd01c614db17454fc02b87ef3fc46558f8c5e796dbb85a6f5be6eb01a403`; all 1,154 INT4 tensors
+  are proven block size 32 and all KV signatures are FLOAT32. Evidence:
+  `docs/evaluation/results/2026-08-22-s1-mini-litert-conversion.md`.
+- [x] Pass the initial host LiteRT-LM CPU/GPU load and byte-exact prompt/template/cap smoke. Both
+  arms returned `Hello there` for the authored 3-token filler input; native JVM benchmark counters
+  were unavailable and are explicitly not inferred from wall time.
+- [ ] Add an isolated Android LiteRT-LM probe, re-prove prompt/token/cap identity, and run the frozen
+  user-shaped transcript-only cases on Pixel CPU/GPU against tuned LEAP. Do not add a Tensor G2 NPU
+  arm without official support or tune from evaluation/private prompts.
 - [ ] Select a replacement only after sustained same-method latency, p90, memory, energy, thermal,
   deterministic-output, and maintenance-cost comparison against the LEAP reference.
 

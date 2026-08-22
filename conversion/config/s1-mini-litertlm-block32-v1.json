@@ -1,0 +1,100 @@
+{
+  "schema_version": "s1-mini-litert-conversion-v1",
+  "model": {
+    "id": "superwhisper/S1-mini",
+    "revision": "65f84bcda1d13df582c4a8443c1c5aa53c0c66db",
+    "architecture": "Qwen3ForCausalLM",
+    "model_type": "qwen3",
+    "source_files": {
+      ".gitattributes": {
+        "bytes": 1612,
+        "sha256": "11c8fbf15aa8a397102551a65150ec4c4bd77adad462fe1c4e7fb10439dccd27"
+      },
+      "LICENSE": {
+        "bytes": 11878,
+        "sha256": "d956d2d305a0639211c9cbde71501accb0e1474cc9ddf79a47820a522aff6f98"
+      },
+      "README.md": {
+        "bytes": 17366,
+        "sha256": "b22a4ce83218b21af2e71c7e0d28b686239a0028299cdbc87e4238b2568cfd97"
+      },
+      "banner.jpg": {
+        "bytes": 154019,
+        "sha256": "c17fc850506c928b2213cac6becec3b315fb96c0064b97a25de9be71964c5fbb"
+      },
+      "chat_template.jinja": {
+        "bytes": 4168,
+        "sha256": "a55ee1b1660128b7098723e0abcd92caa0788061051c62d51cbe87d9cf1974d8"
+      },
+      "config.json": {
+        "bytes": 726,
+        "sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+      },
+      "generation_config.json": {
+        "bytes": 181,
+        "sha256": "6ca52b0bcb818c9e52db8ea18413494110c5f2def581b769f621dda951a7863b"
+      },
+      "merges.txt": {
+        "bytes": 1671853,
+        "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5"
+      },
+      "model.safetensors": {
+        "bytes": 1503300328,
+        "sha256": "69d2057077ab4dc738aaaab75d2a8ffa141e3a09fb9d956198cfce46f381131a"
+      },
+      "tokenizer.json": {
+        "bytes": 11422654,
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+      },
+      "tokenizer_config.json": {
+        "bytes": 9732,
+        "sha256": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101"
+      },
+      "vocab.json": {
+        "bytes": 2776833,
+        "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+      }
+    }
+  },
+  "contract": {
+    "cache_length": 4096,
+    "prefill_lengths": [128, 256, 512, 1024, 1152],
+    "bos_token_id": 151643,
+    "stop_token_ids": [151645, 151643],
+    "fixed_prompt_tokens": 78,
+    "max_raw_tokens_per_pass": 1000,
+    "system_prompt_file_sha256": "fba7bd3330ccc80fda114fa3f005633d05d50d0e73fd2d234c3b143e008f9d17",
+    "system_prompt_runtime_sha256": "6ecb6800f96b00cf612631552eff606a829feb2be8449fa95f9f150713b89327",
+    "control_line_sha256": "6349208ccb31684ff294357eedd9a38ab3cecfafe3247f2c02482f425d74fdd5",
+    "assistant_prefix_sha256": "55a4de9d8289b8701d87f2fd4a613affa911915e3330051fbf93191148387821",
+    "enable_thinking": false,
+    "generation": "greedy",
+    "output_cap": "ceil(1.3 * raw_token_count + 32)"
+  },
+  "quantization": {
+    "recipe_name": "dynamic_wi4b32_afp32",
+    "weight_bits": 4,
+    "weight_dtype": "INT",
+    "granularity": "BLOCKWISE_32",
+    "block_size": 32,
+    "activation_dtype": "FLOAT32",
+    "kv_dtype": "FLOAT32",
+    "compute_precision": "INTEGER",
+    "explicit_dequantize": false,
+    "calibration": "none",
+    "forbidden_recipe_names": [
+      "dynamic_wi4_afp32",
+      "dynamic_wi4c_afp32",
+      "dynamic_wi4b64_afp32",
+      "dynamic_wi4b128_afp32"
+    ]
+  },
+  "tools": {
+    "python": "3.11",
+    "litert_torch_version": "0.9.3",
+    "litert_torch_commit": "4e0b5ee24630e829e197210b8cb2bdee0aa9252b",
+    "ai_edge_quantizer_version": "0.8.0",
+    "litert_torch_wheel_sha256": "87bc59bedaf93e800486589cf8c43104ca8510a88f3ce53a17fd6dfe62569d74",
+    "ai_edge_quantizer_wheel_sha256": "0d27cb1b076f3dfc153509c43b5b4ba237434dccb963304c169ad8c61296c0e2"
+  }
+}
