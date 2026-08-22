@@ -1370,3 +1370,16 @@
   remain out of Logcat, Git, evaluation evidence, and training/selection data.
 - No Android code, model, runtime setting, microphone source, or installed APK changed. The
   unrelated untracked `t.txt` remains untouched.
+
+## 2026-08-22 — owner live QoL verification accepted
+
+- The owner reports that the current installed QoL build passes the requested live-device check:
+  tap-to-copy remains distinct from drag-to-scroll, long transcript scrolling works while
+  recording, the filtered waveform behaves well, and live Start/Stop plus processing presentation
+  looks correct.
+- Closed those interactive visual/gesture verification items in the current handoff. Kept formal
+  TalkBack/dynamic-type, the wider cancel/fallback/undo/focus-switch/cross-app lifecycle matrix,
+  and the separately planned intermittent-speech diagnostic session open rather than extending the
+  report beyond what was checked.
+- No app code, APK, model, device state, personal transcript, or audio capture changed. The
+  unrelated untracked `t.txt` remains untouched.

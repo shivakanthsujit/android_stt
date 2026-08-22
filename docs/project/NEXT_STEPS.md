@@ -538,8 +538,8 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   resumes tail-follow.
 - [x] Make a normal tap on either scrollable transcript surface copy the current raw transcript to
   Android's clipboard. Keep Android's touch-slop/drag behavior for scrolling, copy no placeholder
-  or labels, and expose the action through the clickable accessibility surface. Owner-run
-  scroll-versus-copy and clipboard-content verification remains open.
+  or labels, and expose the action through the clickable accessibility surface. Owner-run live
+  verification confirms tap-to-copy and drag-to-scroll behave as intended.
 - [x] Instrument model load, recording, Stop-to-STT, cleanup, and Stop-to-result in the IME with
   transcript-free diagnostics.
 - [ ] Add/measure IME-specific PSS, thermal state, power, and true Stop-to-editor-commit timing on
@@ -563,12 +563,16 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   display-only envelope directly from live `AudioRecord` chunks, retain no PCM, clear immediately
   on Stop/Cancel/failure, and keep it presentation-only. After owner feedback, add an 80 Hz
   high-pass, -32 dB noise gate, slow attack/release, five-level quantization, and slimmer 36-bar
-  rendering so idle noise stays quiet and speech detail is obscured. Final idle-room calibration,
-  accessibility, and drawing-cost verification remains open on Pixel.
+  rendering so idle noise stays quiet and speech detail is obscured. Owner live verification
+  reports the current motion and filtering look good; formal accessibility and drawing-cost
+  verification remain open on Pixel.
 - [x] Enforce readable primary-action contrast independently of Android's Button state theme.
   Start/Stop and loading/processing use explicit light text over the muted blue or dusty-rose
-  surface in XML and at every runtime state render. Static Pixel verification passes; confirm the
-  live red Stop state during the next owner dictation.
+  surface in XML and at every runtime state render. Static Pixel verification and the subsequent
+  owner live Start/Stop-state check pass.
+- [x] Complete the current QoL live interaction check: tap versus drag, long transcript scrolling
+  while recording, waveform behavior, and Start/Stop plus processing-state presentation all pass
+  by owner report. Keep formal TalkBack/dynamic-type and the broader IME lifecycle matrix separate.
 - [ ] Add fail-safe recovery actions. Distinguish missing models, permission loss, STT failure, and
   cleanup failure; offer the smallest relevant retry while preserving any visible raw transcript,
   never reopening the microphone automatically, and never committing the same result twice.

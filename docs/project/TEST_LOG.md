@@ -840,3 +840,15 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - Static `MainActivity` screenshot verifies explicit light primary-button text and the denser
   36-stroke idle waveform. The selected IME/setup status was also rendered correctly. No
   microphone or model inference ran; live dusty-rose Stop contrast remains owner verification.
+
+## 2026-08-22 — owner-reported live QoL verification
+
+- The owner completed a live-device check of the currently installed QoL build and reports that
+  everything in the requested interaction checklist looks and behaves correctly.
+- The checked scope was transcript tap-to-copy versus drag-to-scroll, long transcript scrolling
+  while recording, live waveform behavior, and Start/Stop plus processing-state presentation.
+- This closes the current visual/gesture QoL verification item. It is owner-reported evidence, not
+  an automated assertion or a claim that formal TalkBack/dynamic-type, multi-app lifecycle,
+  fallback, performance, or intermittent-speech diagnostics have completed.
+- No personal transcript/audio, screenshot, model output, or new device artifact was retained in
+  the repository for this check.

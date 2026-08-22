@@ -6,10 +6,10 @@ Last updated: 2026-08-22
 
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
-- Last verified milestone: refined second daily-driver QoL slice installed on Pixel with tap-to-copy
-  transcripts, lifecycle-driven listening/processing states, a strongly filtered low-detail voice
-  activity display, muted Activity/IME palette, explicit light primary-action text, and denser
-  waveform strokes; owner-run copy/TalkBack/final-state verification remains open
+- Last verified milestone: refined second daily-driver QoL slice installed and owner-verified on
+  Pixel with tap-versus-drag transcript behavior, uninterrupted long-transcript scrolling, clear
+  live Start/Stop contrast, lifecycle-driven states, and a strongly filtered low-detail waveform;
+  formal TalkBack/dynamic-type and broader multi-app lifecycle qualification remain open
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: minimal voice IME device verification and daily-driver hardening
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
@@ -28,8 +28,8 @@ Last updated: 2026-08-22
   setup controls, explicit Start/Stop, Cancel, a five-entry conservative Undo history,
   next-keyboard switch, transcript-free timing logs, a bounded independently scrollable live
   raw-partial surface, and tap-to-copy for the current raw transcript. It is installed and enabled
-  on the Pixel, but scrolling-versus-copy and the streaming speech path still need an owner-run
-  interactive check.
+  on the Pixel. The owner reports that the current live QoL interaction check passes; the broader
+  cancel/fallback/undo/focus-switching and cross-app lifecycle matrix remains open.
 - Application-scoped `DictationPipelineCoordinator` shares one Parakeet and S1-mini engine pair
   between the Activity and IME; destroying the Activity no longer unloads models needed by the IME.
 - IME editor policy disables dictation for password fields, editors requesting no personalized
@@ -227,8 +227,9 @@ Last updated: 2026-08-22
 - The 2026-08-22 second QoL build was installed over the existing package without clearing data.
   Pixel screenshots verified the refreshed Activity card/button hierarchy and IME ready/loading
   hierarchy, persistent state dot, waveform surface, transcript copy affordance, and reachable
-  Cancel/Undo/keyboard controls. The owner still needs to verify live waveform motion, tap-to-copy
-  clipboard contents, scroll-not-copy behavior, TalkBack wording, and recording/processing colors.
+  Cancel/Undo/keyboard controls. The owner subsequently reports that live waveform behavior,
+  tap-to-copy versus drag-to-scroll, long scrolling during recording, and recording/processing
+  visual states all work as intended. Formal TalkBack wording remains unverified.
 - Owner use found the initial blue/red palette too saturated, the 28-bar waveform too bulky, and
   the ungated RMS/peak display too responsive to idle room noise. The installed refinement uses
   muted periwinkle/dusty-rose controls, a shorter 24-stroke display, and the stronger filtered
