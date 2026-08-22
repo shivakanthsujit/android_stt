@@ -78,6 +78,11 @@ Last updated: 2026-08-22
   encoder/decoder state, and displays newly finalized raw transcript text in both the Activity and
   IME. Stop drains captured audio and flushes only the remaining stream tail. Explicit Stop remains
   authoritative; EOU events do not automatically end capture.
+- A source audit confirms that the ordinary Parakeet path applies no app-side VAD, silence gate,
+  high-pass/low-pass filter, AGC, or noise suppression before STT. Each successful PCM16 read is
+  normalized to float and queued intact; the waveform meter observes the same array without
+  mutating it. Android's `MIC` source/device stack and Parakeet's required incremental mel frontend
+  remain possible processing boundaries that have not yet been measured with owner speech.
 - Liquid LEAP `0.10.9` cleanup-only benchmark with model download progress, persistent cache reuse,
   load/unload, minimal output-validity fallback, and monotonic TTFT/total-generation metrics.
 - Editable direct-text cleanup UI plus a 24-case, multi-prompt batch runner that exports JSONL for
@@ -258,6 +263,13 @@ Last updated: 2026-08-22
 
 ## Known issues and observations
 
+- The owner reports intermittent missing recognition when deliberately modulating their voice.
+  It is not yet known whether the captured PCM itself is affected, the Realtime EOU model declines
+  to emit tokens, text is merely delayed until tail finalization, or another streaming boundary is
+  responsible. No evidence supports adding an input filter or recognition gate. A separate
+  debug-only, explicit-opt-in capture/replay/performance session is planned in
+  `docs/research/LIVE_DICTATION_DIAGNOSTICS_AND_PERFORMANCE_PLAN_2026-08-22.md`; no personal audio
+  or transcript persistence has been enabled in the daily-driver build.
 - Moonshine Small Streaming handled a 59.6-second utterance without ending microphone capture, but
   it produced overly short line segments and several recognition errors.
 - On the clean 24-clip read-speech probe, Moonshine scored 3.54% WER, Parakeet F16 1.69%, and

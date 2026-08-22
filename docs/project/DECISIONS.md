@@ -62,6 +62,13 @@ Last updated: 2026-08-22
     `ac9109d0e422bd8aafa899c0f58e1938f4a2846838797a29c04f6a8729033c3c`. This supersedes decision
     8 only for the ordinary live integration artifact; the unmeasured Realtime EOU Q4 quantization
     remains provisional until direct Pixel dictation quality and performance qualification.
+12. Do not gate, denoise, high-pass, low-pass, normalize by voice activity, or otherwise transform
+    captured PCM in the app before STT without replayable evidence that a specific change improves
+    the owner's workload. The waveform's filter remains a read-only presentation branch. Diagnose
+    missing speech in a separate debug-only mode that is disabled by default and explicitly enabled
+    for one bounded session. Such a session may retain exact PCM, raw STT, cleanup input/output, and
+    timings only app-privately; never emit payloads to Logcat or Git, and never reuse personal
+    captures for training or selection without a separate authorization and data contract.
 
 ## Cleanup
 

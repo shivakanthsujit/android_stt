@@ -1351,3 +1351,22 @@
   waveform. Live red Stop-state contrast remains an owner check; no microphone was opened for
   static QA.
 - The unrelated untracked `t.txt` remains untouched.
+
+## 2026-08-22 — Live STT input audit and future diagnostic plan
+
+- Audited the active Parakeet microphone path after the owner reported that deliberately modulated
+  speech can sometimes produce no text. The app applies no VAD, silence gate, high-pass/low-pass,
+  AGC, or noise suppression before STT: each successful 16 kHz PCM16 `AudioRecord` read is
+  normalized to float and queued intact, and JNI forwards it directly to Parakeet's incremental
+  mel frontend. The strongly filtered waveform meter reads but does not mutate the queued array.
+- Confirmed that the app requests Android's `MIC` source and does not instantiate Android audio
+  effects. Device/HAL processing is therefore an unmeasured possibility, not an established cause.
+  Other open hypotheses are model sensitivity to modulation, right-context/finalized-text delay,
+  capture gaps, native-feed backlog, or a downstream cleanup/editor distinction.
+- Added a separate diagnostics/performance plan rather than enabling sensitive persistence in the
+  daily-driver build. The future debug-only mode is explicit, bounded, app-private, and includes
+  exact pre-waveform PCM, raw STT, exact cleanup input/output, stream events, per-model timings,
+  replay, device profiling, deletion/export, and diagnostic-overhead checks. Personal payloads
+  remain out of Logcat, Git, evaluation evidence, and training/selection data.
+- No Android code, model, runtime setting, microphone source, or installed APK changed. The
+  unrelated untracked `t.txt` remains untouched.

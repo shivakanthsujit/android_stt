@@ -116,6 +116,29 @@ Do not add lower-bit GGUF variants.
 Runtime/model-card notes:
 `docs/research/STREAMING_STT_AND_S1_MINI_RUNTIME_CONTRACT_2026-08-21.md`.
 
+## Planned separate session: live dictation diagnostics and performance tuning
+
+Follow
+`docs/research/LIVE_DICTATION_DIAGNOSTICS_AND_PERFORMANCE_PLAN_2026-08-22.md`. The owner reports
+that deliberately modulated speech can produce no text. The current source audit finds no app-side
+filter or gate before Parakeet; do not tune microphone processing from anecdote alone.
+
+- [ ] Add a debug-only, disabled-by-default, explicit per-session diagnostic mode with bounded
+  app-private storage, clear delete/export controls, and a timing-only option.
+- [ ] Save the exact pre-waveform PCM16 stream plus read sizes/timestamps, stream queue/feed/finalize
+  events, raw final STT, exact per-pass cleanup input/output, selected text, editor result, and
+  monotonic stage timings. Never put payload text/audio in Logcat or Git.
+- [ ] Add exact saved-audio replay with recorded and fixed chunk schedules. Classify failures among
+  Android capture/source, Parakeet/model frontend, finalized-only live presentation, cleanup, and
+  editor commit before changing the runtime.
+- [ ] Profile Parakeet feed/finalize and S1 TTFT/total per pass independently, with queue depth,
+  process CPU, PSS/native heap, thermal, and optional Perfetto slices. Measure diagnostic overhead.
+- [ ] Only after a captured baseline, compare `MIC` with reported-supported `UNPROCESSED` and the
+  retained offline Parakeet reference on identical PCM. Do not silently fall back between sources.
+- [ ] Keep all personal captures diagnosis-only and outside the repository; delete the session
+  after evidence handoff. Do not reuse it for training or checkpoint/prompt selection without a
+  separately authorized data contract.
+
 ## Completed: owner-local FluidVoice reference inventory
 
 - [x] Inventory the installed FluidVoice/FluidAudio application, active Parakeet TDT v2 Core ML
