@@ -1287,3 +1287,6 @@
   `cd2227b372a2f4028a6ae725ad28d566c130f7424b4241e3057f2290cb57035d`. Installation preserved
   all three app-private GGUFs. Local Flow remains enabled; Gboard was current default at the
   post-install check, so owner selection and live voice verification remain open.
+- Handoff clarification: scrolling the transcript pauses only automatic tail-follow; capture and
+  STT continue, and tail-follow resumes at the bottom. The owner requested a stronger visible
+  listening indicator, now recorded as the first task for the next session.

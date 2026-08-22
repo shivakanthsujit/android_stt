@@ -519,3 +519,8 @@ Last updated: 2026-08-22
    exactly. Join dictated text to adjacent editor text with a single boundary space only when both
    boundary characters require one; include the separator in the undo record. This is UI/editor
    behavior only and must not alter or persist raw STT/model text.
+5. Treat transcript scrolling as presentation state only. It must never pause or alter microphone
+   capture, streaming inference, partial accumulation, or final cleanup. Resume automatic
+   tail-follow when the owner returns to the bottom. Add a persistent listening indicator whose
+   state comes from the real recording lifecycle and remains visible independently of transcript
+   scroll position; do not use a cosmetic waveform or glow as proof that the microphone is active.

@@ -38,6 +38,10 @@ Last updated: 2026-08-22
 - Moonshine Voice `0.1.2`, English Small Streaming architecture `4`.
 - Model download, persistent no-backup cache, progress display, and offline cache reuse.
 - Raw provisional/final transcript display and monotonic latency metrics.
+- Manual transcript scrolling affects only the viewport: recording and streaming STT continue, and
+  live tail-follow resumes after returning to the bottom. The keyboard currently has textual
+  `Listening locally…` state, but a stronger persistent recording indicator remains the first QoL
+  task for the next session.
 - Debug-only, microphone-free STT benchmark Activity that accepts checksum-verified 16 kHz PCM16
   WAVs over ADB and records raw hypotheses, WER inputs, repeat latency, process CPU time, PSS,
   native heap, and thermal status.

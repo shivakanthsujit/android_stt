@@ -19,13 +19,17 @@ Local Flow remains Pixel 7-first, fully local, explicit Start/Stop, and final-on
 1. **Transcript and undo fundamentals**
    - Give the Activity and IME bounded, independently scrollable transcript surfaces.
    - Follow the newest live partial by default, but preserve position when the owner scrolls up.
+     Scrolling changes presentation only: microphone capture and streaming STT must continue. Resume
+     tail-follow automatically when the owner returns to the bottom.
    - Keep up to five same-editor insertion undo records. Delete only an exact immediate suffix;
      clear history on an editor change or any surrounding-text mismatch.
    - Join consecutive dictations with a boundary space only when the text immediately around the
      cursor requires it. Include any added separator in the exact undo transaction.
 2. **Clearer, calmer keyboard states**
    - Replace dense status copy with a compact recording/processing/result hierarchy.
-   - Add an obvious listening treatment and make Stop the dominant action while recording.
+   - Add an obvious, persistent listening indicator driven by the actual recording state—not a
+     decorative animation—and make Stop the dominant action while recording. It must remain visible
+     even while the transcript is manually scrolled away from the tail.
    - Keep Cancel, Undo, and keyboard switching reachable without accidental activation.
 3. **Real audio waveform**
    - Feed a throttled RMS/peak envelope from project-owned `AudioRecord` chunks to a lightweight
@@ -45,7 +49,8 @@ Local Flow remains Pixel 7-first, fully local, explicit Start/Stop, and final-on
 ## First slice acceptance
 
 - A live transcript longer than five keyboard lines can be scrolled while recording.
-- New partials follow the tail until the owner scrolls upward; manual position is then preserved.
+- New partials follow the tail until the owner scrolls upward; manual position is then preserved
+  without pausing capture or STT. Returning to the bottom resumes tail-follow.
 - The Activity raw transcript has its own bounded scroll viewport and remains editable after Stop.
 - Up to five consecutive Local Flow commits in the same unchanged editor can be undone in reverse
   order. An editor change or a non-matching suffix makes undo unavailable without deleting text.

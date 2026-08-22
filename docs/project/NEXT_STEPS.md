@@ -511,7 +511,8 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   cursor boundaries with host tests.
 - [x] Make raw transcript surfaces bounded and independently scrollable in both Activity and IME.
   Follow new partials while the owner remains at the tail, but preserve manual scroll position when
-  they scroll upward.
+  they scroll upward. Scrolling must never pause microphone capture or STT; returning to the bottom
+  resumes tail-follow.
 - [x] Instrument model load, recording, Stop-to-STT, cleanup, and Stop-to-result in the IME with
   transcript-free diagnostics.
 - [ ] Add/measure IME-specific PSS, thermal state, power, and true Stop-to-editor-commit timing on
@@ -526,6 +527,9 @@ model ownership or weakening microphone, privacy, and fallback behavior.
 - [ ] Complete the ordered QoL plan in
   `docs/research/LOCAL_FLOW_QOL_PLAN_2026-08-22.md`: clearer listening/processing/error hierarchy,
   a real non-persisted audio waveform, retry behavior, and final cancel/undo visual polish.
+- [ ] First next-session UI task: add a persistent, accessible indicator tied to the actual
+  recording state. Keep it visible while the transcript is scrolled, distinguish listening from
+  processing, and never animate it when `AudioRecord` is inactive.
 - [ ] Choose model warm/unload policy based on measured memory and battery cost.
 - [ ] Build a consented, evaluation-only human dictation set with multiple speakers, rooms, pace,
   accents, corrections, names, numbers, uncertainty, long-form speech, and interruptions. Keep all
