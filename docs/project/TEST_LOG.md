@@ -880,3 +880,12 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - This was a static, non-recording deployment check. No model load, microphone, inference,
   deliberate recovery failure, personal transcript, audio capture, screenshot, or payload log was
   used. Live recovery labels and actions remain an interactive owner check.
+
+## 2026-08-22 — owner-reported live recovery check
+
+- The owner subsequently checked the installed recovery build on the Pixel and reports that it
+  looks good and works correctly.
+- This closes the requested live smoke check. It remains owner-reported evidence rather than an
+  automated, branch-by-branch device fault-injection result.
+- No personal transcript, audio, model output, screenshot, or payload log was retained in the
+  repository for this check.

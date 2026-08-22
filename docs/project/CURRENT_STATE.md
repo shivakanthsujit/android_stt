@@ -7,9 +7,9 @@ Last updated: 2026-08-22
 - Branch: `main`
 - Remote: `https://github.com/shivakanthsujit/android_stt.git`
 - Last verified milestone: fail-safe recovery build installed in place on Pixel after its host
-  unit/lint/build gate; app-private models and IME enablement survived, and a cold setup-screen
-  inspection passed without microphone or inference. Live failure-path, formal TalkBack/dynamic-
-  type, and broader multi-app lifecycle qualification remain open
+  unit/lint/build gate; app-private models and IME enablement survived, static setup inspection
+  passed, and the owner reports that the live build looks and works correctly. Formal TalkBack/
+  dynamic-type and broader multi-app lifecycle qualification remain open
 - Workspace: `/Users/ssujit/Documents/projects/android_stt`
 - Current phase: minimal voice IME device verification and daily-driver hardening
 - Completed milestones: 0 (toolchain), 1 (Moonshine smoke test), 2 (cleanup harness and Liquid
@@ -35,7 +35,9 @@ Last updated: 2026-08-22
   cleanup failure inserts the raw transcript once and reloads only for a future dictation; and an
   editor that does not confirm `commitText()` gets no automatic retry. Every failure preserves the
   visible raw transcript, and attempted text is labeled Inserted only after the editor confirms
-  success. Static device inspection passed; live recovery-state exercise remains open.
+  success. Static device inspection passed, and the owner reports that the installed recovery
+  build looks and works correctly in live use. This is not an automated branch-by-branch device
+  fault-injection claim.
 - Application-scoped `DictationPipelineCoordinator` shares one Parakeet and S1-mini engine pair
   between the Activity and IME; destroying the Activity no longer unloads models needed by the IME.
 - IME editor policy disables dictation for password fields, editors requesting no personalized

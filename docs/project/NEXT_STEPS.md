@@ -578,7 +578,8 @@ model ownership or weakening microphone, privacy, and fallback behavior.
   text, opens setup only for permission/artifacts, reloads only for runtime recovery, inserts raw
   once when cleanup fails, and never retries an unconfirmed editor commit. Host unit/lint/build
   gates pass, and the APK is installed with app data and IME enablement preserved. Static setup UI
-  verification passes; exercise the recovery labels during a consented live failure-path check.
+  verification passes, and the owner reports that the live recovery build looks and works as
+  intended. Keep automated branch-by-branch device fault injection separate if later needed.
 - [ ] Add a compact post-result review affordance. Let the owner switch the local transcript card
   between raw and inserted text and copy either one without retaining history or changing the
   permissive insertion policy. Consider exact-suffix Replace/Redo only if editor identity and

@@ -1413,3 +1413,13 @@
   inference ran, no failure was injected, and no personal transcript/audio was captured.
 - Live permission/artifact/runtime/cleanup/editor failure-path verification remains open. The
   unrelated untracked `t.txt` remains untouched.
+
+## 2026-08-22 — owner live recovery verification accepted
+
+- After deployment, the owner checked the installed recovery build on the Pixel and reports that
+  it looks good and works correctly.
+- Accepted that report as completion of the requested live recovery-build check. It is not expanded
+  into an automated assertion that every typed permission, artifact, runtime, cleanup, and editor
+  failure branch was forcibly injected on-device.
+- No app code, APK, model, personal transcript, audio, or device setting changed in this follow-up.
+  The unrelated untracked `t.txt` remains untouched.
