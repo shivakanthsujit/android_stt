@@ -1266,3 +1266,6 @@
   or production integration arm is advanced. The isolated package remains installed pending owner
   approval to remove roughly 1.0 GiB of app-private model/cache evidence.
 - Full report: `docs/evaluation/results/2026-08-22-s1-mini-litert-pixel.md`.
+- With explicit owner approval, uninstalled only `dev.localflow.litertlmbenchmark` after the report
+  was retained. Free `/data` space increased from 2,152,216 KiB to 3,214,612 KiB, recovering
+  1,062,396 KiB; `dev.localflow.dictation` was verified still installed.

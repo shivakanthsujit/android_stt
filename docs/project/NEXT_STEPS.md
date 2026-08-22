@@ -86,9 +86,9 @@ Do not add lower-bit GGUF variants.
   paired latency calls. CPU median total/PSS regressed 448.2%/42.4%; genuine Mali/OpenCL GPU
   regressed 91.0%/142.9%. Reject both and retain LEAP. The owner excluded the nonrepresentative
   Japanese/Unicode stress row from selection and future tests.
-- [ ] Optionally uninstall `dev.localflow.litertlmbenchmark` after evidence handoff to recover about
-  1.0 GiB of Pixel storage. Do not remove it silently; app-private model/cache evidence will be
-  deleted. No further LiteRT performance arm is warranted.
+- [x] Uninstall `dev.localflow.litertlmbenchmark` with owner approval after evidence handoff.
+  App-private model/cache removal recovered 1,062,396 KiB (about 1.01 GiB); the production keyboard
+  remained installed. No further LiteRT performance arm is warranted.
 - [ ] Select a replacement only after sustained same-method latency, p90, memory, energy, thermal,
   deterministic-output, and maintenance-cost comparison against the LEAP reference.
 

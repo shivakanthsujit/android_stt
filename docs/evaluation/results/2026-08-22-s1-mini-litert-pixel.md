@@ -104,10 +104,11 @@ response, crash, or thermal event occurred in the representative run.
 | GPU summary | `5f56485027725bfb75699c0c1796250af7c923691d975ebc8832cc8fad310784` |
 | GPU logcat | `32d33d7dd73b7b205f7b2b433b3708d6f1a80f3053b8b5c0a01545248f08ab7d` |
 
-Raw results, APKs, logs, model bytes, and runtime caches remain ignored outside Git. The isolated
-benchmark package remains installed and consumes approximately 427 MiB under app files plus
-635 MiB of compiled CPU/GPU cache. It was not automatically uninstalled because removal would
-delete benchmark evidence; the owner may remove it after handoff to recover roughly 1.0 GiB.
+Raw results, APKs, logs, and model bytes remain ignored outside Git. After evidence handoff, the
+owner authorized uninstalling the isolated benchmark package. Removing its approximately 427 MiB
+of app files plus 635 MiB of compiled CPU/GPU cache recovered 1,062,396 KiB (about 1.01 GiB).
+The host/Dante evidence remains retained; the production keyboard package was verified present
+after teardown.
 
 ## Decision
 

@@ -794,3 +794,6 @@ Conclusion: the model remains warm, while microphone capture is active only betw
 - The Japanese/Unicode stress row was removed and excluded from the verdict at the owner's request.
   No microphone, evaluation corpus, expected output, private transcript, production app mutation,
   sustained arm, or power trace was used.
+- Owner-approved teardown: `adb uninstall dev.localflow.litertlmbenchmark` returned `Success`;
+  package absence and production `dev.localflow.dictation` presence were verified. `/data` free
+  space rose by 1,062,396 KiB (about 1.01 GiB).
